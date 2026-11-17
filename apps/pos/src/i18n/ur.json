@@ -1,0 +1,22 @@
+{
+  "app": {
+    "name": "NaqdPOS",
+    "tagline": "TODO-ur آف لائن چلنے والا پوائنٹ آف سیل"
+  },
+  "home": {
+    "welcome": "خوش آمدید"
+  },
+  "language": {
+    "switchLabel": "زبان تبدیل کریں",
+    "other": "English"
+  },
+  "pwa": {
+    "updateAvailable": "نیا ورژن دستیاب ہے",
+    "reload": "دوبارہ لوڈ کریں",
+    "later": "بعد میں"
+  },
+  "notFound": {
+    "title": "صفحہ نہیں ملا",
+    "goHome": "ہوم پر جائیں"
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "app": {
+    "name": "NaqdPOS",
+    "tagline": "Point of sale that works offline"
+  },
+  "home": {
+    "welcome": "Welcome"
+  },
+  "language": {
+    "switchLabel": "Change language",
+    "other": "اردو"
+  },
+  "pwa": {
+    "updateAvailable": "New version available",
+    "reload": "Reload",
+    "later": "Later"
+  },
+  "notFound": {
+    "title": "Page not found",
+    "goHome": "Go to home"
+  }
+}

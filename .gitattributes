@@ -1,0 +1,7 @@
+# Keep LF everywhere (Prettier checks for LF; Windows autocrlf would otherwise convert to CRLF).
+* text=auto eol=lf
+*.png binary
+*.jpg binary
+*.ico binary
+*.woff binary
+*.woff2 binary
