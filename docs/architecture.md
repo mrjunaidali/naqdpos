@@ -39,9 +39,10 @@ Money: `*_paisa bigint`. Quantity: `*_milli bigint` (thousandths of the product'
 
 ### Tenancy and people
 - `shops` — id, name, type (`fruit_veg` | `grocery` | `meat` | `general`), address, phone, receipt_footer, logo_path, status (`active` | `suspended`), plan_id, timezone (default `Asia/Karachi`), cashier_expense_limit_paisa (default 200000 = Rs 2,000).
-- `memberships` — user_id (auth.users), shop_id, role (`owner` | `cashier` | `rider`). Online logins (owners; riders who sign in on their own phone). See §5.
-- `staff` — id, shop_id, name, phone, role (`owner` | `cashier` | `rider`), pin_hash, membership_user_id null, active, monthly_salary_paisa null (owner-only; used by US071). Every sale/expense records `staff_id`.
-- `devices` — id, shop_id, name, registered_by, last_sync_at, last_seq_pulled.
+- `memberships` — user_id (auth.users), shop_id, role (`owner` | `cashier` | `rider`); primary key `(shop_id, user_id)` — created only on the server, so no device-made id. Online logins (owners; riders who sign in on their own phone). See §5.
+- `staff` — id, shop_id, name, phone, role (`owner` | `cashier` | `rider`), pin_hash, membership_user_id null, active. Every sale/expense records `staff_id`.
+- `staff_salaries` — staff_id (pk; FK `(staff_id, shop_id)` → staff), shop_id, monthly_salary_paisa (not null; no salary = no row), plus the §2 mutable-table columns. **Owner-only; a separate table so salaries never sync to shop or rider devices** (same pattern as `product_costs`). Used by US071.
+- `devices` — id, shop_id, name, code (receipt-number prefix, e.g. `A1`, unique per shop — §4), registered_by, last_sync_at, last_seq_pulled.
 - `platform_admins` — user_id.
 - `audit_log` — id, shop_id, actor_user_id, acting_as_admin bool, action, entity, entity_id, payload jsonb, at.
 
@@ -129,7 +130,7 @@ Phone OTP is **deferred**. International SMS APIs cost roughly Rs 72–133 per O
 ### Access rules
 - Staff PIN: 4 digits, hashed (PBKDF2 via WebCrypto) and synced to the shop's devices so it works offline. Lock after 5 wrong tries for 1 minute.
 - JWT → `memberships` gives the user's shop and role. RLS on every table:
-  `shop_id in (select shop_id from memberships where user_id = auth.uid())`, plus role-specific policies (riders: deliveries where `rider_staff_id` is theirs; `product_costs` and `staff.monthly_salary_paisa`: owners only; shop devices pull only expenses for open business dates; riders get no expenses).
+  `shop_id in (select shop_id from memberships where user_id = auth.uid())`, plus role-specific policies (riders: deliveries where `rider_staff_id` is theirs; `product_costs` and `staff_salaries`: owners only; shop devices pull only expenses for open business dates; riders get no expenses).
 - Expenses: cashiers may add up to `cashier_expense_limit_paisa`; above it the owner's PIN is required (`approved_by_staff_id`). Only owners reverse expenses, manage categories and recurring expenses, and see expense reports.
 - System admins: `platform_admins` grants access to all shops through admin RPCs; every admin write goes to `audit_log` with `acting_as_admin = true`.
 

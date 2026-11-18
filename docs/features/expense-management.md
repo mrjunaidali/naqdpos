@@ -84,7 +84,7 @@ As an owner, I'm reminded of rent, salaries and other regular payments.
 ### US071 (EXP-8) Staff advances and salary (Release 2)
 As an owner, I track advances (peshgi) against each staff member's salary.
 - "Staff advance" and "Staff salary" expenses require choosing a staff member (`payee_staff_id`).
-- Each staff member's page shows advances given this month. Paying the salary shows salary minus advances as the suggested amount (`staff.monthly_salary_paisa`).
+- Each staff member's page shows advances given this month. Paying the salary shows salary minus advances as the suggested amount (`staff_salaries.monthly_salary_paisa`).
 
 ## Schema (approved — in `docs/architecture.md` §3)
 
@@ -93,7 +93,7 @@ As an owner, I track advances (peshgi) against each staff member's salary.
 - **New `expense_attachments`** (append-only): `id, shop_id, expense_id, storage_path, uploaded_at`. Replaces the proposed `expenses.photo_path`, because an append-only expense row can't be updated after the upload finishes.
 - **New `recurring_expenses`** (mutable, Release 2): `id, shop_id, category_id, amount_paisa, method_code, frequency ('monthly' | 'weekly'), due_day, next_due_date, active`.
 - **`shops.cashier_expense_limit_paisa`** (default 200000).
-- **`day_closes.owner_withdrawal_paisa`**, **`staff.monthly_salary_paisa`** (owner-only).
+- **`day_closes.owner_withdrawal_paisa`**, **`staff_salaries.monthly_salary_paisa`** (owner-only table, not a column on `staff`).
 - RLS: cashier devices pull only the cashier's own expenses for open days; reports via owner-only RPC.
 
 ## Core functions (`packages/core`, unit-tested)

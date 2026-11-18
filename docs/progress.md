@@ -33,3 +33,36 @@ Empty monorepo skeleton. No features and no database tables.
 - Install prompt (`beforeinstallprompt`) and the iOS "Add to Home Screen" guide (owner onboarding).
 - Railway Caddyfile and deploy (deployment §2).
 - `docs/backlog.md` does not exist yet.
+
+## Step 1 — tenancy foundation (2026-11-18)
+
+First Supabase migration and the matching Dexie version. No UI yet.
+
+**Built**
+- `supabase/migrations/20261118200000_tenancy.sql`:
+  - Tables `shops`, `memberships`, `staff`, `staff_salaries`, `devices`, `platform_admins`, `audit_log`, with RLS enabled in the same migration.
+  - Global sequence `public.server_seq` plus a `set_server_seq()` BEFORE INSERT OR UPDATE trigger on the five synced tables. The trigger is security definer, so clients have no sequence privileges and any `server_seq` a client sends is overwritten.
+  - Helpers `is_shop_member(shop_id)`, `has_shop_role(shop_id, roles[])` and `is_platform_admin()`. They are security definer with `search_path = ''`, executable by `authenticated` only, and only answer questions about the caller.
+  - Policies: members read their own shop's rows. Only owners update `shops` (column grants keep `status`, `plan_id` and `deleted_at` for admin RPCs), insert or update `staff` and `devices` (devices also need `registered_by = auth.uid()`), and read or write `staff_salaries`. `memberships` are read-only to clients. `platform_admins` and `audit_log` have no client privileges at all. `anon` has no privileges on any tenancy table. There are no delete policies (soft delete).
+  - RPC `create_shop(p_shop_id, p_name, p_type, p_owner_staff_id, p_owner_name, p_owner_phone, p_shop_phone, p_address?, p_device_id?)`. In one transaction it creates the shop, the caller's owner membership, the owner staff row and a `shop.create` audit row. A retry by the same owner returns the id. Another user reusing the id gets `23505`, and a call without a signed-in user gets `42501`.
+- `packages/core`: `tenancy.ts` (row types `ShopRow`/`StaffRow`/`DeviceRow`, `SHOP_TYPES`, `ROLES`, defaults) and `permissions.ts` (`canManageShop`, `canManageStaff`, `canSeeSalaries`, `canManageDevices`, each mirroring an RLS policy).
+- `apps/pos/src/db/schema.ts`: Dexie **version 2** adds `shops (id, server_seq)`, `staff (id, shop_id, server_seq)` and `devices (id, shop_id, server_seq)`. `memberships`, `staff_salaries`, `platform_admins` and `audit_log` are not stored on the device.
+
+**Tests**: pgTAP 73 in 3 files (`supabase/tests/tenancy_rls`, `tenancy_create_shop`, `tenancy_server_seq`). Core 72 (+12 permissions). Pos 13 (Dexie v2 tables and indexes, no private tables, tenancy row round-trip, v1 → v2 upgrade keeps `meta`). `supabase db lint`: clean.
+
+**Decisions**
+- Salary moved to a separate owner-only table, `staff_salaries` (like `product_costs`), instead of column privileges. `sync_pull` can then skip it for shop and rider devices. Architecture §3/§5 and the expense feature doc are updated.
+- `devices.code` added (receipt prefix from §4, `^[A-Z][0-9]{1,3}$`, unique per shop).
+- `memberships` primary key is `(shop_id, user_id)`; rows are only created on the server.
+- Enumerations are `text` + `check`, not Postgres enums.
+- `audit_log.id` is server-generated (`gen_random_uuid()`), because it is never synced.
+- No `staff.active` index in Dexie: IndexedDB cannot index booleans; filter after `shop_id`.
+- pgTAP files each define small `tests.login()` / `tests.row_count()` helpers inside the test transaction (rolled back).
+
+**Follow-ups**
+- **Security:** every shop member, including riders, can read every `staff.pin_hash`, and a hashed 4-digit PIN can be brute-forced instantly. Shop devices need it offline, but riders should not get it. Restrict this when rider device sync is designed.
+- Device mode (owner, shop or rider device, §4) is not stored yet. Decide in the device registration story.
+- Admin RPCs for shop `status` and `plan_id`, and soft-deleting a shop.
+- Membership management (invites) is still open (§8). Until then memberships come only from `create_shop`.
+- `staff_salaries` is not in Dexie yet. Add it for owner devices with US071.
+- Not pushed to the cloud project.
