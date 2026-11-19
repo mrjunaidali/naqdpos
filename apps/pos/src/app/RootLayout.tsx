@@ -1,9 +1,11 @@
 import { useTranslation } from 'react-i18next';
 import { Outlet } from 'react-router';
 import { otherLanguage } from '../i18n/index.ts';
+import { useSessionCheck } from './sessionCheck.ts';
 
 export function RootLayout() {
   const { t, i18n } = useTranslation();
+  useSessionCheck();
 
   return (
     <div className="flex min-h-dvh flex-col">

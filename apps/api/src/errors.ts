@@ -4,3 +4,10 @@ import type { ErrorResponse } from '@naqdpos/core';
 export function errorBody(error: ErrorResponse['error'], message?: string): ErrorResponse {
   return message === undefined ? { error } : { error, message };
 }
+
+/** SQLSTATE of a Postgres error (e.g. 23505 unique_violation), if it is one. */
+export function pgCode(error: unknown): string | undefined {
+  return typeof error === 'object' && error !== null && 'code' in error
+    ? String(error.code)
+    : undefined;
+}

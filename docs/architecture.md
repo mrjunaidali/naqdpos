@@ -109,7 +109,7 @@ Compute these with pure functions in `packages/core` (client) and matching SQL v
 - **Rider device** (rider's own phone, see §5): only the rider's assigned deliveries, the related sales/customers, and their own handover balance.
 
 ### Receipt numbers offline
-Each registered device gets a short code (`A1`, `A2`, …). Receipt number = device code + per-device counter stored in Dexie. Unique without the network.
+Each registered device gets a short code (`A1`, `A2`, …). Receipt number = device code + per-device counter stored in Dexie. Unique without the network. Codes are assigned by the SQL function `register_device` (`POST /devices`, owner only) in registration order per shop: `A1…A999`, then `B1…`; devices are never deleted, so a code is never reused.
 
 ## 5. Auth and access
 
@@ -125,14 +125,15 @@ Login runs inside our API with **Better Auth** (open-source library). Users and 
 | System admin | Google sign-in **plus TOTP (authenticator app) as a required second factor** (Better Auth two-factor plugin) | `/admin/*` routes require a session that passed 2FA. |
 
 - **Email OTP uses a typed 6-digit code, not a magic link.** A magic link opens in the browser, not the installed PWA, so the session would land in the wrong place. Codes are sent through any SMTP provider (`SMTP_*` settings).
+- **Google sign-in hand-off:** Google returns to the API, which redirects to the app's `/auth/callback` with a single-use token in the URL fragment (`#ott=…`, Better Auth one-time-token plugin: minted only by the server, stored hashed, valid 1 minute). The app trades it for the bearer token at `/auth/one-time-token/verify` and removes it from the address bar. The bearer token never appears in a URL.
 - **Google sign-in in an installed PWA must be tested on iOS.** OAuth redirects from a Home Screen app can open in Safari and lose the session. If it fails, iOS owners use email OTP.
 - Google and email OTP with the same verified email resolve to one user (Better Auth account linking).
-- **Sessions:** the API issues a long-lived session token (bearer token in an `Authorization` header, stored on the device), refreshed while online. Sign-in is needed only on a new device or after logout. An existing session keeps working offline; selling never waits for auth (rule 1).
+- **Sessions:** the API issues a long-lived session token (bearer token in an `Authorization` header, stored on the device in Dexie `meta`), valid 90 days and extended while online (checked at most once a day). Sign-in is needed only on a new device or after logout. An existing session keeps working offline; selling never waits for auth (rule 1).
 - **Later** (after business registration and Meta verification): phone OTP through a WhatsApp authentication template, with SMS as fallback (Better Auth phone-number plugin). No ledger table changes expected.
 
 ### Access rules
 - Staff PIN: 4 digits, hashed (PBKDF2 via WebCrypto) and synced to the shop's devices so it works offline. Lock after 5 wrong tries for 1 minute.
-- **Two layers, both required:** the API checks the session and role on every route, **and** Postgres RLS enforces the same rules. Each request runs in a transaction that first does `set_config('app.user_id', <user id>, true)` (and `app.device_id`). SQL helper `current_user_id()` reads it; helpers `is_shop_member(shop_id)`, `has_shop_role(shop_id, roles)` and `is_platform_admin()` build on it.
+- **Two layers, both required:** the API checks the session and role on every route, **and** Postgres RLS enforces the same rules. Each request runs in a transaction that first does `set_config('app.user_id', <user id>, true)` (and `app.device_id` from the `X-Device-Id` header that registered devices send). SQL helper `current_user_id()` reads it; helpers `is_shop_member(shop_id)`, `has_shop_role(shop_id, roles)` and `is_platform_admin()` build on it.
 - RLS on every table: `shop_id in (select shop_id from memberships where user_id = current_user_id())`, plus role-specific policies (riders: deliveries where `rider_staff_id` is theirs; `product_costs` and `staff_salaries`: owners only; shop devices pull only expenses for open business dates; riders get no expenses).
 - **Database roles:** migrations run as the owner role. The API connects as `naqdpos_app`, which owns nothing and has no `BYPASSRLS`, so RLS always applies to it. Only the worker's admin jobs (backups, maintenance) use a separate privileged role.
 - **Login tables:** Better Auth must read sessions before any user is known, so the RLS policies on `users`, `sessions`, `accounts`, `verifications` and `two_factors` allow `naqdpos_app` only when `current_setting('app.context') = 'auth'`. Better Auth's own pool sets that as a connection startup option; the per-request pool never does, so tenant queries cannot read tokens or TOTP secrets. Same role and `DATABASE_URL` for both pools.

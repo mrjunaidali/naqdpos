@@ -48,7 +48,7 @@ describe('no user set', () => {
   it('cannot call create_shop', async () => {
     await asUser(null, async (q) => {
       const code = await errorCode(
-        q(`select create_shop($1, 'S', 'grocery', $2, 'O', '0300', '0300')`, [
+        q(`select create_shop($1, 'S', 'grocery', $2, 'O', '0300', '0300', 'h')`, [
           randomUUID(),
           randomUUID(),
         ]),

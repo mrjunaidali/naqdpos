@@ -125,3 +125,46 @@ Postgres schema with RLS, the API service with auth, and the typed client. No UI
 - Worker entry (pg-boss) and S3 file routes.
 - Staging: create `naqdpos_app` login and password on the host, run migrations from CI.
 - Rider PIN-hash exposure (from Step 1) still open.
+
+## Step 4 — owner sign-in, onboarding and device registration (2026-11-20)
+
+The owner signs in, creates a shop and registers the device; afterwards the app opens straight to home, also offline.
+
+**Built**
+- Migration `20261120090000_onboarding.sql`:
+  - `create_shop()` gains `p_owner_pin_hash` (old signature dropped)
+  - new `register_device(id, shop_id, name)`: owner only (explicit check, it is security definer), locks the shop row so concurrent registrations get different codes, codes `A1…A999` then `B1…`, idempotent on retry, `23505` for a device id in another shop, writes `device.register` to `audit_log`
+- `packages/core`:
+  - `phone.ts`: `normalizePkMobile()` (03…, +92…, 92…, 0092…, spaces and dashes) to `+923XXXXXXXXX`, `isPkMobile`, `formatPkMobile`
+  - `pin.ts`: `hashPin` / `verifyPin`, PBKDF2-SHA256 via WebCrypto, 100,000 iterations, 16-byte salt, `pbkdf2-sha256$iter$salt$hash`, constant-time compare
+  - `ids.ts`: `uuidv7()` (no new dependency); core now has the DOM lib for WebCrypto types
+  - API contract: row schemas (`ShopRowSchema`, `StaffRowSchema`, `DeviceRowSchema`), `ConfigResponse`, `MeResponse`, `RegisterDeviceRequest`, auth responses; `CreateShopRequest` requires a Pakistani `owner_phone` and `owner_pin_hash`
+  - client: `config`, `sendSignInCode`, `signInWithCode`, `googleSignInUrl`, `exchangeOneTimeToken`, `getSession`, `signOut`, `me`, `registerDevice`; sends `X-Device-Id`; Better Auth errors and network failures become `ApiError` (`status 0` = offline)
+- `apps/api`:
+  - `GET /config` (`{ google }`), `GET /me` (user + shops with role and own staff row, through RLS), `POST /devices` (201/400/401/403/409)
+  - `requireUser` puts the user and `{ userId, deviceId }` on the request; `withUserTx` now also sets `app.device_id`; a malformed `X-Device-Id` is a 400; CORS allows the header
+  - Better Auth: sessions 90 days (`updateAge` 1 day); one-time-token plugin (server-minted only, hashed, 1 minute, no cookie); `/auth/callback/*` goes through `addOneTimeTokenToRedirect`, which adds `#ott=…` only for redirects to `APP_ORIGINS` and strips `set-auth-token`
+- `apps/pos`:
+  - `src/db/session.ts`: `meta` keys `session` (token, user, email, last check) and `device` (id, code, shop, staff); `src/api/index.ts` reads token and device id from Dexie
+  - `useAppState()` (Dexie only: `signed-out` / `setup` / `ready`) and `<Gate>` on `/`, `/sign-in`, `/setup`; daily background session check (signs out only when the server says the session is gone; offline is ignored)
+  - `features/auth`: `SignInPage` (email, code with `one-time-code` numeric input, resend, change email, offline notice, Google button only if `/config` says so), `GoogleCallbackPage` (+ `oneTimeToken.ts`, redeems once even under StrictMode)
+  - `features/onboarding`: `SetupPage` asks `GET /me` first, so an owner on a second device gets `RegisterDeviceForm` instead of a second shop; `OnboardingForm` (shop name, type with `fruit_veg` default, owner name, mobile, PIN + confirm, device name) with ids kept for safe retries; `setup.ts` stores shop, own staff row, device and the `device` meta key in one Dexie transaction
+  - home shows the shop name and device code; small `ui/` pieces (`Field`, `Button`, `Alert`, error messages)
+  - en + ur strings for every label (`TODO-ur` where unsure)
+- No Dexie version bump: v2 already has `shops`, `staff`, `devices`; session and device live in `meta`.
+
+**Tests**: DB 43 (+9: `register_device` codes, separate numbering per shop, retry, 5 concurrent registrations, refusals for cashier / other owner / outsider / no user, 23505, empty name, audit row, `B1` after `A999`; `create_shop` stores the PIN hash). API DB 23 (+16: 90-day session, one-time token single use / reuse / expiry / made-up / client cannot mint / stored hashed, `/me` empty, own and other's shops, `/devices` A1→A2, retry, 403, 409, 401/400, `app.device_id` set and empty). API unit 25 (+14: `/config`, 401s, bad device header, Pakistani mobile, OAuth callback routing, redirect token hand-off incl. foreign origin and error redirects, `requireUser` context). Core 111 (+34: mobile, PIN, uuidv7, client). Pos 47 (+34: sign-in, Google button and callback, onboarding validation and success, retry with same ids, existing owner, cashier, offline home, gates, session check). Live check against the dev API: sign-in → shop → device `A1` → `/me`.
+
+**Decisions**
+- Google hand-off uses Better Auth's one-time-token plugin; the token rides in the URL fragment so static hosts never log it.
+- Onboarding rows (shop, staff, device) are created on the server and stored in Dexie like pulled rows, not through the outbox: onboarding needs the network anyway.
+- The owner's mobile is used for both `staff.phone` and `shops.phone`.
+- A user who is only a cashier or rider sees "only the owner can set up a device".
+
+**Follow-ups**
+- Google sign-in is untested end to end until Google keys exist, and must be tried on iOS (§5).
+- Shop picker for owners with several shops (now: first owner shop).
+- Sign-out UI; and what happens when a different user signs in on a registered device.
+- Install prompt as an onboarding step (§6) and `navigator.storage.persist()`.
+- PIN lock after 5 wrong tries (with the PIN switch story).
+- Rider PIN-hash exposure (Step 1) still open: `/me` returns only the caller's own staff row.

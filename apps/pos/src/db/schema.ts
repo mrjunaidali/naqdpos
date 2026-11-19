@@ -22,9 +22,10 @@ export class NaqdDb extends Dexie {
     this.version(1).stores({
       meta: 'key',
     });
-    // Migration 20261118200000_tenancy. Only what the device needs offline: shop settings,
-    // staff for PIN switching, device codes. memberships, staff_salaries (owner-only),
-    // platform_admins and audit_log are not stored on the device.
+    // Tenancy tables (migration 20261119120000_foundation). Only what the device needs offline:
+    // shop settings, staff for PIN switching, device codes. memberships, staff_salaries
+    // (owner-only), platform_admins and audit_log are not stored on the device.
+    // The session token and this device's registration live in `meta` (src/db/session.ts).
     // No index on staff.active: booleans are not valid IndexedDB keys; filter after shop_id.
     this.version(2).stores({
       shops: 'id, server_seq',

@@ -43,5 +43,7 @@ export default defineConfig({
   test: {
     environment: 'jsdom',
     setupFiles: ['./src/test/setup.ts'],
+    // Tests never call a real API (the client is mocked), but the module needs a base URL.
+    env: { VITE_API_URL: 'http://api.test' },
   },
 });

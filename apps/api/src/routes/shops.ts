@@ -2,8 +2,8 @@ import { createRoute, OpenAPIHono } from '@hono/zod-openapi';
 import { CreateShopRequest, CreateShopResponse, ErrorResponse } from '@naqdpos/core';
 import { sql } from 'kysely';
 import type { AppDeps, AppEnv } from '../app.ts';
-import { errorBody } from '../errors.ts';
 import { withUserTx } from '../db/index.ts';
+import { errorBody, pgCode } from '../errors.ts';
 import { requireUser } from './require-user.ts';
 
 const json = <T>(schema: T) => ({ 'application/json': { schema } });
@@ -25,12 +25,6 @@ const createShop = createRoute({
   },
 });
 
-function pgCode(error: unknown): string | undefined {
-  return typeof error === 'object' && error !== null && 'code' in error
-    ? String(error.code)
-    : undefined;
-}
-
 export function shopRoutes(deps: Pick<AppDeps, 'db' | 'auth'>) {
   const app = new OpenAPIHono<AppEnv>();
   app.use('/shops', requireUser(deps.auth));
@@ -38,12 +32,13 @@ export function shopRoutes(deps: Pick<AppDeps, 'db' | 'auth'>) {
   return app.openapi(createShop, async (c) => {
     const body = c.req.valid('json');
     try {
-      // create_shop does shop + owner membership + owner staff + audit row in one transaction.
-      const id = await withUserTx(deps.db, c.get('userId'), async (tx) => {
+      // create_shop does shop + owner membership + owner staff (with PIN hash) + audit row in
+      // one transaction.
+      const id = await withUserTx(deps.db, c.get('tx'), async (tx) => {
         const { rows } = await sql<{ id: string }>`
           select create_shop(
             ${body.shop_id}, ${body.name}, ${body.type}, ${body.owner_staff_id},
-            ${body.owner_name}, ${body.owner_phone}, ${body.shop_phone},
+            ${body.owner_name}, ${body.owner_phone}, ${body.shop_phone}, ${body.owner_pin_hash},
             ${body.address ?? null}, ${body.device_id ?? null}
           ) as id`.execute(tx);
         return rows[0]!.id;

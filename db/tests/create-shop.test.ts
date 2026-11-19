@@ -10,7 +10,8 @@ afterAll(async () => {
   await Promise.all([admin.end(), app.end()]);
 });
 
-const CALL = `select create_shop($1, 'New shop', 'meat', $2, 'Owner', '03001234567', '03007654321', 'Main road', $3) as id`;
+const PIN_HASH = 'pbkdf2-sha256$100000$c2FsdA==$aGFzaA==';
+const CALL = `select create_shop($1, 'New shop', 'meat', $2, 'Owner', '+923001234567', '+923007654321', '${PIN_HASH}', 'Main road', $3) as id`;
 
 describe('create_shop', () => {
   it('creates shop, owner membership, owner staff and an audit row in one call', async () => {
@@ -26,16 +27,22 @@ describe('create_shop', () => {
         {
           name: 'New shop',
           type: 'meat',
-          phone: '03007654321',
+          phone: '+923007654321',
           address: 'Main road',
           device_id: deviceId,
         },
       ]);
       const membership = await q('select user_id, role from memberships');
       expect(membership.rows).toEqual([{ user_id: f.outsider, role: 'owner' }]);
-      const staff = await q('select id, role, membership_user_id, phone from staff');
+      const staff = await q('select id, role, membership_user_id, phone, pin_hash from staff');
       expect(staff.rows).toEqual([
-        { id: staffId, role: 'owner', membership_user_id: f.outsider, phone: '03001234567' },
+        {
+          id: staffId,
+          role: 'owner',
+          membership_user_id: f.outsider,
+          phone: '+923001234567',
+          pin_hash: PIN_HASH,
+        },
       ]);
       // The new owner can edit right away.
       expect((await q(`update shops set name = 'Renamed' where id = $1`, [shopId])).rowCount).toBe(

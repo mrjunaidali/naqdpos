@@ -1,7 +1,23 @@
 // The only way the apps call the backend (CLAUDE.md, Portability 3). Every response is parsed
 // with the shared schemas, so a server change that breaks the contract fails loudly here.
-import type { z } from 'zod';
-import { CreateShopRequest, CreateShopResponse, ErrorResponse, HealthResponse } from './schemas.ts';
+import { z } from 'zod';
+import {
+  AuthErrorResponse,
+  ConfigResponse,
+  CreateShopRequest,
+  CreateShopResponse,
+  DeviceRowSchema,
+  ErrorResponse,
+  HealthResponse,
+  MeResponse,
+  OneTimeTokenResponse,
+  RegisterDeviceRequest,
+  SendCodeRequest,
+  SessionResponse,
+  SignInResponse,
+  SignInWithCodeRequest,
+  SocialSignInResponse,
+} from './schemas.ts';
 
 /** The subset of `fetch` the client uses; apps pass the browser's fetch. */
 export type FetchLike = (
@@ -9,13 +25,18 @@ export type FetchLike = (
   init: { method: string; headers: Record<string, string>; body?: string },
 ) => Promise<{ ok: boolean; status: number; json(): Promise<unknown> }>;
 
+type MaybePromise<T> = T | Promise<T>;
+
 export interface ApiClientOptions {
   baseUrl: string;
   fetch: FetchLike;
   /** Bearer session token, if signed in. */
-  getToken?: () => string | null | Promise<string | null>;
+  getToken?: () => MaybePromise<string | null>;
+  /** This device's id once registered; sent as X-Device-Id (sets app.device_id on the server). */
+  getDeviceId?: () => MaybePromise<string | null>;
 }
 
+/** status 0 + code 'network' = the request never reached the server (offline, DNS, CORS). */
 export class ApiError extends Error {
   readonly status: number;
   readonly code: string;
@@ -30,6 +51,8 @@ export class ApiError extends Error {
 
 export type ApiClient = ReturnType<typeof createApiClient>;
 
+const SuccessResponse = z.object({ success: z.boolean() });
+
 export function createApiClient(options: ApiClientOptions) {
   const baseUrl = options.baseUrl.replace(/\/+$/, '');
 
@@ -42,27 +65,71 @@ export function createApiClient(options: ApiClientOptions) {
     const headers: Record<string, string> = { accept: 'application/json' };
     const token = await options.getToken?.();
     if (token) headers.authorization = `Bearer ${token}`;
+    const deviceId = await options.getDeviceId?.();
+    if (deviceId) headers['x-device-id'] = deviceId;
     if (body !== undefined) headers['content-type'] = 'application/json';
 
-    const response = await options.fetch(`${baseUrl}${path}`, {
-      method,
-      headers,
-      ...(body !== undefined && { body: JSON.stringify(body) }),
-    });
+    let response: Awaited<ReturnType<FetchLike>>;
+    try {
+      response = await options.fetch(`${baseUrl}${path}`, {
+        method,
+        headers,
+        ...(body !== undefined && { body: JSON.stringify(body) }),
+      });
+    } catch {
+      throw new ApiError(0, 'network', 'Could not reach the server');
+    }
     const json: unknown = await response.json().catch(() => undefined);
     if (!response.ok) {
-      const error = ErrorResponse.safeParse(json);
-      throw error.success
-        ? new ApiError(response.status, error.data.error, error.data.message)
-        : new ApiError(response.status, 'internal');
+      const ours = ErrorResponse.safeParse(json);
+      if (ours.success) throw new ApiError(response.status, ours.data.error, ours.data.message);
+      const auth = AuthErrorResponse.safeParse(json);
+      if (auth.success)
+        throw new ApiError(response.status, auth.data.code ?? 'auth_error', auth.data.message);
+      throw new ApiError(response.status, 'internal');
     }
     return schema.parse(json);
   }
 
+  // Methods are async so invalid input is a rejected promise like every other failure.
   return {
     health: () => request('GET', '/health', HealthResponse),
-    // async, so invalid input is a rejected promise like every other failure.
+    config: () => request('GET', '/config', ConfigResponse),
+
+    /** Emails a 6-digit sign-in code (architecture §5: typed code, not a magic link). */
+    sendSignInCode: async (email: string) =>
+      request('POST', '/auth/email-otp/send-verification-otp', SuccessResponse, {
+        ...SendCodeRequest.parse({ email }),
+        type: 'sign-in',
+      }),
+    signInWithCode: async (email: string, otp: string) =>
+      request('POST', '/auth/sign-in/email-otp', SignInResponse, {
+        ...SignInWithCodeRequest.parse({ email, otp }),
+      }),
+    /** URL of Google's consent page. Google returns through the API to `callbackURL`. */
+    googleSignInUrl: async (callbackURL: string, errorCallbackURL: string) =>
+      (
+        await request('POST', '/auth/sign-in/social', SocialSignInResponse, {
+          provider: 'google',
+          callbackURL,
+          errorCallbackURL,
+          disableRedirect: true,
+        })
+      ).url,
+    /** Trades the single-use token from the Google redirect for the bearer session token. */
+    exchangeOneTimeToken: async (token: string) => {
+      const result = await request('POST', '/auth/one-time-token/verify', OneTimeTokenResponse, {
+        token,
+      });
+      return { token: result.session.token, user: result.user };
+    },
+    getSession: () => request('GET', '/auth/get-session', SessionResponse),
+    signOut: () => request('POST', '/auth/sign-out', SuccessResponse, {}),
+
+    me: () => request('GET', '/me', MeResponse),
     createShop: async (input: CreateShopRequest) =>
       request('POST', '/shops', CreateShopResponse, CreateShopRequest.parse(input)),
+    registerDevice: async (input: RegisterDeviceRequest) =>
+      request('POST', '/devices', DeviceRowSchema, RegisterDeviceRequest.parse(input)),
   };
 }

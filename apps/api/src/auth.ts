@@ -1,19 +1,39 @@
 // Better Auth (architecture §5): Google sign-in, email OTP (typed 6-digit code), TOTP two-factor,
-// and bearer session tokens for the installed PWA. Users and sessions are rows in our Postgres.
+// bearer session tokens for the installed PWA, and single-use tokens to hand a Google sign-in
+// back to the app. Users and sessions are rows in our Postgres.
 import { betterAuth, type BetterAuthOptions } from 'better-auth';
-import { bearer, emailOTP, twoFactor } from 'better-auth/plugins';
+import { bearer, emailOTP, oneTimeToken, twoFactor } from 'better-auth/plugins';
 import pg from 'pg';
 import type { Env } from './env.ts';
 import type { Logger } from './logger.ts';
 
 export type SendOtp = (email: string, otp: string, type: string) => Promise<void>;
 
+export interface AuthUser {
+  id: string;
+  email: string;
+  name: string;
+}
+
 /** What the routes need from auth; lets unit tests use a stub instead of a database. */
 export interface AuthService {
+  /** Google sign-in is offered only when both Google keys are set. */
+  googleEnabled: boolean;
   handler(request: Request): Promise<Response>;
-  /** The signed-in user's id from the session token, or null. */
-  getUserId(headers: Headers): Promise<string | null>;
+  /** Google's return to the API: Better Auth, then the single-use token for the app. */
+  handleOAuthCallback(request: Request): Promise<Response>;
+  /** The signed-in user from the session token, or null. */
+  getUser(headers: Headers): Promise<AuthUser | null>;
+  /** Mints a single-use, short-lived token for a session (server side only). */
+  createOneTimeToken(sessionToken: string): Promise<string>;
 }
+
+const DAY = 60 * 60 * 24;
+/** Long-lived so owners rarely sign in again (§5); extended once a day while in use. */
+const SESSION_EXPIRES_IN = 90 * DAY;
+const SESSION_UPDATE_AGE = DAY;
+/** The Google redirect token only has to survive one page load. */
+const ONE_TIME_TOKEN_MINUTES = 1;
 
 const ts = { createdAt: 'created_at', updatedAt: 'updated_at' } as const;
 
@@ -75,10 +95,21 @@ export function createAuthPool(connectionString: string): pg.Pool {
   return new pg.Pool({ connectionString, max: 5, options: '-c app.context=auth' });
 }
 
-export function authOptions(
-  env: Env,
-  deps: { pool: pg.Pool; logger: Logger; sendOtp?: SendOtp },
-): BetterAuthOptions {
+export interface AuthDeps {
+  pool: pg.Pool;
+  logger: Logger;
+  sendOtp?: SendOtp;
+  /** Tests only: a shorter one-time-token lifetime. */
+  oneTimeTokenMinutes?: number;
+}
+
+function googleKeys(env: Env) {
+  return env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET
+    ? { clientId: env.GOOGLE_CLIENT_ID, clientSecret: env.GOOGLE_CLIENT_SECRET }
+    : undefined;
+}
+
+export function authOptions(env: Env, deps: AuthDeps) {
   const sendOtp: SendOtp =
     deps.sendOtp ??
     ((email, otp, type) => {
@@ -89,11 +120,7 @@ export function authOptions(
       }
       return Promise.reject(new Error('Email OTP: SMTP is not configured yet'));
     });
-
-  const google =
-    env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET
-      ? { clientId: env.GOOGLE_CLIENT_ID, clientSecret: env.GOOGLE_CLIENT_SECRET }
-      : undefined;
+  const google = googleKeys(env);
 
   return {
     appName: 'NaqdPOS',
@@ -103,6 +130,11 @@ export function authOptions(
     trustedOrigins: env.APP_ORIGINS,
     database: deps.pool,
     ...authSchemaOptions,
+    session: {
+      ...authSchemaOptions.session,
+      expiresIn: SESSION_EXPIRES_IN,
+      updateAge: SESSION_UPDATE_AGE,
+    },
     // Google and email OTP with the same verified email resolve to one user (§5).
     account: {
       ...authSchemaOptions.account,
@@ -117,23 +149,81 @@ export function authOptions(
       }),
       twoFactor({ issuer: 'NaqdPOS', schema: twoFactorSchema }),
       bearer(),
+      oneTimeToken({
+        expiresIn: deps.oneTimeTokenMinutes ?? ONE_TIME_TOKEN_MINUTES,
+        // Stored as a hash, so a database read does not reveal usable tokens.
+        storeToken: 'hashed',
+        // Only the server mints tokens (in the Google callback); clients can only redeem them.
+        disableClientRequest: true,
+        // The app uses the bearer token from the response body, not a cookie.
+        disableSetSessionCookie: true,
+      }),
     ],
-  };
+  } satisfies BetterAuthOptions;
 }
 
-export function createAuth(
-  env: Env,
-  deps: { pool: pg.Pool; logger: Logger; sendOtp?: SendOtp },
-): AuthService {
-  if (!env.GOOGLE_CLIENT_ID || !env.GOOGLE_CLIENT_SECRET) {
+/**
+ * After Google, Better Auth redirects to the app's callback URL with the session in a cookie
+ * on the API's domain, which the installed PWA cannot use. When the redirect goes to one of
+ * our app origins and carries a new session, add a single-use token as `#ott=…`: the fragment
+ * is never sent to the static host, and the app trades it for the bearer token and then
+ * removes it from the address bar. The bearer token itself never appears in a URL.
+ */
+export async function addOneTimeTokenToRedirect(
+  response: Response,
+  appOrigins: readonly string[],
+  mint: (sessionToken: string) => Promise<string>,
+): Promise<Response> {
+  const location = response.headers.get('location');
+  const sessionToken = response.headers.get('set-auth-token');
+  if (response.status < 300 || response.status >= 400 || !location || !sessionToken) {
+    return response;
+  }
+  let target: URL;
+  try {
+    target = new URL(location);
+  } catch {
+    return response;
+  }
+  const headers = new Headers(response.headers);
+  headers.delete('set-auth-token');
+  if (appOrigins.includes(target.origin)) {
+    target.hash = `ott=${encodeURIComponent(await mint(sessionToken))}`;
+    headers.set('location', target.toString());
+  }
+  return new Response(null, { status: response.status, headers });
+}
+
+export function createAuth(env: Env, deps: AuthDeps): AuthService {
+  const google = googleKeys(env);
+  if (!google) {
     deps.logger.warn('Google sign-in is off: GOOGLE_CLIENT_ID / GOOGLE_CLIENT_SECRET not set');
   }
   const auth = betterAuth(authOptions(env, deps));
+
+  async function createOneTimeToken(sessionToken: string): Promise<string> {
+    const { token } = await auth.api.generateOneTimeToken({
+      headers: new Headers({ authorization: `Bearer ${sessionToken}` }),
+    });
+    return token;
+  }
+
   return {
+    googleEnabled: google !== undefined,
     handler: (request) => auth.handler(request),
-    async getUserId(headers) {
-      const session = await auth.api.getSession({ headers });
-      return session?.user.id ?? null;
+    async handleOAuthCallback(request) {
+      return addOneTimeTokenToRedirect(
+        await auth.handler(request),
+        env.APP_ORIGINS,
+        createOneTimeToken,
+      );
     },
+    async getUser(headers) {
+      const session = await auth.api.getSession({ headers });
+      if (!session) return null;
+      const { id, email, name } = session.user;
+      return { id, email, name };
+    },
+    createOneTimeToken,
   };
 }

@@ -1,4 +1,4 @@
-// Kysely table types for the columns the API touches (migration 20261119120000_foundation).
+// Kysely table types for the columns the API touches (migrations 20261119120000_foundation, 20261120090000_onboarding).
 // Hand-written; extend them as routes need more tables.
 import type { ColumnType, Generated } from 'kysely';
 import type { Role, ShopStatus, ShopType } from '@naqdpos/core';
@@ -52,8 +52,23 @@ export interface StaffTable {
   server_seq: ServerSeq;
 }
 
+export interface DevicesTable {
+  id: string;
+  shop_id: string;
+  name: string;
+  code: string;
+  registered_by: string | null;
+  last_sync_at: Date | null;
+  last_seq_pulled: Generated<string>;
+  created_at: Timestamp;
+  updated_at: Timestamp;
+  deleted_at: Date | null;
+  server_seq: ServerSeq;
+}
+
 export interface Database {
   shops: ShopsTable;
   memberships: MembershipsTable;
   staff: StaffTable;
+  devices: DevicesTable;
 }

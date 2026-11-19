@@ -3,8 +3,74 @@
     "name": "NaqdPOS",
     "tagline": "Point of sale that works offline"
   },
+  "common": {
+    "wait": "Please wait…",
+    "loading": "Loading…",
+    "retry": "Try again"
+  },
+  "errors": {
+    "offline": "No internet connection. Connect and try again.",
+    "tooManyAttempts": "Too many attempts. Wait a minute and try again.",
+    "generic": "Something went wrong. Please try again."
+  },
   "home": {
-    "welcome": "Welcome"
+    "welcome": "Welcome",
+    "deviceCode": "This device: {{code}}"
+  },
+  "signIn": {
+    "title": "Sign in",
+    "offline": "You are offline. Connect to the internet to sign in. Once signed in, the app works offline.",
+    "email": "Email",
+    "invalidEmail": "Enter a valid email address.",
+    "sendCode": "Send code",
+    "codeSent": "We sent a 6-digit code to {{email}}.",
+    "code": "6-digit code",
+    "invalidCode": "Enter the 6 digits from the email.",
+    "signIn": "Sign in",
+    "resend": "Resend code",
+    "changeEmail": "Change email",
+    "wrongCode": "That code is not right. Check the email and try again.",
+    "codeExpired": "That code has expired. Send a new one.",
+    "or": "or",
+    "google": "Sign in with Google",
+    "googleFailed": "Google sign-in did not finish. Try again, or use your email.",
+    "finishing": "Finishing sign-in…",
+    "backToSignIn": "Back to sign-in"
+  },
+  "onboarding": {
+    "title": "Set up your shop",
+    "intro": "A few details and you can start selling.",
+    "shopName": "Shop name",
+    "shopType": "Shop type",
+    "ownerName": "Your name",
+    "mobile": "Your mobile number",
+    "mobileHint": "Pakistani mobile, e.g. 0300 1234567",
+    "invalidMobile": "Enter a Pakistani mobile number, e.g. 0300 1234567.",
+    "pin": "Your 4-digit PIN",
+    "pinHint": "You will use this PIN to open the till and approve actions.",
+    "pinConfirm": "Enter the PIN again",
+    "invalidPin": "The PIN must be exactly 4 digits.",
+    "pinMismatch": "The two PINs do not match.",
+    "required": "This is required.",
+    "submit": "Create shop"
+  },
+  "shopType": {
+    "fruit_veg": "Fruit & vegetables",
+    "grocery": "Grocery",
+    "meat": "Meat",
+    "general": "General store"
+  },
+  "device": {
+    "name": "Name for this device",
+    "nameHint": "So you can tell your phones and computers apart.",
+    "defaultName": "Owner phone",
+    "registerTitle": "Add this device",
+    "registerIntro": "You are signed in to {{shop}}. Add this device to use it in the shop.",
+    "register": "Add device"
+  },
+  "setup": {
+    "notOwner": "Only the shop owner can set up a new device. Ask the owner to sign in here.",
+    "signOut": "Sign out"
   },
   "language": {
     "switchLabel": "Change language",

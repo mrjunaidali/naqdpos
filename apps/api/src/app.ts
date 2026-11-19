@@ -2,11 +2,14 @@
 // transaction as the signed-in user, call SQL, return JSON. Data rules live in SQL and RLS.
 import { OpenAPIHono } from '@hono/zod-openapi';
 import { cors } from 'hono/cors';
-import type { AuthService } from './auth.ts';
-import type { Db } from './db/index.ts';
+import type { AuthService, AuthUser } from './auth.ts';
+import type { Db, TxContext } from './db/index.ts';
 import { errorBody } from './errors.ts';
 import type { Logger } from './logger.ts';
+import { configRoutes } from './routes/config.ts';
+import { deviceRoutes } from './routes/devices.ts';
 import { healthRoutes } from './routes/health.ts';
+import { meRoutes } from './routes/me.ts';
 import { shopRoutes } from './routes/shops.ts';
 
 export interface AppDeps {
@@ -20,7 +23,8 @@ export interface AppDeps {
 }
 
 export interface AppEnv {
-  Variables: { userId: string };
+  /** Set by requireUser on routes that need a session. */
+  Variables: { user: AuthUser; tx: TxContext };
 }
 
 export function createApp(deps: AppDeps) {
@@ -41,7 +45,7 @@ export function createApp(deps: AppDeps) {
     '*',
     cors({
       origin: deps.origins,
-      allowHeaders: ['Authorization', 'Content-Type'],
+      allowHeaders: ['Authorization', 'Content-Type', 'X-Device-Id'],
       // The bearer plugin returns the session token in this header after sign-in.
       exposeHeaders: ['set-auth-token'],
       credentials: true,
@@ -62,6 +66,8 @@ export function createApp(deps: AppDeps) {
     );
   });
 
+  // Google returns here; the app gets a single-use token in the redirect (auth.ts).
+  app.get('/auth/callback/*', (c) => deps.auth.handleOAuthCallback(c.req.raw));
   app.on(['GET', 'POST'], '/auth/*', (c) => deps.auth.handler(c.req.raw));
 
   app.openAPIRegistry.registerComponent('securitySchemes', 'bearer', {
@@ -69,7 +75,10 @@ export function createApp(deps: AppDeps) {
     scheme: 'bearer',
   });
   app.route('/', healthRoutes(deps));
+  app.route('/', configRoutes(deps));
+  app.route('/', meRoutes(deps));
   app.route('/', shopRoutes(deps));
+  app.route('/', deviceRoutes(deps));
   app.doc31('/openapi.json', {
     openapi: '3.1.0',
     info: { title: 'NaqdPOS API', version: '0.0.0' },
