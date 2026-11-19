@@ -7,12 +7,7 @@ import globals from 'globals';
 import tseslint from 'typescript-eslint';
 
 export default defineConfig([
-  globalIgnores([
-    '**/node_modules/**',
-    '**/dist/**',
-    '**/dev-dist/**',
-    '**/coverage/**',
-  ]),
+  globalIgnores(['**/node_modules/**', '**/dist/**', '**/dev-dist/**', '**/coverage/**']),
 
   js.configs.recommended,
 
@@ -31,6 +26,11 @@ export default defineConfig([
     files: ['apps/*/src/**/*.{ts,tsx}'],
     extends: [reactHooks.configs.flat['recommended-latest'], reactRefresh.configs.vite],
     languageOptions: { globals: globals.browser },
+  },
+
+  {
+    files: ['apps/api/**/*.ts', 'db/**/*.ts'],
+    languageOptions: { globals: globals.node },
   },
 
   {

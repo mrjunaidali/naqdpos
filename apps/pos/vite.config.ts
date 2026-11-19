@@ -7,6 +7,8 @@ import { VitePWA } from 'vite-plugin-pwa';
 const THEME_COLOR = '#15803d';
 
 export default defineConfig({
+  // One .env at the repo root for every app; Vite only exposes VITE_* names to the browser.
+  envDir: '../..',
   plugins: [
     react(),
     tailwindcss(),

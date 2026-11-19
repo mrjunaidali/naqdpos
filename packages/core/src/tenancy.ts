@@ -1,5 +1,5 @@
-// Row shapes for the tenancy tables (architecture §3, migration 20261118200000_tenancy.sql).
-// Timestamps are ISO 8601 strings as they arrive from PostgREST/RPC JSON.
+// Row shapes for the tenancy tables (architecture §3, migration 20261119120000_foundation.sql).
+// Timestamps are ISO 8601 strings as they arrive in API JSON.
 import type { Paisa } from './money.ts';
 
 export const SHOP_TYPES = ['fruit_veg', 'grocery', 'meat', 'general'] as const;

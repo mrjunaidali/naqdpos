@@ -1,0 +1,33 @@
+{
+  "name": "@naqdpos/api",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "node --watch --env-file-if-exists=../../.env src/dev.ts",
+    "start": "node src/server.ts",
+    "build": "tsc --noEmit -p tsconfig.json",
+    "test": "vitest run --exclude \"**/*.db.test.ts\"",
+    "test:db": "vitest run db.test",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "auth:schema": "node --env-file-if-exists=../../.env scripts/auth-schema.ts"
+  },
+  "dependencies": {
+    "@hono/node-server": "2.1.9",
+    "@hono/zod-openapi": "1.6.3",
+    "@naqdpos/core": "workspace:*",
+    "better-auth": "1.7.26",
+    "hono": "4.13.19",
+    "kysely": "0.29.9",
+    "pg": "8.23.1",
+    "pino": "10.4.0",
+    "zod": "4.6.7"
+  },
+  "devDependencies": {
+    "@types/node": "26.6.6",
+    "@types/pg": "8.23.1",
+    "pino-pretty": "13.2.0",
+    "typescript": "6.0.3",
+    "vitest": "5.1.0"
+  }
+}

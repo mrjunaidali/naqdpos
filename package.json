@@ -13,7 +13,12 @@
     "lint": "eslint .",
     "typecheck": "pnpm -r typecheck",
     "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "format:check": "prettier --check .",
+    "db:create": "node db/scripts/db.ts create",
+    "db:up": "node db/scripts/db.ts up",
+    "db:new": "node db/scripts/db.ts new",
+    "db:reset": "node db/scripts/db.ts reset",
+    "db:test": "node db/scripts/db.ts test"
   },
   "devDependencies": {
     "@eslint/js": "10.0.1",

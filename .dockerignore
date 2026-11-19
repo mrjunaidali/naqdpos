@@ -1,0 +1,11 @@
+# Keep secrets and local artefacts out of the build context.
+.env
+.env.*
+!.env.example
+**/node_modules
+**/dist
+**/dev-dist
+**/coverage
+.git
+.claude
+**/*.test.ts

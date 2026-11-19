@@ -1,0 +1,11 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    // Node runs these files directly (type stripping), so only erasable TypeScript is allowed.
+    "erasableSyntaxOnly": true,
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "types": ["node"]
+  },
+  "include": ["src", "scripts", "vitest.config.ts"]
+}

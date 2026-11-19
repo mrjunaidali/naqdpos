@@ -1,0 +1,18 @@
+{
+  "name": "@naqdpos/db",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test:db": "vitest run",
+    "typecheck": "tsc --noEmit -p tsconfig.json"
+  },
+  "devDependencies": {
+    "@types/node": "26.6.6",
+    "@types/pg": "8.23.1",
+    "dbmate": "2.38.1",
+    "pg": "8.23.1",
+    "typescript": "6.0.3",
+    "vitest": "5.1.0"
+  }
+}
