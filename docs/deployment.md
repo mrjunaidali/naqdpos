@@ -1,32 +1,68 @@
 # NaqdPOS hosting and deployment
 
-Status: **decided (Nov 2026)**. Front ends on Railway, backend on Supabase Cloud (project `naqdpos`). Start on Supabase Free, move to Pro when paying shops cover it.
+Status: **decided (Nov 2026)**. Own backend on open standards: Node API + PostgreSQL + S3-compatible storage. Start on Railway + Cloudflare R2; every part can move to another host by changing environment variables. Supabase was evaluated and dropped (§6).
+
+## 0. Brand and domains
+
+- Brand: **Naqd** (local) / **NaqdPOS** (app stores).
+- Registered (Nov 2026): **naqd.pk**, **naqdpos.pk**, **naqd.com.pk**.
+- Not yet registered: naqdpos.com (free when checked 19 Nov 2026), naqd.com (for sale on Sedo, negotiate later), naqdly.com (possible future global brand).
+- Open: which domain serves the apps (`pos.`, `admin.`, `api.` subdomains below). Suggested: naqd.pk, with the others forwarding to it.
 
 ## 1. What runs where
 
-| Part | What it is | Host |
+| Part | What it is | Start on | Can move to |
+| --- | --- | --- | --- |
+| `apps/pos` | Static PWA (Vite build) | Railway static service, `pos.<domain>` | Cloudflare Pages, Netlify, any web server |
+| `apps/admin` | Static SPA (Vite build) | Railway static service, `admin.<domain>` | Same as above |
+| `apps/api` (API) | Docker image, Node 24 + Hono | Railway service, `api.<domain>` | Render, Fly, any VPS, AWS/Azure container services |
+| `apps/api` (worker) | Same image, worker entry (pg-boss jobs) | Railway service | Same as API |
+| Database | PostgreSQL 17 | Railway Postgres | Neon, AWS RDS, DigitalOcean, own server |
+| Files | S3-compatible object storage | Cloudflare R2 (no egress fees) | AWS S3, Backblaze B2, MinIO |
+| Email (OTP codes) | SMTP | Free tier of Resend or Brevo (open) | Any SMTP provider |
+| Phone OTP (later) | WhatsApp auth template, SMS fallback | Deferred until business registration and Meta verification | — |
+
+Region: as close to Pakistan as the host offers. The shop app is offline-first, so latency matters less than usual.
+
+## 2. Settings (environment variables)
+
+Moving a part = changing its settings. Nothing host-specific is in code.
+
+| Where | Variable | Example / note |
 | --- | --- | --- |
-| `apps/pos` | Static PWA (Vite build output) | Railway, `pos.<domain>` |
-| `apps/admin` | Static SPA (Vite build output) | Railway, `admin.<domain>` |
-| Backend | Postgres + RLS, Auth (Google sign-in, email OTP, TOTP for admins), Storage (bill photos, logos), Edge Functions, scheduled jobs | Supabase Cloud, region closest to Pakistan (e.g. Mumbai) |
-| Email for OTP | SMTP provider connected to Supabase Auth (free tier, e.g. Resend or Brevo) | Still open (architecture §8) |
-| Phone OTP (later) | WhatsApp authentication template, SMS fallback | Deferred until business registration and Meta verification (architecture §5) |
+| pos, admin (build time) | `VITE_API_URL` | `https://api.<domain>` (local: `http://localhost:8787`) |
+| API, worker | `DATABASE_URL` | `postgres://naqdpos_app:…@host:5432/naqdpos` (app role, RLS applies) |
+| API, worker | `DATABASE_ADMIN_URL` | owner role; migrations and backup jobs only |
+| API, worker | `S3_ENDPOINT`, `S3_REGION`, `S3_BUCKET`, `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY` | R2 endpoint now |
+| API | `BETTER_AUTH_SECRET`, `BETTER_AUTH_URL` | long random secret; public API URL |
+| API | `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` | Google Cloud OAuth client |
+| API, worker | `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, `MAIL_FROM` | OTP emails |
+| API | `APP_ORIGINS` | allowed front-end origins for CORS (`https://pos.<domain>,https://admin.<domain>`) |
 
-The shop app is offline-first, so the distance between Pakistan and the server matters less than usual. Sync tolerates latency.
+Secrets live only in the host's secret settings and a password manager. Never in the repo, never in front-end builds. `.env.example` lists every variable without values.
 
-## 2. Static hosting requirements (Railway)
+## 3. Environments
 
-Both apps run as a small static web server (Caddy or nginx) per Railway service.
+| Env | Database | API | Front ends |
+| --- | --- | --- | --- |
+| Local | Postgres installed on the PC (`naqdpos_dev`, `naqdpos_test`); MinIO in Docker when files are needed | `pnpm --filter api dev` | `pnpm --filter pos dev` |
+| Staging | separate Railway Postgres | Railway service from `main` | Railway, `staging-pos.<domain>` |
+| Production | Railway Postgres | Railway service from release tags | Railway, `pos.<domain>` |
 
-- **HTTPS only**, with a custom domain (Railway provides the certificate). Service workers need HTTPS.
+- **Migrations:** `dbmate` with plain SQL in `db/migrations/`, run from CI against staging first, then production (`DATABASE_ADMIN_URL`). The database must always be rebuildable from migrations.
+- **CI (GitHub Actions):** on every push: install, lint, typecheck, unit tests, and API/RLS tests against a Postgres service container. On merge to `main`: build Docker image, migrate staging, deploy staging. Production on tag.
+- **Database roles:** created by the first migration: owner role (migrations), `naqdpos_app` (API; no `BYPASSRLS`, owns nothing).
+
+## 4. Static hosting requirements (front ends)
+
+- **HTTPS only**, custom domain. Service workers need HTTPS.
 - **SPA fallback**: every unknown path returns `index.html` (React Router).
 - **Cache headers**:
   - `index.html`, `sw.js`, `manifest.webmanifest`, `registerSW.js`: `Cache-Control: no-cache`. Otherwise the "New version available" prompt never appears (architecture §6).
   - `/assets/*` (hashed): `Cache-Control: public, max-age=31536000, immutable`.
 - **MIME**: `.webmanifest` → `application/manifest+json`.
-- **Build-time env**: `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY` (publishable key). **Never** put the service role / secret key in a front-end build.
 
-Example `Caddyfile`:
+Example `Caddyfile` (Railway static service):
 
 ```
 :{$PORT} {
@@ -47,49 +83,31 @@ Example `Caddyfile`:
 }
 ```
 
-## 3. Supabase setup
+## 5. Backups and operations
 
-- **Projects**:
-  - `naqdpos` — created Nov 2026 (Free plan). Production.
-  - `naqdpos-staging` — to create when needed (Free allows 2 projects). Until then, develop locally with the Supabase CLI (`supabase start`, needs Docker).
-  - Migrations in `supabase/migrations/` are applied with the Supabase CLI (`supabase link` then `supabase db push`) from CI, staging first.
-- **RLS**: available on every plan; nothing to enable at account level. Every migration that creates a table must also `enable row level security` and add policies (tables created by SQL don't get RLS automatically). Check the dashboard Security Advisor after each migration.
-- **Auth** (architecture §5):
-  - **Google**: create an OAuth client in Google Cloud (consent screen with app name, logo and privacy policy URL; scopes `email` and `profile` only). Add the Supabase callback URL and the `pos.` and `admin.` domains as redirect URLs. One client per Supabase project.
-  - **Email OTP**: enable the Email provider with a typed 6-digit code (edit the email template to show `{{ .Token }}`, not a magic link). Connect a custom SMTP provider; the built-in mailer is rate-limited and for testing only. Send from an address on our domain (set up SPF/DKIM so codes don't land in spam).
-  - **MFA**: enable TOTP; the admin portal requires AAL2 for platform admins.
-  - Confirm identity linking so Google and email OTP with the same email give one user.
-  - Phone provider stays **off** until phone OTP is added.
-  - Development: use test Google accounts and test email addresses; set auth rate limits.
-- **Storage**: bucket `bill-photos` (private, RLS by `shop_id`), bucket `logos`.
-- **Secrets**: service role key only in Edge Functions and CI, never in apps. Keep the database password in a password manager.
+- **Backups:** nightly `pg_dump` by a worker job (or Railway's backups where available), compressed and uploaded to a separate R2 bucket; keep 30 daily + 12 monthly. **Test a restore once a month** into a scratch database.
+- **Health:** `GET /health` checks DB connectivity; the host restarts the service if it fails.
+- **Logs:** pino JSON logs to stdout; the host keeps them. Never log tokens, PINs or OTP codes.
+- **Scaling path:** more API copies → PgBouncer (transaction mode) in front of Postgres → bigger Postgres → read replica for reports. No code changes needed for any of these.
+- **Moving hosts:** (1) create the new Postgres, (2) `pg_dump` / `pg_restore`, (3) copy storage objects by key, (4) point `DATABASE_URL` / `S3_*` at the new place, (5) redeploy the same Docker image, (6) change DNS. Keep the old host read-only until the new one is verified.
 
-## 4. Cost plan
+## 6. Cost plan (estimates)
 
-Prices checked Nov 2026; PKR at roughly Rs 280 = $1.
+Prices are rough and change; PKR at about Rs 280 = $1. Check host pricing pages before launch.
 
-| Stage | Supabase | Approx. monthly |
+| Stage | Setup | Approx. monthly |
 | --- | --- | --- |
-| Build + pilot (first few shops) | Free plan: 500 MB DB, 50K MAU, 2 projects, no automatic backups, pauses after 7 days of **no activity** | Rs 0 |
-| Paying shops | Pro: $25/org incl. $10 compute credit (one Micro project). 8 GB DB, 100K MAU, 250 GB bandwidth, daily backups (7 days), no pausing | ~Rs 7,000 |
-| Pro + staging on Pro | $25 + $10 extra Micro project | ~Rs 9,800 |
+| Build + pilot | Railway Hobby (usage-based, $5 minimum credited as usage): API + worker + Postgres + 2 static sites at low load; R2 free tier; SMTP free tier | roughly Rs 1,500–5,000 |
+| Growing | Bigger Railway usage, or one VPS (API, worker, Postgres) + R2 | roughly Rs 3,000–10,000 |
 
-Plus: Railway usage for the two static services (Hobby plan, $5/month minimum that is credited as usage, ~Rs 1,400), the domain, and the SMTP provider (free tier covers pilot volume). No SMS cost while sign-in is Google + email OTP. When phone OTP is added: WhatsApp authentication messages are about Rs 3 each; international SMS APIs are about Rs 72–133 each.
+No per-user fees and no plan jumps: cost follows real CPU, memory, storage and traffic. If Railway becomes expensive, the same Docker image and a `pg_dump` move to a VPS.
 
-**Break-even**: at Rs 1,000–1,500 per shop per month, 5–7 shops cover Supabase Pro.
+**Why not Supabase (decided Nov 2026):** good product, but auth, storage and the API would live in a vendor platform, Pro costs ~Rs 7,000/month regardless of usage, and local development needed ~10 Docker containers. Own backend keeps every part standard and movable. A Supabase project `naqdpos` was created during evaluation; delete it once nothing uses it.
 
-### Free-plan rules while piloting
-- Daily syncing from real shops keeps the project active, so it does not pause.
-- Free has **no automatic backups**: run a nightly `pg_dump` (e.g. a scheduled GitHub Actions job) and keep the dump in private storage. Test a restore once.
-- Upgrade Free → Pro is a plan change in the dashboard; no data migration.
-
-## 5. Alternative considered: no Supabase
-
-Railway Postgres + own Node API (Hono/Fastify) + own phone OTP/JWT + S3-compatible storage (e.g. Cloudflare R2) + Railway cron. Feasible because sync and reports are already Postgres functions, but adds an estimated 2–4 weeks of work (auth and security are the risky parts) and makes us responsible for backups and patching. Railway itself is usage-billed, so savings would be partial. **Not chosen for now**; revisit if Supabase cost becomes a problem at scale. Switching later is possible because the data is plain Postgres.
-
-## 6. Open items
-- SMTP provider for email OTP (architecture §8).
+## 7. Open items
+- SMTP provider for OTP emails (architecture §8).
+- Google OAuth client (consent screen, privacy policy URL, redirect URLs for `api.`, `pos.`, `admin.` domains).
 - Phone OTP provider — deferred until business registration and Meta verification.
 - Test Google sign-in inside the installed PWA on iOS (architecture §5).
-- Domain name.
-- Off-site backup location for the nightly dump during the Free stage.
+- Choose the serving domain (naqd.pk suggested) for `pos.`, `admin.`, `api.` (§0).
+- Register naqdpos.com (§0).

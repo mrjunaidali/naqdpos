@@ -18,7 +18,7 @@ export class NaqdDb extends Dexie {
 
   constructor(name: string = DB_NAME) {
     super(name);
-    // Every schema change = a new version here plus a matching Supabase migration (CLAUDE.md rule 8).
+    // Every schema change = a new version here plus a matching migration in db/migrations (CLAUDE.md rule 8).
     this.version(1).stores({
       meta: 'key',
     });

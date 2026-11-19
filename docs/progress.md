@@ -14,8 +14,8 @@ Empty monorepo skeleton. No features and no database tables.
 - `apps/admin`: React 19 + React Router 8 + Tailwind 4, placeholder home page.
 - Tooling: ESLint 10 flat config (typescript-eslint type-checked, react-hooks, react-refresh, prettier), Prettier, Vitest 5 (jsdom + Testing Library + `fake-indexeddb` in pos).
 - Root scripts: `dev`, `build`, `test`, `lint`, `typecheck`, `format`, `format:check`.
-- `supabase/` from `supabase init` (CLI 3.2.0, local `project_id = "naqdpos"`); not linked or pushed. Empty `migrations/`, `functions/`, `tests/`.
-- `.env.example` (`VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`), `.gitignore`, `.vscode/extensions.json`.
+- A hosted-backend CLI folder (`init`, empty `migrations/`, `functions/`, `tests/`); removed in Step 2.
+- `.env.example` (now `VITE_API_URL`), `.gitignore`, `.vscode/extensions.json`.
 
 **Tests**: core 60 (money, qty); pos 9 (Dexie schema, i18n key parity + RTL, routes).
 
@@ -36,10 +36,10 @@ Empty monorepo skeleton. No features and no database tables.
 
 ## Step 1 — tenancy foundation (2026-11-18)
 
-First Supabase migration and the matching Dexie version. No UI yet.
+First database migration and the matching Dexie version. The migration was written for the hosted backend evaluated at the time and removed in Step 2 (still in git at `cb62f5c`); it is reworked for `db/migrations`. No UI yet.
 
 **Built**
-- `supabase/migrations/20261118200000_tenancy.sql`:
+- `20261118200000_tenancy.sql` (removed in Step 2):
   - Tables `shops`, `memberships`, `staff`, `staff_salaries`, `devices`, `platform_admins`, `audit_log`, with RLS enabled in the same migration.
   - Global sequence `public.server_seq` plus a `set_server_seq()` BEFORE INSERT OR UPDATE trigger on the five synced tables. The trigger is security definer, so clients have no sequence privileges and any `server_seq` a client sends is overwritten.
   - Helpers `is_shop_member(shop_id)`, `has_shop_role(shop_id, roles[])` and `is_platform_admin()`. They are security definer with `search_path = ''`, executable by `authenticated` only, and only answer questions about the caller.
@@ -48,7 +48,7 @@ First Supabase migration and the matching Dexie version. No UI yet.
 - `packages/core`: `tenancy.ts` (row types `ShopRow`/`StaffRow`/`DeviceRow`, `SHOP_TYPES`, `ROLES`, defaults) and `permissions.ts` (`canManageShop`, `canManageStaff`, `canSeeSalaries`, `canManageDevices`, each mirroring an RLS policy).
 - `apps/pos/src/db/schema.ts`: Dexie **version 2** adds `shops (id, server_seq)`, `staff (id, shop_id, server_seq)` and `devices (id, shop_id, server_seq)`. `memberships`, `staff_salaries`, `platform_admins` and `audit_log` are not stored on the device.
 
-**Tests**: pgTAP 73 in 3 files (`supabase/tests/tenancy_rls`, `tenancy_create_shop`, `tenancy_server_seq`). Core 72 (+12 permissions). Pos 13 (Dexie v2 tables and indexes, no private tables, tenancy row round-trip, v1 → v2 upgrade keeps `meta`). `supabase db lint`: clean.
+**Tests**: pgTAP 73 in 3 files (`tenancy_rls`, `tenancy_create_shop`, `tenancy_server_seq`; removed in Step 2). Core 72 (+12 permissions). Pos 13 (Dexie v2 tables and indexes, no private tables, tenancy row round-trip, v1 → v2 upgrade keeps `meta`). DB lint: clean.
 
 **Decisions**
 - Salary moved to a separate owner-only table, `staff_salaries` (like `product_costs`), instead of column privileges. `sync_pull` can then skip it for shop and rider devices. Architecture §3/§5 and the expense feature doc are updated.
@@ -66,3 +66,19 @@ First Supabase migration and the matching Dexie version. No UI yet.
 - Membership management (invites) is still open (§8). Until then memberships come only from `create_shop`.
 - `staff_salaries` is not in Dexie yet. Add it for owner devices with US071.
 - Not pushed to the cloud project.
+
+## Step 2 — switch to own backend (2026-11-19)
+
+The hosted backend was dropped (deployment §6). Docs now describe our own API: Node + Hono, PostgreSQL with RLS, Better Auth, S3-compatible storage.
+
+**Changed**
+- `CLAUDE.md`, `docs/architecture.md`, `docs/deployment.md` updated for the own backend.
+- Removed the old backend folder (config, tenancy migration, pgTAP tests) and its CLI dev dependency.
+- `.env.example`: only `VITE_API_URL=http://localhost:8787`. Local `apps/*/.env.local` files deleted.
+- Comments in `schema.ts` and `permissions.ts` point to `db/migrations`; bill photos go to object storage (expense feature doc).
+- Dev PC: local containers stopped, Docker images deleted, CLI logged out and its config folder removed.
+
+**Follow-ups**
+- Rework the tenancy migration (git `cb62f5c`) into `db/migrations` for dbmate, with RLS tests in Vitest (`db/tests`) using `current_user_id()` instead of `auth.uid()`.
+- Create `apps/api` (Hono) and the typed API clients.
+- Delete the evaluation cloud project once nothing uses it (deployment §6).

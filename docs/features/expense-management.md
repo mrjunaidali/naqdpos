@@ -72,7 +72,7 @@ As an owner, I see where money goes.
 
 ### US069 (EXP-6) Bill photo (Release 2)
 As an owner, I attach a photo of the bill or receipt.
-- Photo is taken or picked on the device, compressed (max ~300 KB) and stored locally, then uploaded to Supabase Storage (`bill-photos/<shop_id>/…`) when online. An `expense_attachments` row is written after upload (the expense row itself is never updated).
+- Photo is taken or picked on the device, compressed (max ~300 KB) and stored locally, then uploaded to object storage (S3 API, key `bill-photos/<shop_id>/…`) when online. An `expense_attachments` row is written after upload (the expense row itself is never updated).
 - Expense save never waits for the upload.
 
 ### US070 (EXP-7) Recurring expenses (Release 2)

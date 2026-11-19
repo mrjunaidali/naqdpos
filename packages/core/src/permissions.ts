@@ -1,5 +1,5 @@
 // Client-side role checks (CLAUDE.md rule 7). Each one mirrors an RLS policy in
-// supabase/migrations; the server enforces them too, these only drive the UI.
+// db/migrations; the server enforces them too, these only drive the UI.
 import type { Role } from './tenancy.ts';
 
 /** Edit shop settings (RLS: shops_update_owner). */

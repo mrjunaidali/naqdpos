@@ -4,22 +4,25 @@ Source of truth for the data model, sync and access rules. AI sessions must foll
 
 ## 1. System overview
 
+Own backend on open standards. Every part is configured by environment variables and can move to another host by changing them (see `docs/deployment.md`).
+
 ```
- Shop device (PWA)                         Supabase
- ┌──────────────────────────┐             ┌───────────────────────────────┐
- │ React UI                 │             │ Postgres (+ RLS)              │
- │   ↕ useLiveQuery         │  push/pull  │   tables, views               │
- │ Dexie (IndexedDB)        │ ──────────► │   rpc: sync_push, sync_pull   │
- │   data tables + outbox   │ ◄────────── │   rpc: reports, closing       │
- │ Sync engine (bg, retry)  │             │ Auth (Google, email OTP)      │
- │ Service worker (Workbox) │             │ Edge Functions: whatsapp,     │
- └──────────────────────────┘             │   scheduled jobs, sms         │
- Admin portal (online) ─────────────────► │ Storage: bill photos, logos   │
-                                          └───────────────────────────────┘
+ Shop device (PWA)                    API service (apps/api)             PostgreSQL
+ ┌──────────────────────────┐        ┌───────────────────────────┐     ┌──────────────────────┐
+ │ React UI                 │        │ Node 24 + Hono            │     │ tables, RLS          │
+ │   ↕ useLiveQuery         │  HTTPS │ Better Auth (login, 2FA)  │ SQL │ SQL functions:       │
+ │ Dexie (IndexedDB)        │ ─────► │ /sync/push, /sync/pull    │ ──► │  sync_push/sync_pull │
+ │   data tables + outbox   │ ◄───── │ /reports/*, /admin/*      │     │  reports, closing    │
+ │ Sync engine (bg, retry)  │        │ sets app.user_id per tx   │     │ pg-boss job tables   │
+ │ Service worker (Workbox) │        └───────────────────────────┘     └──────────────────────┘
+ └──────────────────────────┘        Worker (same codebase): jobs,     S3-compatible storage
+ Admin portal (online) ──HTTPS──►    WhatsApp, alerts, backups         (Cloudflare R2): photos, logos
 ```
 
-- The UI only reads from Dexie. The sync engine moves data between Dexie and Postgres.
-- The admin portal talks to Supabase directly (online only).
+- The UI only reads from Dexie. The sync engine moves data between Dexie and the API.
+- Apps know one setting, `VITE_API_URL`. The API knows `DATABASE_URL`, `S3_*`, `SMTP_*` and auth secrets. Nothing else is hard-wired.
+- The API is stateless (sessions live in Postgres), so it can run as many copies as needed behind a load balancer.
+- The admin portal uses the same API (`/admin/*` routes), online only.
 
 ## 2. Conventions for every synced table
 
@@ -39,10 +42,11 @@ Money: `*_paisa bigint`. Quantity: `*_milli bigint` (thousandths of the product'
 
 ### Tenancy and people
 - `shops` — id, name, type (`fruit_veg` | `grocery` | `meat` | `general`), address, phone, receipt_footer, logo_path, status (`active` | `suspended`), plan_id, timezone (default `Asia/Karachi`), cashier_expense_limit_paisa (default 200000 = Rs 2,000).
-- `memberships` — user_id (auth.users), shop_id, role (`owner` | `cashier` | `rider`); primary key `(shop_id, user_id)` — created only on the server, so no device-made id. Online logins (owners; riders who sign in on their own phone). See §5.
+- `users`, `sessions`, `accounts`, `verifications`, `two_factors` — login tables owned by Better Auth (created by its migration, kept in our `db/migrations`). `users`: id, email, name, email_verified, image. Not synced to devices.
+- `memberships` — user_id (`users`), shop_id, role (`owner` | `cashier` | `rider`). Online logins (owners; riders who sign in on their own phone). See §5.
 - `staff` — id, shop_id, name, phone, role (`owner` | `cashier` | `rider`), pin_hash, membership_user_id null, active. Every sale/expense records `staff_id`.
-- `staff_salaries` — staff_id (pk; FK `(staff_id, shop_id)` → staff), shop_id, monthly_salary_paisa (not null; no salary = no row), plus the §2 mutable-table columns. **Owner-only; a separate table so salaries never sync to shop or rider devices** (same pattern as `product_costs`). Used by US071.
-- `devices` — id, shop_id, name, code (receipt-number prefix, e.g. `A1`, unique per shop — §4), registered_by, last_sync_at, last_seq_pulled.
+- `staff_salaries` — staff_id (pk), shop_id, monthly_salary_paisa null, updated_at. **Owner-only; a separate table so salaries never sync to shop or rider devices** (same pattern as `product_costs`). Used by US071.
+- `devices` — id, shop_id, name, registered_by, last_sync_at, last_seq_pulled.
 - `platform_admins` — user_id.
 - `audit_log` — id, shop_id, actor_user_id, acting_as_admin bool, action, entity, entity_id, payload jsonb, at.
 
@@ -80,13 +84,13 @@ Product and category names are stored in both languages in the same row: `name` 
 - Khata balance = `sum(khata_entries.amount_paisa)` per customer.
 - Expected cash for a day = opening cash + cash sale payments + cash khata receipts + rider handovers − cash expenses (net of reversals) − cash refunds − cash supplier payments − owner withdrawal. Only expenses paid in cash count; wallet, bank and non-cash expenses (e.g. wastage at cost) do not.
 - Expense totals = `expenseTotals()` in core: by category and method, reversals netted out.
-Compute these with pure functions in `packages/core` (client) and matching SQL views/RPCs (server). Both must agree — keep a shared test fixture.
+Compute these with pure functions in `packages/core` (client) and matching SQL views/functions (server). Both must agree — keep a shared test fixture.
 
 ## 4. Sync design
 
 ### Push (device → server)
 1. Every local write = one Dexie transaction that writes the row **and** an `outbox` entry `{id, table, op: 'insert' | 'upsert', row, created_at, attempts}`.
-2. The sync engine sends outbox entries in batches (max 200) to `rpc('sync_push', {device_id, entries})`.
+2. The sync engine sends outbox entries in batches (max 200) to `POST /sync/push` `{device_id, entries}`. The API validates them with the shared Zod schemas and calls the SQL function `sync_push(device_id, entries)` in one transaction with the user set (§9).
 3. `sync_push` runs in one transaction per batch:
    - append-only tables: `INSERT … ON CONFLICT (id) DO NOTHING` (idempotent — retries never duplicate);
    - mutable tables: upsert only if incoming `updated_at` > stored `updated_at` (last write wins); otherwise record a row in `sync_conflicts` and keep the server version;
@@ -95,7 +99,7 @@ Compute these with pure functions in `packages/core` (client) and matching SQL v
 5. Triggers: app start, `online` event, after each sale (debounced 5s), every 60s while online, manual "Sync now". Backoff on failure: 5s, 15s, 60s, 5min.
 
 ### Pull (server → device)
-1. `rpc('sync_pull', {device_id, since_seq, limit})` returns rows from all tables the device may see where `server_seq > since_seq`, ordered by `server_seq`.
+1. `GET /sync/pull?device_id&since_seq&limit` (SQL function `sync_pull`) returns rows from all tables the device may see where `server_seq > since_seq`, ordered by `server_seq`.
 2. The device applies them to Dexie and stores the new cursor. Repeat until empty.
 3. Pull runs after every successful push.
 
@@ -110,7 +114,7 @@ Each registered device gets a short code (`A1`, `A2`, …). Receipt number = dev
 ## 5. Auth and access
 
 ### Sign-in methods (decided Nov 2026)
-Phone OTP is **deferred**. International SMS APIs cost roughly Rs 72–133 per OTP to Pakistan, and WhatsApp authentication templates need a registered, Meta-verified business (not done yet). Sign-in instead uses Supabase Auth providers that are free and need no business registration.
+Login runs inside our API with **Better Auth** (open-source library). Users and sessions are rows in our own Postgres, so there are no per-user fees and nothing to migrate if we change hosts. Phone OTP is **deferred**: international SMS APIs cost roughly Rs 72–133 per OTP to Pakistan, and WhatsApp authentication templates need a registered, Meta-verified business (not done yet).
 
 | Who | Sign-in | Notes |
 | --- | --- | --- |
@@ -118,21 +122,21 @@ Phone OTP is **deferred**. International SMS APIs cost roughly Rs 72–133 per O
 | Rider with own phone | Sign in with Google or email OTP | Owner invites the rider by email. **Open:** invite flow (may need an `invites` table — ask before adding). |
 | Rider without Google/email | Owner signs in once on the rider's phone and registers it as a rider device; rider then uses their staff PIN | **Open — confirm with pilot shops.** |
 | Cashier / counter staff | Staff PIN on a registered shop device | No online account. |
-| System admin | Google sign-in **plus TOTP (authenticator app) as a required second factor** | Admin portal requires AAL2. |
+| System admin | Google sign-in **plus TOTP (authenticator app) as a required second factor** (Better Auth two-factor plugin) | `/admin/*` routes require a session that passed 2FA. |
 
-- **Email OTP uses a typed 6-digit code, not a magic link.** A magic link opens in the browser, not the installed PWA, so the session would land in the wrong place.
+- **Email OTP uses a typed 6-digit code, not a magic link.** A magic link opens in the browser, not the installed PWA, so the session would land in the wrong place. Codes are sent through any SMTP provider (`SMTP_*` settings).
 - **Google sign-in in an installed PWA must be tested on iOS.** OAuth redirects from a Home Screen app can open in Safari and lose the session. If it fails, iOS owners use email OTP.
-- Email OTP needs a custom SMTP provider in Supabase (the built-in mailer is rate-limited and meant for testing). Choose one with a free tier (deployment §3).
-- A person who uses both Google and email OTP with the same verified email must resolve to one auth user (Supabase identity linking) — confirm in setup.
-- Sessions stay signed in on the device (refresh token). Sign-in is needed only on a new device or after logout, so it is rare. An existing session keeps working offline; selling never waits for auth (rule 1).
-- **Later** (after business registration and Meta verification): add phone OTP through a WhatsApp authentication template, with SMS as fallback. This adds a login identity in Supabase Auth; no table change expected.
+- Google and email OTP with the same verified email resolve to one user (Better Auth account linking).
+- **Sessions:** the API issues a long-lived session token (bearer token in an `Authorization` header, stored on the device), refreshed while online. Sign-in is needed only on a new device or after logout. An existing session keeps working offline; selling never waits for auth (rule 1).
+- **Later** (after business registration and Meta verification): phone OTP through a WhatsApp authentication template, with SMS as fallback (Better Auth phone-number plugin). No ledger table changes expected.
 
 ### Access rules
 - Staff PIN: 4 digits, hashed (PBKDF2 via WebCrypto) and synced to the shop's devices so it works offline. Lock after 5 wrong tries for 1 minute.
-- JWT → `memberships` gives the user's shop and role. RLS on every table:
-  `shop_id in (select shop_id from memberships where user_id = auth.uid())`, plus role-specific policies (riders: deliveries where `rider_staff_id` is theirs; `product_costs` and `staff_salaries`: owners only; shop devices pull only expenses for open business dates; riders get no expenses).
+- **Two layers, both required:** the API checks the session and role on every route, **and** Postgres RLS enforces the same rules. Each request runs in a transaction that first does `set_config('app.user_id', <user id>, true)` (and `app.device_id`). SQL helper `current_user_id()` reads it; helpers `is_shop_member(shop_id)`, `has_shop_role(shop_id, roles)` and `is_platform_admin()` build on it.
+- RLS on every table: `shop_id in (select shop_id from memberships where user_id = current_user_id())`, plus role-specific policies (riders: deliveries where `rider_staff_id` is theirs; `product_costs` and `staff_salaries`: owners only; shop devices pull only expenses for open business dates; riders get no expenses).
+- **Database roles:** migrations run as the owner role. The API connects as `naqdpos_app`, which owns nothing and has no `BYPASSRLS`, so RLS always applies to it. Only the worker's admin jobs (backups, maintenance) use a separate privileged role.
 - Expenses: cashiers may add up to `cashier_expense_limit_paisa`; above it the owner's PIN is required (`approved_by_staff_id`). Only owners reverse expenses, manage categories and recurring expenses, and see expense reports.
-- System admins: `platform_admins` grants access to all shops through admin RPCs; every admin write goes to `audit_log` with `acting_as_admin = true`.
+- System admins: `platform_admins` grants access to all shops through `/admin/*` routes; every admin write goes to `audit_log` with `acting_as_admin = true`.
 
 ## 6. PWA and device storage
 
@@ -192,17 +196,27 @@ Thresholds are constants in `syncHealth.ts`; a per-shop override can come later 
 | App update reload | Allowed (data is in IndexedDB, not memory), but only when the cart is empty. |
 
 ### Server-side stale-device alert (Release 2)
-A scheduled Edge Function checks `devices.last_sync_at`. If a device has not synced for 24 h, it notifies the owner by WhatsApp/SMS (once per day per device). Depends on the WhatsApp/SMS provider decision (§8).
+A scheduled worker job (pg-boss) checks `devices.last_sync_at`. If a device has not synced for 24 h, it notifies the owner by WhatsApp/SMS (once per day per device). Depends on the WhatsApp/SMS provider decision (§8).
 
 ### i18n
 All sync messages go through `t()` with keys under `sync.*` in both `en.json` and `ur.json`. Counts use i18next plurals.
 
 ## 8. Key decisions still open
+- SMTP provider for email OTP codes (§5).
 - Phone OTP provider (WhatsApp authentication template, SMS fallback) — deferred until business registration and Meta verification (§5).
-- SMTP provider for email OTP (§5, deployment §3).
 - Rider invite flow, and sign-in for riders without Google or email (§5).
 - Cost price method on purchase: latest cost vs weighted average (US051).
 - WhatsApp Business API provider (US058).
 - Pricing and plans (pricing doc not yet decided).
 - Whether devices report `storage_persisted` and outbox size to the server (would add columns to `devices`) so the owner/admin can see at-risk devices.
 - Whether `sale_lines` also stores an Urdu name snapshot (`name_ur_snapshot`) so receipts can print in Urdu after a product is renamed.
+
+## 9. API service (`apps/api`)
+
+- **Stack:** Node 24 LTS, TypeScript, Hono, `@hono/zod-openapi` (request/response schemas from `packages/core`, OpenAPI docs generated), Kysely on the `pg` driver, Better Auth, pino logs, pg-boss for jobs, `@aws-sdk/client-s3` for files.
+- **Thin layer over SQL:** routes validate input, open a transaction, set `app.user_id` / `app.device_id`, call SQL functions or Kysely queries, and return JSON. Business rules shared with the device live in `packages/core`; data rules (RLS, closed-day checks, idempotent inserts) live in SQL.
+- **Routes (initial):** `/auth/*` (Better Auth), `POST /shops` (create shop + owner membership + owner staff), `POST /devices` (register), `POST /sync/push`, `GET /sync/pull`, `/reports/*` (owner), `/files/*` (pre-signed upload/download URLs), `/admin/*` (platform admin, 2FA), `GET /health`.
+- **Files:** the API never streams large files. It returns pre-signed S3 URLs; the device uploads directly to storage. Rows store only the key (e.g. `bill-photos/<shop_id>/<expense_id>.jpg`).
+- **Worker:** same package, separate entry point (`pnpm --filter api worker`). Runs pg-boss jobs: WhatsApp/SMS sends, stale-device alerts, nightly backup to storage.
+- **Config:** only environment variables (`DATABASE_URL`, `S3_ENDPOINT`, `S3_BUCKET`, `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY`, `SMTP_*`, `BETTER_AUTH_SECRET`, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `APP_ORIGINS`). `.env.example` lists them all.
+- **Scaling:** stateless; add API copies as load grows. Use a connection pooler (PgBouncer, transaction mode) when copies × pool size gets close to Postgres's connection limit; `set_config(..., true)` is transaction-scoped so it is safe with transaction pooling.

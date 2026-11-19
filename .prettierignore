@@ -3,6 +3,5 @@ node_modules
 dist
 dev-dist
 coverage
-supabase/.temp
 # Hand-written docs are not auto-formatted.
 *.md

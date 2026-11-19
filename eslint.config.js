@@ -12,7 +12,6 @@ export default defineConfig([
     '**/dist/**',
     '**/dev-dist/**',
     '**/coverage/**',
-    'supabase/**',
   ]),
 
   js.configs.recommended,
