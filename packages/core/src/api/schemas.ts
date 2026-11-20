@@ -3,12 +3,14 @@
 import { z } from 'zod';
 import { PK_MOBILE_PATTERN } from '../phone.ts';
 import {
+  DEVICE_MODES,
   ROLES,
   SHOP_STATUSES,
   SHOP_TYPES,
   type DeviceRow,
   type ShopRow,
   type StaffRow,
+  type StaffSalaryRow,
 } from '../tenancy.ts';
 
 const name = z.string().trim().min(1).max(100);
@@ -77,11 +79,24 @@ export const DeviceRowSchema = z.object({
   registered_by: z.uuid().nullable(),
   last_sync_at: iso.nullable(),
   last_seq_pulled: z.number().int(),
+  // Default: responses from before devices.mode existed parse as the safe 'shop'.
+  mode: z.enum(DEVICE_MODES).default('shop'),
   created_at: iso,
   updated_at: iso,
   deleted_at: iso.nullable(),
   server_seq: z.number().int().nullable(),
-}) satisfies z.ZodType<DeviceRow>;
+}) satisfies z.ZodType<DeviceRow, unknown>;
+
+export const StaffSalaryRowSchema = z.object({
+  staff_id: z.uuid(),
+  shop_id: z.uuid(),
+  monthly_salary_paisa: z.number().int().nonnegative(),
+  device_id: z.uuid().nullable(),
+  created_at: iso,
+  updated_at: iso,
+  deleted_at: iso.nullable(),
+  server_seq: z.number().int().nullable(),
+}) satisfies z.ZodType<StaffSalaryRow>;
 
 // --- Shops and devices ---
 
@@ -108,8 +123,10 @@ export const RegisterDeviceRequest = z.object({
   id: z.uuid(),
   shop_id: z.uuid(),
   name: z.string().trim().min(1).max(50),
+  /** Who uses the device. Older apps send nothing and get 'shop' (§4 compatibility). */
+  mode: z.enum(DEVICE_MODES).default('shop'),
 });
-export type RegisterDeviceRequest = z.infer<typeof RegisterDeviceRequest>;
+export type RegisterDeviceRequest = z.input<typeof RegisterDeviceRequest>;
 
 /** GET /me: who is signed in and which shops they belong to. */
 export const MeResponse = z.object({
@@ -161,11 +178,14 @@ export const API_ERROR_CODES = [
   'forbidden',
   'conflict',
   'not_found',
+  'upgrade_required',
   'internal',
 ] as const;
 export const ErrorResponse = z.object({
   error: z.enum(API_ERROR_CODES),
   message: z.string().optional(),
+  /** With 426 upgrade_required: the oldest app version the API accepts (§4). */
+  min_version: z.string().optional(),
 });
 export type ErrorResponse = z.infer<typeof ErrorResponse>;
 

@@ -11,6 +11,7 @@ import { deviceRoutes } from './routes/devices.ts';
 import { healthRoutes } from './routes/health.ts';
 import { meRoutes } from './routes/me.ts';
 import { shopRoutes } from './routes/shops.ts';
+import { syncRoutes } from './routes/sync.ts';
 
 export interface AppDeps {
   db: Db;
@@ -20,6 +21,8 @@ export interface AppDeps {
   origins: string[];
   /** True when the database answers; injected so /health is testable without Postgres. */
   checkDb: () => Promise<boolean>;
+  /** MIN_APP_VERSION: older apps get 426 on /sync/*. Unset = accept every version. */
+  minAppVersion?: string | undefined;
 }
 
 export interface AppEnv {
@@ -45,7 +48,7 @@ export function createApp(deps: AppDeps) {
     '*',
     cors({
       origin: deps.origins,
-      allowHeaders: ['Authorization', 'Content-Type', 'X-Device-Id'],
+      allowHeaders: ['Authorization', 'Content-Type', 'X-Device-Id', 'X-App-Version'],
       // The bearer plugin returns the session token in this header after sign-in.
       exposeHeaders: ['set-auth-token'],
       credentials: true,
@@ -79,6 +82,7 @@ export function createApp(deps: AppDeps) {
   app.route('/', meRoutes(deps));
   app.route('/', shopRoutes(deps));
   app.route('/', deviceRoutes(deps));
+  app.route('/', syncRoutes(deps));
   app.doc31('/openapi.json', {
     openapi: '3.1.0',
     info: { title: 'NaqdPOS API', version: '0.0.0' },

@@ -1,0 +1,69 @@
+// Local writes (CLAUDE.md rule 1, architecture §4): every write is ONE Dexie transaction that
+// stores the row and its outbox entry, so a row is never saved without being queued for sync,
+// and never queued without being saved. The sync engine pushes the outbox in the background.
+import { SYNC_TABLES, uuidv7, type OutboxOp, type SyncTableName } from '@naqdpos/core';
+import type { Table } from 'dexie';
+import { db as defaultDb, type NaqdDb, type OutboxEntry } from './schema.ts';
+
+export interface LocalWrite {
+  table: SyncTableName;
+  op: OutboxOp;
+  row: Record<string, unknown>;
+}
+
+type Listener = () => void;
+const listeners = new Set<Listener>();
+
+/** Called after every committed local write; the sync engine debounces a push on it. */
+export function onLocalWrite(listener: Listener): () => void {
+  listeners.add(listener);
+  return () => listeners.delete(listener);
+}
+
+export function rowKey(table: SyncTableName, row: Record<string, unknown>): string {
+  const key = row[SYNC_TABLES[table].key];
+  if (typeof key !== 'string' || key === '') {
+    throw new Error(`${table}: row has no ${SYNC_TABLES[table].key}`);
+  }
+  return `${table}:${key}`;
+}
+
+export function dataTable(database: NaqdDb, table: SyncTableName): Table<unknown, string> {
+  return database.table(table);
+}
+
+/** Writes rows and their outbox entries in one transaction (all or nothing). Returns entry ids. */
+export async function localWriteMany(
+  writes: LocalWrite[],
+  database: NaqdDb = defaultDb,
+): Promise<string[]> {
+  const tables = [...new Set(writes.map((w) => w.table))].map((t) => dataTable(database, t));
+  const ids = await database.transaction('rw', [...tables, database.outbox], async () => {
+    const created: string[] = [];
+    for (const write of writes) {
+      if (!SYNC_TABLES[write.table].pushable) throw new Error(`${write.table} is pull-only`);
+      // A new row has no server_seq until it comes back from the server.
+      const row = { ...write.row, server_seq: write.row.server_seq ?? null };
+      const entry: OutboxEntry = {
+        id: uuidv7(),
+        table: write.table,
+        op: write.op,
+        row,
+        row_key: rowKey(write.table, row),
+        created_at: new Date().toISOString(),
+        attempts: 0,
+      };
+      await dataTable(database, write.table).put(row);
+      await database.outbox.add(entry);
+      created.push(entry.id);
+    }
+    return created;
+  });
+  for (const listener of listeners) listener();
+  return ids;
+}
+
+export async function localWrite(write: LocalWrite, database: NaqdDb = defaultDb): Promise<string> {
+  const [id] = await localWriteMany([write], database);
+  return id!;
+}

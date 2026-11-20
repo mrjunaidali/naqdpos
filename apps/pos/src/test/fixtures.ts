@@ -59,6 +59,7 @@ export function deviceRow(overrides: Partial<DeviceRow> = {}): DeviceRow {
     registered_by: USER_ID,
     last_sync_at: null,
     last_seq_pulled: 0,
+    mode: 'owner',
     created_at: NOW,
     updated_at: NOW,
     deleted_at: null,
@@ -92,6 +93,12 @@ export async function seedReady(): Promise<void> {
   await db.shops.put(shopRow());
   await db.staff.put(staffRow());
   await db.devices.put(deviceRow());
-  const device: StoredDevice = { id: DEVICE_ID, code: 'A1', shop_id: SHOP_ID, staff_id: STAFF_ID };
+  const device: StoredDevice = {
+    id: DEVICE_ID,
+    code: 'A1',
+    shop_id: SHOP_ID,
+    mode: 'owner',
+    staff_id: STAFF_ID,
+  };
   await db.meta.put({ key: META_KEYS.DEVICE, value: device });
 }

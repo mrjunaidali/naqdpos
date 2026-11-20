@@ -1,7 +1,7 @@
 // Kysely table types for the columns the API touches (migrations 20261119120000_foundation, 20261120090000_onboarding).
 // Hand-written; extend them as routes need more tables.
 import type { ColumnType, Generated } from 'kysely';
-import type { Role, ShopStatus, ShopType } from '@naqdpos/core';
+import type { DeviceMode, Role, ShopStatus, ShopType } from '@naqdpos/core';
 
 type Timestamp = ColumnType<Date, Date | string | undefined, Date | string>;
 /** Set by the server_seq trigger; whatever a client sends is overwritten. */
@@ -60,6 +60,7 @@ export interface DevicesTable {
   registered_by: string | null;
   last_sync_at: Date | null;
   last_seq_pulled: Generated<string>;
+  mode: Generated<DeviceMode>;
   created_at: Timestamp;
   updated_at: Timestamp;
   deleted_at: Date | null;

@@ -18,6 +18,8 @@ export const api = {
   me: vi.fn(),
   createShop: vi.fn(),
   registerDevice: vi.fn(),
+  syncPush: vi.fn(),
+  syncPull: vi.fn(),
 } satisfies Record<keyof ApiClient, Mock>;
 
 /** Clears calls and sets safe defaults: Google off, every other call unanswered. */

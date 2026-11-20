@@ -1,41 +1,37 @@
-import { useTranslation } from 'react-i18next';
+import { useEffect } from 'react';
 import { useRegisterSW } from 'virtual:pwa-register/react';
+import { NewVersionBanner } from './NewVersionBanner.tsx';
+import { setApplyUpdate, setRegistration, startUpdateChecks } from './swUpdate.ts';
+
+let stopChecks: (() => void) | null = null;
 
 /**
- * "New version available — Reload" banner (architecture §6). Never auto-reloads.
- * TODO(sale story): hide while the cart has items.
+ * Registers the service worker (registerType 'prompt': never auto-reloads, architecture §6) and
+ * starts the update checks. The banner itself is NewVersionBanner.
  */
 export function UpdatePrompt() {
-  const { t } = useTranslation();
   const {
     needRefresh: [needRefresh, setNeedRefresh],
     updateServiceWorker,
-  } = useRegisterSW();
+  } = useRegisterSW({
+    onRegisteredSW(_url, registration) {
+      if (!registration) return;
+      setRegistration(registration);
+      stopChecks?.();
+      stopChecks = startUpdateChecks();
+    },
+  });
 
-  if (!needRefresh) return null;
+  // The "update required" banner reloads through the waiting worker when there is one.
+  useEffect(() => {
+    setApplyUpdate(needRefresh ? () => updateServiceWorker(true) : null);
+  }, [needRefresh, updateServiceWorker]);
 
   return (
-    <div
-      role="status"
-      className="fixed inset-x-0 bottom-0 flex items-center justify-between gap-4 bg-gray-900 px-4 py-2 text-white"
-    >
-      <span>{t('pwa.updateAvailable')}</span>
-      <div className="flex gap-2">
-        <button
-          type="button"
-          className="min-h-11 rounded-md px-3"
-          onClick={() => setNeedRefresh(false)}
-        >
-          {t('pwa.later')}
-        </button>
-        <button
-          type="button"
-          className="min-h-11 rounded-md bg-green-600 px-3 font-semibold"
-          onClick={() => void updateServiceWorker()}
-        >
-          {t('pwa.reload')}
-        </button>
-      </div>
-    </div>
+    <NewVersionBanner
+      visible={needRefresh}
+      onLater={() => setNeedRefresh(false)}
+      onReload={() => void updateServiceWorker(true)}
+    />
   );
 }

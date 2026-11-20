@@ -42,7 +42,14 @@ function serverAccepts() {
     Promise.resolve({ id: input.shop_id }),
   );
   mocked.registerDevice.mockImplementation((input) =>
-    Promise.resolve(deviceRow({ id: input.id, shop_id: input.shop_id, name: input.name })),
+    Promise.resolve(
+      deviceRow({
+        id: input.id,
+        shop_id: input.shop_id,
+        name: input.name,
+        mode: input.mode ?? 'shop',
+      }),
+    ),
   );
   mocked.me.mockImplementation(() => {
     const call = mocked.createShop.mock.calls.at(-1)?.[0];
@@ -116,7 +123,8 @@ describe('onboarding form', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Create shop' }));
 
     expect(await screen.findByRole('heading', { name: 'Welcome' })).toBeInTheDocument();
-    expect(await screen.findByText('This device: A1')).toBeInTheDocument();
+    // Setup navigates home twice (Gate redirect + onDone), so check inside waitFor.
+    await waitFor(() => expect(screen.getByText('This device: A1')).toBeInTheDocument());
 
     const sent = mocked.createShop.mock.calls[0]![0];
     expect(sent).toMatchObject({
@@ -131,7 +139,8 @@ describe('onboarding form', () => {
     expect(sent.device_id).toBe(mocked.registerDevice.mock.calls[0]![0].id);
     expect(mocked.registerDevice.mock.calls[0]![0]).toMatchObject({
       shop_id: sent.shop_id,
-      name: 'Owner phone',
+      name: 'Shop counter',
+      mode: 'shop',
     });
 
     // Dexie now holds the shop, the owner's staff row and this device.
@@ -141,8 +150,35 @@ describe('onboarding form', () => {
       id: sent.device_id,
       code: 'A1',
       shop_id: sent.shop_id,
+      mode: 'shop',
       staff_id: sent.owner_staff_id,
     });
+  });
+
+  it('asks who uses the device, defaulting to the shop counter; owner mode renames it', async () => {
+    serverAccepts();
+    await openOnboarding();
+    expect(screen.getByRole('group', { name: 'Who uses this device?' })).toBeInTheDocument();
+    expect(screen.getByRole('radio', { name: /Shop counter/ })).toBeChecked();
+    expect(screen.getByLabelText('Name for this device')).toHaveValue('Shop counter');
+
+    fireEvent.click(screen.getByRole('radio', { name: /My own phone/ }));
+    expect(screen.getByLabelText('Name for this device')).toHaveValue('Owner phone');
+    fillValidForm();
+    fireEvent.click(screen.getByRole('button', { name: 'Create shop' }));
+    expect(await screen.findByRole('heading', { name: 'Welcome' })).toBeInTheDocument();
+    expect(mocked.registerDevice.mock.calls[0]![0]).toMatchObject({
+      mode: 'owner',
+      name: 'Owner phone',
+    });
+    expect(await getStoredDevice()).toMatchObject({ mode: 'owner' });
+  });
+
+  it('keeps a typed device name when the mode changes', async () => {
+    await openOnboarding();
+    typeInto('Name for this device', 'Till 1');
+    fireEvent.click(screen.getByRole('radio', { name: /My own phone/ }));
+    expect(screen.getByLabelText('Name for this device')).toHaveValue('Till 1');
   });
 
   it('shows the error and retries with the same ids after a dropped connection', async () => {
@@ -174,7 +210,9 @@ describe('setup for an owner who already has a shop', () => {
     const existing = me([{ role: 'owner', shop: shopRow(), staff: staffRow() }]);
     mocked.me.mockResolvedValue(existing);
     mocked.registerDevice.mockImplementation((input) =>
-      Promise.resolve(deviceRow({ id: input.id, code: 'A2', name: input.name })),
+      Promise.resolve(
+        deviceRow({ id: input.id, code: 'A2', name: input.name, mode: input.mode ?? 'shop' }),
+      ),
     );
     renderAt('/setup');
 
@@ -183,10 +221,30 @@ describe('setup for an owner who already has a shop', () => {
     typeInto('Name for this device', 'Counter PC');
     fireEvent.click(screen.getByRole('button', { name: 'Add device' }));
 
-    expect(await screen.findByText('This device: A2')).toBeInTheDocument();
+    // Setup navigates home twice (Gate redirect + onDone), so check inside waitFor.
+    await waitFor(() => expect(screen.getByText('This device: A2')).toBeInTheDocument());
     expect(mocked.createShop).not.toHaveBeenCalled();
     expect(mocked.registerDevice).toHaveBeenCalledWith(
-      expect.objectContaining({ shop_id: shopRow().id, name: 'Counter PC' }),
+      expect.objectContaining({ shop_id: shopRow().id, name: 'Counter PC', mode: 'shop' }),
+    );
+  });
+
+  it("registers the owner's own phone in owner mode when chosen", async () => {
+    mocked.me.mockResolvedValue(me([{ role: 'owner', shop: shopRow(), staff: staffRow() }]));
+    mocked.registerDevice.mockImplementation((input) =>
+      Promise.resolve(
+        deviceRow({ id: input.id, code: 'A2', name: input.name, mode: input.mode ?? 'shop' }),
+      ),
+    );
+    renderAt('/setup');
+    await screen.findByRole('heading', { name: 'Add this device' });
+    expect(screen.getByRole('radio', { name: /Shop counter/ })).toBeChecked();
+    fireEvent.click(screen.getByRole('radio', { name: /My own phone/ }));
+    fireEvent.click(screen.getByRole('button', { name: 'Add device' }));
+    // Setup navigates home twice (Gate redirect + onDone), so check inside waitFor.
+    await waitFor(() => expect(screen.getByText('This device: A2')).toBeInTheDocument());
+    expect(mocked.registerDevice).toHaveBeenCalledWith(
+      expect.objectContaining({ name: 'Owner phone', mode: 'owner' }),
     );
   });
 

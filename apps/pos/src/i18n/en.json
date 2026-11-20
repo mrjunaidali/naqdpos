@@ -66,7 +66,13 @@
     "defaultName": "Owner phone",
     "registerTitle": "Add this device",
     "registerIntro": "You are signed in to {{shop}}. Add this device to use it in the shop.",
-    "register": "Add device"
+    "register": "Add device",
+    "modeQuestion": "Who uses this device?",
+    "modeOwner": "My own phone (owner)",
+    "modeOwnerHint": "Gets everything, including salaries and cost prices.",
+    "modeShop": "Shop counter (staff use it)",
+    "modeShopHint": "Staff switch with their PIN. Owner-only data never comes to this device.",
+    "defaultNameShop": "Shop counter"
   },
   "setup": {
     "notOwner": "Only the shop owner can set up a new device. Ask the owner to sign in here.",
@@ -84,5 +90,60 @@
   "notFound": {
     "title": "Page not found",
     "goHome": "Go to home"
+  },
+  "sync": {
+    "synced": "Synced",
+    "pending_one": "{{count}} pending",
+    "pending_other": "{{count}} pending",
+    "paused": "Sync paused",
+    "needsReview": "Needs review",
+    "openSync": "Sync status: {{status}}. Open sync",
+    "title": "Sync",
+    "syncNow": "Sync now",
+    "syncing": "Syncing…",
+    "lastSync": "Last synced: {{time}}",
+    "neverSynced": "Not synced yet",
+    "waiting_one": "{{count}} change waiting to sync",
+    "waiting_other": "{{count}} changes waiting to sync",
+    "allSynced": "Everything is synced.",
+    "offline": "You are offline. Sales are saved on this device and sync when you are back online.",
+    "updateRequired": "Update required to sync",
+    "reload": "Reload",
+    "finishSaleToReload": "Finish the sale, then reload.",
+    "authRequired": "Sign in again to sync",
+    "deviceUnlinked": "This device is no longer linked to the shop",
+    "clockAhead": "Phone date/time is wrong — fix it and tap Sync now",
+    "rejectedTitle": "Needs review",
+    "rejectedIntro": "The server did not accept these changes. They are kept on this device.",
+    "table": {
+      "shops": "Shop settings",
+      "staff": "Staff",
+      "staff_salaries": "Salary",
+      "devices": "Device"
+    },
+    "error": {
+      "forbidden": "Not allowed for this user or device.",
+      "other_shop": "This belongs to another shop.",
+      "day_closed": "That day is already closed.",
+      "invalid": "The data was not valid.",
+      "unknown_table": "The server does not support this from this app version.",
+      "not_pushable": "The server does not support this from this app version.",
+      "generic": "The server did not accept this change."
+    },
+    "reason": {
+      "pending": "Changes are waiting to sync.",
+      "sales_reminder": "Many sales are not synced yet. Connect to the internet and tap Sync now.",
+      "age_2h": "Some changes have not synced for over 2 hours.",
+      "age_12h": "Some changes have not synced for over 12 hours.",
+      "age_24h": "Some changes have not synced for over a day. Connect to the internet now.",
+      "sales_100": "More than 100 sales are not synced.",
+      "storage_not_persisted": "This browser may delete unsynced data. Install the app to keep it safe.",
+      "storage_80": "Device storage is almost full.",
+      "storage_95": "Device storage is full. Sync now and free up space.",
+      "update_required": "Update required to sync",
+      "auth_required": "Sign in again to sync",
+      "device_unlinked": "This device is no longer linked to the shop",
+      "rejected_entries": "Some changes were not accepted. See below."
+    }
   }
 }

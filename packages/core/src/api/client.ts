@@ -18,6 +18,12 @@ import {
   SignInWithCodeRequest,
   SocialSignInResponse,
 } from './schemas.ts';
+import {
+  SyncPullQuery,
+  SyncPullResponse,
+  SyncPushRequest,
+  SyncPushResponse,
+} from '../sync/schemas.ts';
 
 /** The subset of `fetch` the client uses; apps pass the browser's fetch. */
 export type FetchLike = (
@@ -34,18 +40,23 @@ export interface ApiClientOptions {
   getToken?: () => MaybePromise<string | null>;
   /** This device's id once registered; sent as X-Device-Id (sets app.device_id on the server). */
   getDeviceId?: () => MaybePromise<string | null>;
+  /** This build's version; sent as X-App-Version on every request (architecture §4). */
+  appVersion?: string;
 }
 
 /** status 0 + code 'network' = the request never reached the server (offline, DNS, CORS). */
 export class ApiError extends Error {
   readonly status: number;
   readonly code: string;
+  /** 426 upgrade_required only: the oldest app version the API accepts. */
+  readonly minVersion: string | undefined;
 
-  constructor(status: number, code: string, message?: string) {
+  constructor(status: number, code: string, message?: string, minVersion?: string) {
     super(message ?? `API error ${status} (${code})`);
     this.name = 'ApiError';
     this.status = status;
     this.code = code;
+    this.minVersion = minVersion;
   }
 }
 
@@ -67,6 +78,7 @@ export function createApiClient(options: ApiClientOptions) {
     if (token) headers.authorization = `Bearer ${token}`;
     const deviceId = await options.getDeviceId?.();
     if (deviceId) headers['x-device-id'] = deviceId;
+    if (options.appVersion) headers['x-app-version'] = options.appVersion;
     if (body !== undefined) headers['content-type'] = 'application/json';
 
     let response: Awaited<ReturnType<FetchLike>>;
@@ -82,7 +94,13 @@ export function createApiClient(options: ApiClientOptions) {
     const json: unknown = await response.json().catch(() => undefined);
     if (!response.ok) {
       const ours = ErrorResponse.safeParse(json);
-      if (ours.success) throw new ApiError(response.status, ours.data.error, ours.data.message);
+      if (ours.success)
+        throw new ApiError(
+          response.status,
+          ours.data.error,
+          ours.data.message,
+          ours.data.min_version,
+        );
       const auth = AuthErrorResponse.safeParse(json);
       if (auth.success)
         throw new ApiError(response.status, auth.data.code ?? 'auth_error', auth.data.message);
@@ -131,5 +149,19 @@ export function createApiClient(options: ApiClientOptions) {
       request('POST', '/shops', CreateShopResponse, CreateShopRequest.parse(input)),
     registerDevice: async (input: RegisterDeviceRequest) =>
       request('POST', '/devices', DeviceRowSchema, RegisterDeviceRequest.parse(input)),
+
+    /** Sends up to 200 outbox entries (architecture §4). */
+    syncPush: async (input: SyncPushRequest) =>
+      request('POST', '/sync/push', SyncPushResponse, SyncPushRequest.parse(input)),
+    /** One page of rows newer than `since_seq`. */
+    syncPull: async (input: SyncPullQuery) => {
+      const query = SyncPullQuery.parse(input);
+      const params = new URLSearchParams({
+        device_id: query.device_id,
+        since_seq: String(query.since_seq),
+        limit: String(query.limit),
+      });
+      return request('GET', `/sync/pull?${params.toString()}`, SyncPullResponse);
+    },
   };
 }

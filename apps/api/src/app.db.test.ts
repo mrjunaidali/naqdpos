@@ -366,3 +366,99 @@ describe('app.device_id', () => {
     expect(await read({ userId })).toBe('');
   });
 });
+
+describe('/sync/push and /sync/pull', () => {
+  /** An owner with a shop and a registered device in the given mode. */
+  async function device(mode: 'owner' | 'shop') {
+    const o = await owner();
+    const id = randomUUID();
+    const res = await post(
+      '/devices',
+      { id, shop_id: o.shop.shop_id, name: 'Phone', mode },
+      o.token,
+    );
+    expect(res.status).toBe(201);
+    expect(await res.json()).toMatchObject({ mode });
+    const headers = { ...bearer(o.token), 'x-device-id': id, 'x-app-version': '0.0.0' };
+    return { ...o, deviceId: id, headers };
+  }
+
+  const pullPage = async (d: Awaited<ReturnType<typeof device>>, since: number) => {
+    const res = await app.request(`/sync/pull?device_id=${d.deviceId}&since_seq=${since}`, {
+      headers: d.headers,
+    });
+    expect(res.status).toBe(200);
+    return (await res.json()) as {
+      rows: { table: string; row: Record<string, unknown> }[];
+      next_seq: number;
+      has_more: boolean;
+    };
+  };
+
+  it('pushes a staff row, then pulls it back with a server_seq', async () => {
+    const d = await device('shop');
+    const now = new Date().toISOString();
+    const staffId = randomUUID();
+    const entry = {
+      id: randomUUID(),
+      table: 'staff',
+      op: 'upsert',
+      row: {
+        id: staffId,
+        shop_id: d.shop.shop_id,
+        name: 'Bilal',
+        phone: null,
+        role: 'cashier',
+        pin_hash: null,
+        membership_user_id: null,
+        active: true,
+        device_id: d.deviceId,
+        created_at: now,
+        updated_at: now,
+        deleted_at: null,
+        server_seq: null,
+      },
+    };
+    const body = { device_id: d.deviceId, entries: [entry] };
+    const push = () =>
+      app.request('/sync/push', { method: 'POST', headers: d.headers, body: JSON.stringify(body) });
+    const first = await push();
+    expect(first.status).toBe(200);
+    expect(await first.json()).toEqual({ accepted: [entry.id], conflicts: [], errors: [] });
+    expect(await (await push()).json()).toEqual({
+      accepted: [entry.id],
+      conflicts: [],
+      errors: [],
+    });
+
+    const page = await pullPage(d, 0);
+    expect(page.has_more).toBe(false);
+    const pulled = page.rows.find((r) => r.table === 'staff' && r.row.id === staffId);
+    expect(pulled?.row.name).toBe('Bilal');
+    expect(typeof pulled?.row.server_seq).toBe('number');
+    expect(new Set(page.rows.map((r) => r.table))).toEqual(new Set(['shops', 'staff', 'devices']));
+    expect((await pullPage(d, page.next_seq)).rows).toEqual([]);
+  });
+
+  it('turns a row that fails its schema into a per-entry invalid error', async () => {
+    const d = await device('owner');
+    const bad = { id: randomUUID(), table: 'staff', op: 'upsert', row: { id: 'nope' } };
+    const res = await app.request('/sync/push', {
+      method: 'POST',
+      headers: d.headers,
+      body: JSON.stringify({ device_id: d.deviceId, entries: [bad] }),
+    });
+    const result = (await res.json()) as { errors: { id: string; code: string }[] };
+    expect(result.errors).toEqual([expect.objectContaining({ id: bad.id, code: 'invalid' })]);
+  });
+
+  it('answers 403 for a device of another shop', async () => {
+    const mine = await device('owner');
+    const theirs = await device('owner');
+    const res = await app.request(`/sync/pull?device_id=${theirs.deviceId}&since_seq=0`, {
+      headers: { ...mine.headers, 'x-device-id': theirs.deviceId },
+    });
+    expect(res.status).toBe(403);
+    expect(await res.json()).toEqual({ error: 'forbidden' });
+  });
+});

@@ -12,7 +12,8 @@ import { api } from '../../api/index.ts';
 import { Alert, Button } from '../../ui/Button.tsx';
 import { errorMessageKey } from '../../ui/errors.ts';
 import { Field } from '../../ui/Field.tsx';
-import { registerThisDevice } from './setup.ts';
+import { DeviceModeField } from './DeviceModeField.tsx';
+import { defaultDeviceName, registerThisDevice, type SetupMode } from './setup.ts';
 
 type FieldName = 'shopName' | 'ownerName' | 'mobile' | 'pin' | 'pinConfirm' | 'deviceName';
 type Errors = Partial<Record<FieldName, string>>;
@@ -30,7 +31,8 @@ export function OnboardingForm({ onDone }: { onDone: () => void }) {
     mobile: '',
     pin: '',
     pinConfirm: '',
-    deviceName: t('device.defaultName'),
+    deviceMode: 'shop' as SetupMode,
+    deviceName: defaultDeviceName('shop', t),
   });
   const [errors, setErrors] = useState<Errors>({});
   const [error, setError] = useState<string>();
@@ -76,6 +78,7 @@ export function OnboardingForm({ onDone }: { onDone: () => void }) {
         deviceId: ids.current.device,
         shopId: ids.current.shop,
         name: values.deviceName.trim(),
+        mode: values.deviceMode,
       });
       onDone();
     } catch (e) {
@@ -161,6 +164,19 @@ export function OnboardingForm({ onDone }: { onDone: () => void }) {
         onChange={set('pinConfirm')}
         error={errors.pinConfirm}
         required
+      />
+      <DeviceModeField
+        value={values.deviceMode}
+        onChange={(mode) =>
+          setValues((v) => ({
+            ...v,
+            deviceMode: mode,
+            deviceName:
+              v.deviceName === defaultDeviceName(v.deviceMode, t)
+                ? defaultDeviceName(mode, t)
+                : v.deviceName,
+          }))
+        }
       />
       <Field
         label={t('device.name')}

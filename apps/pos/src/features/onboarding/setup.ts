@@ -1,12 +1,20 @@
 // Finishing setup on this device: register it with the server, then keep the server's copies
 // of the shop, the owner's staff row and the device in Dexie. These rows are created by the
 // server (POST /shops, POST /devices), so they are stored like pulled rows, not via the outbox.
-import type { MeResponse } from '@naqdpos/core';
+import type { DeviceMode, MeResponse } from '@naqdpos/core';
 import { api } from '../../api/index.ts';
 import { db } from '../../db/schema.ts';
 import { META_KEYS, type StoredDevice } from '../../db/session.ts';
 
 type ShopEntry = MeResponse['shops'][number];
+
+/** Modes offered during setup; rider devices come with the rider story. */
+export type SetupMode = Extract<DeviceMode, 'owner' | 'shop'>;
+
+/** The device name follows the chosen mode until the user types their own. */
+export function defaultDeviceName(mode: SetupMode, t: (key: string) => string): string {
+  return mode === 'owner' ? t('device.defaultName') : t('device.defaultNameShop');
+}
 
 /** The shop this device is set up for: the first one the user owns (a picker comes later). */
 export function ownerShop(me: MeResponse): ShopEntry | undefined {
@@ -17,12 +25,14 @@ export async function registerThisDevice(input: {
   deviceId: string;
   shopId: string;
   name: string;
+  mode: SetupMode;
 }): Promise<void> {
   // Idempotent on the server: a retry with the same id returns the same code.
   const device = await api.registerDevice({
     id: input.deviceId,
     shop_id: input.shopId,
     name: input.name,
+    mode: input.mode,
   });
   const entry = (await api.me()).shops.find((s) => s.shop.id === input.shopId);
   if (!entry) throw new Error('The new shop is not visible to this user');
@@ -31,6 +41,7 @@ export async function registerThisDevice(input: {
     id: device.id,
     code: device.code,
     shop_id: input.shopId,
+    mode: device.mode,
     staff_id: entry.staff?.id ?? null,
   };
   // One transaction; the `device` key goes in with the rows, so the app is never half set up.

@@ -18,6 +18,7 @@ const app = createApp({
   auth,
   logger,
   origins: env.APP_ORIGINS,
+  minAppVersion: env.MIN_APP_VERSION,
   checkDb: async () => {
     try {
       await sql`select 1`.execute(db);

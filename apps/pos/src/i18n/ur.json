@@ -66,7 +66,13 @@
     "defaultName": "مالک کا فون",
     "registerTitle": "یہ ڈیوائس شامل کریں",
     "registerIntro": "TODO-ur آپ {{shop}} میں سائن ان ہیں۔ دکان میں استعمال کے لیے یہ ڈیوائس شامل کریں۔",
-    "register": "ڈیوائس شامل کریں"
+    "register": "ڈیوائس شامل کریں",
+    "modeQuestion": "TODO-ur یہ ڈیوائس کون استعمال کرتا ہے؟",
+    "modeOwner": "TODO-ur میرا اپنا فون (مالک)",
+    "modeOwnerHint": "TODO-ur سب کچھ ملتا ہے، تنخواہیں اور قیمتِ خرید بھی۔",
+    "modeShop": "TODO-ur دکان کا کاؤنٹر (عملہ استعمال کرتا ہے)",
+    "modeShopHint": "TODO-ur عملہ اپنے PIN سے بدلتا ہے۔ صرف مالک والا ڈیٹا اس ڈیوائس پر نہیں آتا۔",
+    "defaultNameShop": "TODO-ur دکان کا کاؤنٹر"
   },
   "setup": {
     "notOwner": "TODO-ur نئی ڈیوائس صرف دکان کا مالک سیٹ اپ کر سکتا ہے۔ مالک سے یہاں سائن ان کروائیں۔",
@@ -84,5 +90,60 @@
   "notFound": {
     "title": "صفحہ نہیں ملا",
     "goHome": "ہوم پر جائیں"
+  },
+  "sync": {
+    "synced": "TODO-ur سنک ہو گیا",
+    "pending_one": "TODO-ur {{count}} باقی",
+    "pending_other": "TODO-ur {{count}} باقی",
+    "paused": "TODO-ur سنک رکا ہوا ہے",
+    "needsReview": "TODO-ur جائزہ ضروری",
+    "openSync": "TODO-ur سنک کی حالت: {{status}}۔ سنک کھولیں",
+    "title": "TODO-ur سنک",
+    "syncNow": "TODO-ur ابھی سنک کریں",
+    "syncing": "TODO-ur سنک ہو رہا ہے…",
+    "lastSync": "TODO-ur آخری سنک: {{time}}",
+    "neverSynced": "TODO-ur ابھی سنک نہیں ہوا",
+    "waiting_one": "TODO-ur {{count}} تبدیلی سنک کی منتظر",
+    "waiting_other": "TODO-ur {{count}} تبدیلیاں سنک کی منتظر",
+    "allSynced": "TODO-ur سب کچھ سنک ہو گیا۔",
+    "offline": "TODO-ur آپ آف لائن ہیں۔ سیل اس ڈیوائس پر محفوظ ہے اور انٹرنیٹ آنے پر سنک ہو گی۔",
+    "updateRequired": "TODO-ur سنک کے لیے اپڈیٹ ضروری ہے",
+    "reload": "TODO-ur دوبارہ لوڈ کریں",
+    "finishSaleToReload": "TODO-ur پہلے سیل مکمل کریں، پھر دوبارہ لوڈ کریں۔",
+    "authRequired": "TODO-ur سنک کے لیے دوبارہ سائن ان کریں",
+    "deviceUnlinked": "TODO-ur یہ ڈیوائس اب دکان سے منسلک نہیں",
+    "clockAhead": "TODO-ur فون کی تاریخ/وقت غلط ہے — درست کر کے ابھی سنک کریں دبائیں",
+    "rejectedTitle": "TODO-ur جائزہ ضروری",
+    "rejectedIntro": "TODO-ur سرور نے یہ تبدیلیاں قبول نہیں کیں۔ یہ اس ڈیوائس پر محفوظ ہیں۔",
+    "table": {
+      "shops": "TODO-ur دکان کی سیٹنگز",
+      "staff": "TODO-ur عملہ",
+      "staff_salaries": "TODO-ur تنخواہ",
+      "devices": "TODO-ur ڈیوائس"
+    },
+    "error": {
+      "forbidden": "TODO-ur اس صارف یا ڈیوائس کو اجازت نہیں۔",
+      "other_shop": "TODO-ur یہ کسی اور دکان کا ہے۔",
+      "day_closed": "TODO-ur وہ دن بند ہو چکا ہے۔",
+      "invalid": "TODO-ur ڈیٹا درست نہیں تھا۔",
+      "unknown_table": "TODO-ur سرور اس ایپ ورژن سے یہ قبول نہیں کرتا۔",
+      "not_pushable": "TODO-ur سرور اس ایپ ورژن سے یہ قبول نہیں کرتا۔",
+      "generic": "TODO-ur سرور نے یہ تبدیلی قبول نہیں کی۔"
+    },
+    "reason": {
+      "pending": "TODO-ur تبدیلیاں سنک کی منتظر ہیں۔",
+      "sales_reminder": "TODO-ur کئی سیلز سنک نہیں ہوئیں۔ انٹرنیٹ سے جڑیں اور ابھی سنک کریں دبائیں۔",
+      "age_2h": "TODO-ur کچھ تبدیلیاں 2 گھنٹے سے سنک نہیں ہوئیں۔",
+      "age_12h": "TODO-ur کچھ تبدیلیاں 12 گھنٹے سے سنک نہیں ہوئیں۔",
+      "age_24h": "TODO-ur کچھ تبدیلیاں ایک دن سے سنک نہیں ہوئیں۔ ابھی انٹرنیٹ سے جڑیں۔",
+      "sales_100": "TODO-ur 100 سے زیادہ سیلز سنک نہیں ہوئیں۔",
+      "storage_not_persisted": "TODO-ur براؤزر غیر سنک ڈیٹا مٹا سکتا ہے۔ محفوظ رکھنے کے لیے ایپ انسٹال کریں۔",
+      "storage_80": "TODO-ur ڈیوائس کی اسٹوریج تقریباً بھر گئی ہے۔",
+      "storage_95": "TODO-ur ڈیوائس کی اسٹوریج بھر گئی ہے۔ ابھی سنک کریں اور جگہ خالی کریں۔",
+      "update_required": "TODO-ur سنک کے لیے اپڈیٹ ضروری ہے",
+      "auth_required": "TODO-ur سنک کے لیے دوبارہ سائن ان کریں",
+      "device_unlinked": "TODO-ur یہ ڈیوائس اب دکان سے منسلک نہیں",
+      "rejected_entries": "TODO-ur کچھ تبدیلیاں قبول نہیں ہوئیں۔ نیچے دیکھیں۔"
+    }
   }
 }

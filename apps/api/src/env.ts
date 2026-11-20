@@ -1,5 +1,6 @@
 // Every setting comes from environment variables (CLAUDE.md, Portability 1; deployment §2).
 // Validated once at startup so a missing value fails fast instead of on the first request.
+import { isAppVersion } from '@naqdpos/core';
 import { z } from 'zod';
 
 // .env.example lists every variable with an empty value, so empty means "not set" (loadEnv).
@@ -36,6 +37,12 @@ const EnvSchema = z.object({
   S3_BUCKET: optional,
   S3_ACCESS_KEY_ID: optional,
   S3_SECRET_ACCESS_KEY: optional,
+
+  // Raised only for a breaking sync change: older apps then get 426 on /sync/* (architecture §4).
+  MIN_APP_VERSION: z
+    .string()
+    .refine(isAppVersion, 'must be major.minor.patch, e.g. 1.4.0')
+    .optional(),
 });
 
 export type Env = z.infer<typeof EnvSchema>;

@@ -37,4 +37,11 @@ describe('loadEnv', () => {
       expect(String(error)).not.toContain('secret-port');
     }
   });
+
+  it('accepts an optional MIN_APP_VERSION in major.minor.patch form', () => {
+    expect(loadEnv(valid).MIN_APP_VERSION).toBeUndefined();
+    expect(loadEnv({ ...valid, MIN_APP_VERSION: '' }).MIN_APP_VERSION).toBeUndefined();
+    expect(loadEnv({ ...valid, MIN_APP_VERSION: '1.4.0' }).MIN_APP_VERSION).toBe('1.4.0');
+    expect(() => loadEnv({ ...valid, MIN_APP_VERSION: '1.4' })).toThrow(/MIN_APP_VERSION/);
+  });
 });

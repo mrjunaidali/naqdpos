@@ -46,7 +46,9 @@ Money: `*_paisa bigint`. Quantity: `*_milli bigint` (thousandths of the product'
 - `memberships` — user_id (`users`), shop_id, role (`owner` | `cashier` | `rider`). Online logins (owners; riders who sign in on their own phone). See §5.
 - `staff` — id, shop_id, name, phone, role (`owner` | `cashier` | `rider`), pin_hash, membership_user_id null, active. Every sale/expense records `staff_id`.
 - `staff_salaries` — staff_id (pk), shop_id, monthly_salary_paisa null, updated_at. **Owner-only; a separate table so salaries never sync to shop or rider devices** (same pattern as `product_costs`). Used by US071.
-- `devices` — id, shop_id, name, registered_by, last_sync_at, last_seq_pulled.
+- `devices` — id, shop_id, name, code, registered_by, last_sync_at, last_seq_pulled, mode (`owner` | `shop` | `rider`, default `shop`; decided 20 Nov 2026). The owner picks the mode when registering ("Who uses this device?"); only owners register a device or change its mode. Sync bookkeeping (`last_sync_at`, `last_seq_pulled`) does not bump `server_seq`.
+- `sync_tables` — registry of synced tables: table_name, kind (`append` | `mutable`), id_column, shop_column, pushable, push_columns (the only columns a device may set), pull_scope (`all` | `owner_device`). `sync_push`/`sync_pull` touch only registered tables; a new synced table = one row here plus its entry in `packages/core/src/sync/tables.ts`. Not synced.
+- `sync_conflicts` — id (server-generated), shop_id, device_id, table_name, row_id, incoming jsonb, incoming_updated_at, server_updated_at, at. Pushed edits that lost to a newer server version (§4). Owners can read; not synced.
 - `platform_admins` — user_id.
 - `audit_log` — id, shop_id, actor_user_id, acting_as_admin bool, action, entity, entity_id, payload jsonb, at.
 
@@ -89,22 +91,24 @@ Compute these with pure functions in `packages/core` (client) and matching SQL v
 ## 4. Sync design
 
 ### Push (device → server)
-1. Every local write = one Dexie transaction that writes the row **and** an `outbox` entry `{id, table, op: 'insert' | 'upsert', row, created_at, attempts}`.
-2. The sync engine sends outbox entries in batches (max 200) to `POST /sync/push` `{device_id, entries}`. The API validates them with the shared Zod schemas and calls the SQL function `sync_push(device_id, entries)` in one transaction with the user set (§9).
-3. `sync_push` runs in one transaction per batch:
+1. Every local write = one Dexie transaction that writes the row **and** an `outbox` entry `{id, table, op: 'insert' | 'upsert', row, row_key, created_at, attempts}` (`apps/pos/src/db/outbox.ts`).
+2. The sync engine sends outbox entries in batches (max 200) to `POST /sync/push` `{device_id, entries}`. `device_id` must equal `X-Device-Id` (it becomes `app.device_id`). The API validates each row with its table's shared Zod schema (a bad row is a per-entry `invalid` error, not a failed batch) and calls the SQL function `sync_push(device_id, entries)` in one transaction with the user set (§9).
+3. `sync_push` runs in one transaction per batch, each entry in its own sub-transaction, as the signed-in user (security invoker, so RLS and column grants apply):
+   - the device must exist, not be removed, and belong to a shop the user is a member of; otherwise the whole call is refused (API 403);
    - append-only tables: `INSERT … ON CONFLICT (id) DO NOTHING` (idempotent — retries never duplicate);
-   - mutable tables: upsert only if incoming `updated_at` > stored `updated_at` (last write wins); otherwise record a row in `sync_conflicts` and keep the server version;
-   - rejects rows for a closed business_date or another shop (returns per-entry errors, does not fail the batch).
-4. Returns accepted ids and per-entry errors; the device deletes accepted outbox entries and marks errors for review.
-5. Triggers: app start, `online` event, after each sale (debounced 5s), every 60s while online, manual "Sync now". Backoff on failure: 5s, 15s, 60s, 5min.
+   - mutable tables: upsert only if incoming `updated_at` > stored `updated_at` (last write wins). The **same `updated_at` with the same content** is a retry and is accepted silently. Otherwise (older, or same time with different content) record a row in `sync_conflicts`, keep the server version and **return the server row** in `conflicts`;
+   - per-entry errors, never failing the batch: `other_shop`, `day_closed` (`is_day_closed()`), `forbidden` (RLS, or a `pull_scope = owner_device` table pushed by a device whose mode is not `owner`: a shop device runs on the owner's session, so RLS alone would allow it), `clock_ahead` (mutable `updated_at` or append-only `created_at` more than 10 minutes ahead of server time), `invalid`, `unknown_table`, `not_pushable`.
+4. Returns `{accepted, conflicts: [{id, table, row}], errors: [{id, code, message?}]}`. The device deletes accepted and conflict entries from the outbox, **writes each conflict's server row into Dexie** (otherwise it would keep the losing edit forever: the server row's `server_seq` did not change, so pull never resends it), and moves errors to `sync_errors` for review. "Sync now" re-queues `clock_ahead` entries with future timestamps set to the (corrected) device time.
+5. Triggers: app start, `online` event, after each local write (debounced 5s), every 60s while online, manual "Sync now". Backoff on network/server failure: 5s, 15s, 60s, then every 5min; the 60s tick and write triggers wait for a pending backoff. **401** (session gone) and **403** (no longer a member, device removed) pause sync with no retries, keep the outbox and store the reason (`auth_required` / `device_unlinked`); the app never signs the user out because of it, and only "Sync now" tries again.
 
 ### Pull (server → device)
-1. `GET /sync/pull?device_id&since_seq&limit` (SQL function `sync_pull`) returns rows from all tables the device may see where `server_seq > since_seq`, ordered by `server_seq`.
-2. The device applies them to Dexie and stores the new cursor. Repeat until empty.
+1. `GET /sync/pull?device_id&since_seq&limit` (SQL function `sync_pull`, limit default 500, max 1000) returns `{rows: [{table, row, server_seq}], next_seq, has_more}`: rows of the device's shop from all registered tables the device may see (RLS, plus `pull_scope = owner_device` tables only for `owner`-mode devices) where `server_seq > since_seq`, ordered by `server_seq`. It records `last_seq_pulled` and `last_sync_at` on the device.
+2. The device applies them to Dexie and stores the new cursor. Repeat until `has_more` is false. A row with a local edit still in the outbox is not overwritten (that edit is newer on the device and comes back after its push). Tables the app version does not know are skipped.
 3. Pull runs after every successful push.
 
 ### Device modes and what syncs
-- **Owner device** (owner signed in online, see §5): everything for the shop, including `product_costs`.
+The mode is stored in `devices.mode` and applies to pull **and** push.
+- **Owner device** (owner signed in online, see §5): everything for the shop, including `product_costs` and `staff_salaries`.
 - **Shop device** (shared counter phone/PC, registered by the owner): staff switch with PIN; `product_costs` and owner-only report data are **not** pulled. Owner actions on a shop device (reports, cost prices, closing approval) require the owner PIN and fetch owner-only data online.
 - **Rider device** (rider's own phone, see §5): only the rider's assigned deliveries, the related sales/customers, and their own handover balance.
 
@@ -117,7 +121,8 @@ Devices can stay offline for days and then push data made by an older app versio
 - **The API stays backward compatible** with older sync payloads: new fields are optional with defaults, and fields are never renamed or removed while devices on older versions are still active. Shared Zod schemas must keep accepting the old shape.
 - **Breaking change (rare):** the API setting `MIN_APP_VERSION` (env var) is raised. `/sync/push` and `/sync/pull` then answer older apps with `426 Upgrade Required` and `{ min_version }`.
 - On `426` the app **pauses sync only — selling continues offline** (rule 1). The outbox keeps every entry. A persistent banner shows "Update required to sync — Reload" (i18n `sync.updateRequired`), and the update check (§6) runs immediately. After reload, sync resumes and pushes the waiting outbox.
-- `syncHealth` treats "update required" as at least `warning` (reason `update_required`).
+- `syncHealth` treats "update required" as at least `warning` (reason `update_required`), and likewise the paused auth states (reasons `auth_required`, `device_unlinked`).
+- A missing or malformed `X-App-Version` counts as older while `MIN_APP_VERSION` is set. The gate runs before the session check.
 
 ## 5. Auth and access
 
@@ -180,7 +185,7 @@ A pure function in `packages/core/src/syncHealth.ts` computes the level from dev
 ```ts
 syncHealth({
   outboxCount, oldestOutboxAt, unsyncedSalesCount, errorCount,
-  isOnline, lastSyncAt, storagePersisted, storageUsedRatio, updateRequired, now,
+  isOnline, lastSyncAt, storagePersisted, storageUsedRatio, updateRequired, authProblem, now,
 }) => { level: 'ok' | 'pending' | 'reminder' | 'warning' | 'critical', reasons: string[] }
 ```
 
@@ -189,7 +194,7 @@ syncHealth({
 | `ok` | outbox empty, no errors | Small green tick in the header |
 | `pending` | outbox has entries, oldest < 30 min | Amber badge with unsynced count; tap opens the Sync screen |
 | `reminder` | every **25 unsynced sales** since the last reminder, or oldest unsynced entry ≥ **2 h** | Dismissible toast: "25 sales not synced. Connect to internet and tap Sync now." Shown after the sale completes (on the receipt screen), never during cart entry. At most once per 30 min. |
-| `warning` | oldest unsynced ≥ **12 h**, or unsynced sales ≥ **100**, or storage not persisted with any unsynced data, or storage used ≥ **80%**, or **update required** (§4) | Persistent amber banner on the sell screen with "Sync now" (or "Reload" when an update is required). Cannot be dismissed until the condition clears. |
+| `warning` | oldest unsynced ≥ **12 h**, or unsynced sales ≥ **100**, or storage not persisted with any unsynced data, or storage used ≥ **80%**, or **update required** (§4), or sync paused by **401 / 403** (§4) | Persistent amber banner on the sell screen with "Sync now" (or "Reload" when an update is required). Cannot be dismissed until the condition clears. |
 | `critical` | oldest unsynced ≥ **24 h**, or storage used ≥ **95%**, or any rejected entries (`errorCount > 0`) | Persistent red banner on every screen. Owner sees a "Needs review" list for rejected entries. Prompt to export a backup. |
 
 Thresholds are constants in `syncHealth.ts`; a per-shop override can come later through shop settings (would need an architecture change — ask first).

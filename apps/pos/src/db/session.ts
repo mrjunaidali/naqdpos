@@ -1,5 +1,6 @@
 // Sign-in and device registration kept on the device (Dexie `meta`, architecture §5): the app
 // opens signed in and registered after a restart and offline, without asking the server.
+import type { DeviceMode } from '@naqdpos/core';
 import { db } from './schema.ts';
 
 export interface StoredSession {
@@ -16,6 +17,11 @@ export interface StoredDevice {
   /** Receipt-number prefix assigned by the server (A1, A2, …; architecture §4). */
   code: string;
   shop_id: string;
+  /**
+   * Who uses the device (architecture §4); decides what it may sync. Missing on devices set up
+   * before modes existed: treat as 'shop'.
+   */
+  mode?: DeviceMode;
   /** The signed-in owner's staff row in that shop. */
   staff_id: string | null;
 }

@@ -144,10 +144,103 @@ describe('other routes', () => {
   it('serves the OpenAPI document and a JSON 404', async () => {
     const doc = (await (await app().request('/openapi.json')).json()) as { paths: object };
     expect(Object.keys(doc.paths)).toEqual(
-      expect.arrayContaining(['/health', '/config', '/me', '/shops', '/devices']),
+      expect.arrayContaining([
+        '/health',
+        '/config',
+        '/me',
+        '/shops',
+        '/devices',
+        '/sync/push',
+        '/sync/pull',
+      ]),
     );
     const missing = await app().request('/nope');
     expect(missing.status).toBe(404);
     expect(await missing.json()).toEqual({ error: 'not_found' });
+  });
+});
+
+describe('/sync/* (architecture §4)', () => {
+  const DEVICE = '019a9b8e-1c2d-7e3f-8a4b-5c6d7e8f9a0e';
+  const pull = (headers: Record<string, string>, deps: Partial<AppDeps> = {}) =>
+    app(deps).request(`/sync/pull?device_id=${DEVICE}&since_seq=0`, { headers });
+  const pushBody = JSON.stringify({ device_id: DEVICE, entries: [] });
+
+  it.each([
+    ['older', '1.3.9', 426],
+    ['missing', undefined, 426],
+    ['malformed', 'latest', 426],
+  ])('answers 426 with min_version when the app version is %s', async (_, version, status) => {
+    const headers: Record<string, string> = { ...signedIn, 'x-device-id': DEVICE };
+    if (version) headers['x-app-version'] = version;
+    const res = await pull(headers, { minAppVersion: '1.4.0' });
+    expect(res.status).toBe(status);
+    expect(await res.json()).toEqual({ error: 'upgrade_required', min_version: '1.4.0' });
+    const push = await app({ minAppVersion: '1.4.0' }).request('/sync/push', {
+      method: 'POST',
+      headers,
+      body: pushBody,
+    });
+    expect(push.status).toBe(426);
+  });
+
+  it('answers 426 before checking the session', async () => {
+    const res = await pull({ 'x-app-version': '0.1.0' }, { minAppVersion: '1.4.0' });
+    expect(res.status).toBe(426);
+  });
+
+  it('lets equal or newer versions through, and every version while MIN_APP_VERSION is unset', async () => {
+    // Past the gate, an unsigned request gets 401: the gate let it through.
+    for (const version of ['1.4.0', '1.10.0']) {
+      const res = await pull({ 'x-app-version': version }, { minAppVersion: '1.4.0' });
+      expect(res.status, version).toBe(401);
+    }
+    expect((await pull({})).status).toBe(401);
+  });
+
+  it('gates only /sync/*', async () => {
+    const res = await app({ minAppVersion: '9.0.0' }).request('/health');
+    expect(res.status).toBe(200);
+  });
+
+  it('rejects a device_id that differs from X-Device-Id', async () => {
+    const other = '019a9b8e-1c2d-7e3f-8a4b-5c6d7e8f9a0f';
+    const res = await app().request('/sync/push', {
+      method: 'POST',
+      headers: { ...signedIn, 'x-device-id': other },
+      body: pushBody,
+    });
+    expect(res.status).toBe(400);
+    const missing = await pull(signedIn);
+    expect(missing.status).toBe(400);
+  });
+
+  it('rejects more than 200 entries', async () => {
+    const entries = Array.from({ length: 201 }, (_, i) => ({
+      id: `019a9b8e-1c2d-7e3f-8a4b-${String(i).padStart(12, '0')}`,
+      table: 'staff',
+      op: 'upsert',
+      row: {},
+    }));
+    const res = await app().request('/sync/push', {
+      method: 'POST',
+      headers: { ...signedIn, 'x-device-id': DEVICE },
+      body: JSON.stringify({ device_id: DEVICE, entries }),
+    });
+    expect(res.status).toBe(400);
+  });
+
+  it('allows the X-App-Version header in CORS', async () => {
+    const preflight = await app().request('/sync/pull', {
+      method: 'OPTIONS',
+      headers: {
+        origin: 'http://localhost:5173',
+        'access-control-request-method': 'GET',
+        'access-control-request-headers': 'x-app-version',
+      },
+    });
+    expect(preflight.headers.get('access-control-allow-headers')?.toLowerCase()).toContain(
+      'x-app-version',
+    );
   });
 });

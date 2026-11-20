@@ -51,6 +51,7 @@ const device: DeviceRow = {
   registered_by: null,
   last_sync_at: null,
   last_seq_pulled: 0,
+  mode: 'shop',
   created_at: NOW,
   updated_at: NOW,
   deleted_at: null,
@@ -71,25 +72,56 @@ describe('NaqdDb schema', () => {
     }
   });
 
-  it('is version 2 with meta, shops, staff and devices', async () => {
+  it('is version 3 with the tenancy tables, staff_salaries, outbox and sync_errors', async () => {
     const db = track(new NaqdDb('naqdpos-test-schema'));
     await db.open();
-    expect(db.verno).toBe(2);
+    expect(db.verno).toBe(3);
     expect(db.tables.map((table) => table.name).sort()).toEqual([
       'devices',
       'meta',
+      'outbox',
       'shops',
       'staff',
+      'staff_salaries',
+      'sync_errors',
     ]);
+    const indexNames = (name: string) =>
+      db
+        .table(name)
+        .schema.indexes.map((index) => index.name)
+        .sort();
+    expect(indexNames('outbox')).toEqual(['row_key', 'table']);
+    expect(indexNames('staff_salaries')).toEqual(['server_seq', 'shop_id']);
   });
 
-  it('does not store owner-only or server-only tables', async () => {
+  it('does not store server-only tables', async () => {
     const db = track(new NaqdDb('naqdpos-test-no-private'));
     await db.open();
     const names = db.tables.map((table) => table.name);
-    for (const name of ['staff_salaries', 'memberships', 'platform_admins', 'audit_log']) {
+    for (const name of ['memberships', 'platform_admins', 'audit_log', 'sync_conflicts']) {
       expect(names).not.toContain(name);
     }
+  });
+
+  it('upgrades a version 2 database to 3 without losing rows', async () => {
+    const name = 'naqdpos-test-upgrade-v3';
+    const v2 = track(new Dexie(name));
+    v2.version(1).stores({ meta: 'key' });
+    v2.version(2).stores({
+      shops: 'id, server_seq',
+      staff: 'id, shop_id, server_seq',
+      devices: 'id, shop_id, server_seq',
+    });
+    await v2.table('shops').put(shop);
+    await v2.table('meta').put({ key: 'device', value: { id: device.id } });
+    v2.close();
+
+    const db = track(new NaqdDb(name));
+    await db.open();
+    expect(db.verno).toBe(3);
+    expect(await db.shops.get(SHOP_ID)).toEqual(shop);
+    expect(await db.meta.get('device')).toEqual({ key: 'device', value: { id: device.id } });
+    expect(await db.outbox.count()).toBe(0);
   });
 
   it('indexes shop_id and server_seq for sync and lookups', async () => {
@@ -152,7 +184,7 @@ describe('NaqdDb schema', () => {
 
     const db = track(new NaqdDb(name));
     await db.open();
-    expect(db.verno).toBe(2);
+    expect(db.verno).toBe(3);
     expect(await db.meta.get('storage_persisted')).toEqual({
       key: 'storage_persisted',
       value: false,

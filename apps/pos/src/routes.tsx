@@ -6,6 +6,7 @@ import { RootLayout } from './app/RootLayout.tsx';
 import { GoogleCallbackPage } from './features/auth/GoogleCallbackPage.tsx';
 import { SignInPage } from './features/auth/SignInPage.tsx';
 import { SetupPage } from './features/onboarding/SetupPage.tsx';
+import { SyncPage } from './features/sync/SyncPage.tsx';
 
 export const routes: RouteObject[] = [
   {
@@ -35,6 +36,14 @@ export const routes: RouteObject[] = [
         element: (
           <Gate state="setup">
             <SetupPage />
+          </Gate>
+        ),
+      },
+      {
+        path: 'sync',
+        element: (
+          <Gate state="ready">
+            <SyncPage />
           </Gate>
         ),
       },

@@ -168,3 +168,61 @@ The owner signs in, creates a shop and registers the device; afterwards the app 
 - Install prompt as an onboarding step (§6) and `navigator.storage.persist()`.
 - PIN lock after 5 wrong tries (with the PIN switch story).
 - Rider PIN-hash exposure (Step 1) still open: `/me` returns only the caller's own staff row.
+
+## Step 5 — sync engine: outbox, push/pull, health (2026-11-20)
+
+Local writes are queued in an outbox and synced in the background; the header shows sync health and a Sync screen lists rejected entries. Architecture §3, §4, §6 and §7 are updated to match.
+
+**Built**
+- Migration `20261120150000_sync.sql`:
+  - `devices.mode` (`owner` | `shop` | `rider`, default `shop`); `register_device(id, shop_id, name, p_mode default 'shop')` (old signature dropped, mode in the audit payload)
+  - devices get their own `server_seq` trigger: changes to only `last_sync_at` / `last_seq_pulled` keep the old `server_seq`, so a pull never makes the device row "new" again; a client-sent `server_seq` is still overwritten
+  - `sync_tables` registry (kind, id/shop columns, pushable, `push_columns`, `pull_scope`), rows for `shops` (settings only), `staff` (without `membership_user_id`), `staff_salaries` (`owner_device`) and `devices` (pull only)
+  - `sync_conflicts` (owners read, members insert), `is_day_closed()` stub (returns false until `day_closes` exists)
+  - `sync_device()` (42501 unless the device is visible to the user and not removed), `sync_mark_device()` (security definer bookkeeping), `sync_push()` and `sync_pull()` as security invoker with dynamic SQL driven only by the registry (`format('%I')`)
+- `packages/core`:
+  - `syncHealth.ts`: §7 thresholds as `SYNC_THRESHOLDS`; `update_required`, `auth_required`, `device_unlinked` are warnings; reasons listed most severe first; unknown storage state never alarms
+  - `appVersion.ts`: `compareVersions`, `isAppVersion`, `isOlderThan` (missing or malformed = older)
+  - `sync/tables.ts` (`SYNC_TABLES`, `OWNER_DEVICE_TABLES`, `isSyncTable`), `sync/schemas.ts` (`SyncPushRequest` ≤ 200 entries, `SyncPushResponse`, `SyncPullQuery`, `SyncPullResponse`; table names and error codes are plain strings so a newer server never breaks an older app)
+  - `DEVICE_MODES`, `DeviceRow.mode`, `StaffSalaryRow` + schema; `RegisterDeviceRequest.mode` defaults to `shop`; `ErrorResponse` has `upgrade_required` and `min_version`
+  - client: `appVersion` option → `X-App-Version` on every request; `syncPush`, `syncPull`; `ApiError.minVersion` on 426
+- `apps/api`:
+  - `MIN_APP_VERSION` (optional, checked as `x.y.z`; in `.env.example`); CORS allows `X-App-Version`
+  - `routes/sync.ts`: `POST /sync/push`, `GET /sync/pull`. Version gate (426 `{ error: 'upgrade_required', min_version }`) runs before auth and only on `/sync/*`; `device_id` must equal `X-Device-Id` (400); rows checked against their table schema (bad row = per-entry `invalid`); 42501 from SQL = 403
+  - `POST /devices` passes the mode
+- `apps/pos`:
+  - Dexie **version 3**: `outbox (id, table, row_key)`, `sync_errors (id, table)`, `staff_salaries (staff_id, shop_id, server_seq)`
+  - `db/outbox.ts`: `localWrite` / `localWriteMany`, one `rw` transaction for rows + outbox entries, pull-only tables refused, `onLocalWrite` listeners
+  - `sync/engine.ts` (`createSyncEngine`, injected API, timers and events): push in batches of 200, pull until `has_more` is false, conflicts take the server row, errors move to `sync_errors`, pulled rows skip ids with a pending local edit, unknown tables skipped; triggers start / `online` / write (5 s debounce) / 60 s / Sync now; backoff 5 s → 15 s → 60 s → 5 min; 426, 401, 403 pause with no retries (state in `meta.sync_state`); a new app version clears "update required" on start; Sync now re-queues `clock_ahead` entries with future timestamps clamped to now
+  - `sync/index.ts` (the app's engine, started in `main.tsx`), `sync/state.ts`, `useSyncStatus` (Dexie + online + storage estimate → `syncHealth`)
+  - header: `<BrandMark />`, shop name, sync chip (green "Synced", amber "N pending" / "Sync paused", red "Needs review") linking to `/sync`
+  - `features/sync/SyncPage`: what is waiting, reasons, last sync, Sync now, rejected entries (clock_ahead → `sync.clockAhead`), auth messages
+  - `UpdateRequiredBanner` (persistent, Reload only with an empty cart); `NewVersionBanner` hides while the cart has items or an update is required; `app/swUpdate.ts`: `registration.update()` every 60 min while online, on visibility and focus, and on 426
+  - `features/sale/cartStore.ts` (Zustand, `itemCount` only)
+  - onboarding and "Add this device" ask "Who uses this device?" (default Shop counter); the device name follows the mode until edited; `meta.device.mode` stored
+  - `theme/default.css`: colour tokens as Tailwind 4 `@theme` variables; new and touched components use tokens only
+  - `__APP_VERSION__` from `package.json` via Vite `define`
+  - `sync.*` and `device.mode*` strings in en and ur (`TODO-ur`), plurals for counts
+
+**Tests**: DB 66 (+23 in `sync.test.ts`: same batch twice, newer wins, older/equal-different → conflict with server row returned and logged, other shop per entry, hijacking another shop's row, owner-only table from shop vs owner device, cashier refused by RLS, shop settings without server columns, clock_ahead at 60 vs 5 min, unknown / pull-only tables, foreign / removed / unknown device and no user, throwaway ledger table for append-only idempotency, `day_closed`, `clock_ahead` on `created_at` and pull; pull paging, cursor and bookkeeping, owner vs shop device visibility, never another shop's rows, cashier never gets salaries; device `server_seq` trigger; mode stored, invalid mode, cashier cannot change mode). API DB 26 (+3: push twice and pull back over HTTP, bad row → per-entry invalid, 403 for another shop's device). API unit 35 (+10: 426 for older / missing / malformed versions, before auth, equal and newer pass, unset accepts all, only `/sync/*`, device mismatch 400, > 200 entries 400, CORS header, `MIN_APP_VERSION` env). Core 145 (+34: syncHealth thresholds and boundaries, versions, sync schemas and registry, client header, push/pull, 426). Pos 84 (+37: outbox atomicity incl. batch and caller rollback; Dexie v3 + v2→v3 upgrade; engine batching and paging, rejected entries, conflict convergence, pending-edit protection, unknown tables, offline/unregistered, triggers, debounce, backoff sequence and reset, tick waits for backoff, 426 pause + outbox kept + local writes + update check + cleared after reload, 401/403 pause without sign-out and Sync now recovery, clock_ahead re-queue; chip states, Sync screen, update banners and cart rule, SW update checks; onboarding mode question). `pos` production build checked.
+
+**Decisions**
+- Equal `updated_at` and equal content = a retried push, not a conflict (otherwise resending a batch would log false conflicts).
+- Conflicts return the server row and the device stores it (convergence); conflict entries count as done, not as errors.
+- The version gate answers 426 before the session check, and a missing version counts as older while `MIN_APP_VERSION` is set.
+- `clock_ahead` uses the server's `now() + 10 min`; "Sync now" clamps future timestamps to the corrected device time before re-pushing.
+- Registry rows are per layer: one row in `sync_tables` (SQL) plus one entry in `SYNC_TABLES` (core). SQL cannot read the TS registry.
+- `sync_push` and `sync_pull` are security invoker; only the bookkeeping helper is security definer.
+- Shop settings are pushable, but only the columns owners may already update; `shops` rows cannot be created by push (no insert grant).
+- Pull results are filtered by the device's shop as well as RLS, so an owner of two shops never mixes them on one device.
+
+**Follow-ups**
+- Switching a device from owner to shop mode (not built yet; only owners may) must clear owner-only Dexie stores (`OWNER_DEVICE_TABLES`: `staff_salaries`, later `product_costs`) and reset the pull cursor.
+- The daily session check (`sessionCheck.ts`) still signs out on 401. With a non-empty outbox that conflicts with §7's guarded logout. Decide whether to keep the session and rely on the sync `auth_required` state.
+- "Sign in again" and "re-link device" actions on the Sync screen (now only messages).
+- §7 reminder toast, warning/critical banners on the sell screen, "Synced N records" toast, and "Saved offline" line on receipts: with the sale story (hooks: `onSynced`, `useSyncStatus`).
+- `navigator.storage.persist()` request and the export/import backup (§6) are still open; `useSyncStatus` only reads `persisted()` and `estimate()`.
+- `day_closes` migration must replace `is_day_closed()`.
+- Rider devices: pull scope for riders (deliveries only) and the PIN-hash exposure from Step 1.
+- Older screens (sign-in, onboarding fields, buttons) still use palette classes; move them to theme tokens. The header has no bell yet (no notifications).
+- Live check of push/pull against the dev API from a browser (covered by HTTP tests against `naqdpos_test`, not tried by hand).

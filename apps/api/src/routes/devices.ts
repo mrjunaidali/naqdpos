@@ -39,7 +39,9 @@ export function deviceRoutes(deps: Pick<AppDeps, 'db' | 'auth'>) {
       // register_device checks the owner role, locks the shop and picks the next code (SQL).
       const row = await withUserTx(deps.db, c.get('tx'), async (tx) => {
         const { rows } = await sql<Selectable<DevicesTable>>`
-          select * from register_device(${body.id}, ${body.shop_id}, ${body.name})`.execute(tx);
+          select * from register_device(${body.id}, ${body.shop_id}, ${body.name}, ${body.mode})`.execute(
+          tx,
+        );
         return rows[0]!;
       });
       return c.json(toDeviceRow(row), 201);

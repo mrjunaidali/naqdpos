@@ -11,6 +11,14 @@ export type ShopStatus = (typeof SHOP_STATUSES)[number];
 export const ROLES = ['owner', 'cashier', 'rider'] as const;
 export type Role = (typeof ROLES)[number];
 
+/**
+ * What a device may sync (architecture §4): `owner` = the owner's own phone (everything,
+ * including owner-only tables); `shop` = shared counter (no owner-only tables); `rider`.
+ * Default `shop`, so a device never gets owner-only data by accident.
+ */
+export const DEVICE_MODES = ['owner', 'shop', 'rider'] as const;
+export type DeviceMode = (typeof DEVICE_MODES)[number];
+
 export const DEFAULT_TIMEZONE = 'Asia/Karachi';
 /** Rs 2,000 (architecture §3). */
 export const DEFAULT_CASHIER_EXPENSE_LIMIT_PAISA: Paisa = 200_000;
@@ -59,4 +67,17 @@ export interface DeviceRow extends SyncedMutable {
   registered_by: string | null;
   last_sync_at: string | null;
   last_seq_pulled: number;
+  mode: DeviceMode;
+}
+
+/** Owner-only (architecture §3): pulled and pushed only by devices in `owner` mode. */
+export interface StaffSalaryRow {
+  staff_id: string;
+  shop_id: string;
+  monthly_salary_paisa: Paisa;
+  created_at: string;
+  updated_at: string;
+  deleted_at: string | null;
+  device_id: string | null;
+  server_seq: number | null;
 }
