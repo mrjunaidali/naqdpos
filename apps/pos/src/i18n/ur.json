@@ -39,7 +39,8 @@
     "backToSignIn": "سائن ان پر واپس جائیں",
     "unsyncedOther": "TODO-ur اس ڈیوائس پر غیر سنک تبدیلیاں ہیں۔ پہلے {{email}} سے سائن ان کر کے سنک کریں۔",
     "unsyncedOtherUnknown": "TODO-ur اس ڈیوائس پر غیر سنک تبدیلیاں ہیں۔ پہلے پچھلے اکاؤنٹ سے سائن ان کر کے سنک کریں۔",
-    "otherShop": "TODO-ur یہ ڈیوائس {{shop}} کی ہے۔ اسی دکان کے اکاؤنٹ سے سائن ان کریں۔"
+    "otherShop": "TODO-ur یہ ڈیوائس {{shop}} کی ہے۔ اسی دکان کے اکاؤنٹ سے سائن ان کریں۔",
+    "notOwner": "TODO-ur اس ڈیوائس پر صرف دکان کا مالک سائن ان کر سکتا ہے"
   },
   "onboarding": {
     "title": "اپنی دکان سیٹ اپ کریں",
@@ -196,7 +197,8 @@
     "someoneElse": "TODO-ur کوئی اور",
     "nobody": "TODO-ur ابھی کوئی نہیں آ سکتا۔ مالک سیٹنگز ← عملہ میں عملہ اور PIN شامل کرے۔",
     "ownerTitle": "TODO-ur مالک کا PIN درکار ہے",
-    "ownerIntro": "TODO-ur یہ اسکرین صرف مالک کھول سکتا ہے۔"
+    "ownerIntro": "TODO-ur یہ اسکرین صرف مالک کھول سکتا ہے۔",
+    "lockedMinutes": "TODO-ur بہت زیادہ غلط PIN۔ {{minutes}} منٹ بعد کوشش کریں۔"
   },
   "settings": {
     "title": "TODO-ur سیٹنگز",

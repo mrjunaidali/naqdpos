@@ -159,7 +159,7 @@ Build in this order, not in ID order. "Sheet step" is the step number in the ori
 
 **US016** · Must · 3 · Done — As a cashier, I want to switch to my profile with a 4-digit PIN on the shared shop device, so that sales are recorded under my name.
 - Quick switch from the header; PIN verified offline against the synced `pin_hash`
-- Lock for 1 minute after 5 wrong tries
+- After 5 wrong tries lock for 1 minute, then 5 minutes, then 15 minutes for every further lockout; a correct PIN resets it
 - Current staff in Zustand; repository helpers stamp `staff_id` on every ledger write
 
 ### F10 · Roles & permissions

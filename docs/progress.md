@@ -273,3 +273,12 @@ Owners manage staff offline; staff switch in from the header with a PIN checked 
 - Switching a device from owner to shop mode must clear owner-only stores (Step 5 follow-up, still open; no UI to change mode yet).
 - Offline sign-out with owner PIN after a backup export (§7) — needs the backup export.
 - Header bell and the Home screen design (hero card, nav bar) are not built yet.
+
+### Step 6 fixes (2026-11-20)
+
+Two rules tightened after review (the Step 6 plan had said a flat 1-minute lock and "any member of the shop"):
+- **Escalating PIN lock:** 5 wrong tries lock for 1 minute, the next lockout 5 minutes, every further one 15 minutes (`PIN_LOCK_STEPS_MS` in core). A correct PIN resets the failures and the lockout level. `meta.pin_lock` gains `lockouts`; `normalizePinLock()` loads states saved without it. Locks over a minute show in minutes (`pin.lockedMinutes`).
+- **Owner-only re-sign-in:** another user signing in on a set-up device must be an `owner` of its shop (`/me` role); a cashier or rider gets `not_owner` ("Only the shop owner can sign in on this device") and the session is not replaced.
+- Architecture §5 and the US016 acceptance line updated.
+
+**Tests**: core 171 (+3 net: each lock step, staying at 15 min, reset after success, old state loads). Pos 119 (+4: escalation through `attemptPin` and reset, reload during a 5-minute lock, old saved state, cashier and rider refused with the session kept).

@@ -9,6 +9,7 @@ export function SignInBlocked({ outcome }: { outcome: Exclude<SignInOutcome, { s
   const { t } = useTranslation();
   const [busy, setBusy] = useState(false);
 
+  if (outcome.status === 'not_owner') return <Alert>{t('signIn.notOwner')}</Alert>;
   if (outcome.status === 'other_shop') {
     return <Alert>{t('signIn.otherShop', { shop: outcome.shopName })}</Alert>;
   }

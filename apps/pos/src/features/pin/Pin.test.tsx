@@ -1,4 +1,4 @@
-import { PIN_LOCK_MS } from '@naqdpos/core';
+import { PIN_LOCK_STEPS_MS } from '@naqdpos/core';
 import { cleanup, fireEvent, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { db } from '../../db/schema.ts';
@@ -109,16 +109,49 @@ describe('PIN switch from the header (US016)', () => {
     await expect(attemptPin(CASHIER, '1234')).resolves.toMatchObject({ status: 'locked' });
   });
 
-  it('unlocks after the minute', async () => {
-    const T0 = 1_800_000_000_000;
-    for (let i = 0; i < 5; i++) await attemptPin(CASHIER, '0000', { now: () => T0 });
-    expect(await attemptPin(CASHIER, '1234', { now: () => T0 + PIN_LOCK_MS - 1 })).toMatchObject({
-      status: 'locked',
+  it('escalates: 1 minute, then 5 minutes, then 15 minutes; a correct PIN resets it', async () => {
+    let now = 1_800_000_000_000;
+    const clock = { now: () => now };
+    const lockOnce = async () => {
+      for (let i = 0; i < 5; i++) await attemptPin(CASHIER, '0000', clock);
+      const result = await attemptPin(CASHIER, '1234', clock);
+      expect(result.status).toBe('locked');
+      return (result as { until: number }).until - now;
+    };
+    const lengths: number[] = [];
+    for (let i = 0; i < 4; i++) {
+      lengths.push(await lockOnce());
+      now += lengths.at(-1)!; // wait out the lock
+    }
+    expect(lengths).toEqual([...PIN_LOCK_STEPS_MS, 900_000]);
+
+    expect(await attemptPin(CASHIER, '1234', clock)).toEqual({ status: 'ok' });
+    expect((await db.meta.get(PIN_LOCK_KEY))?.value).toEqual({
+      failures: 0,
+      lockedUntil: null,
+      lockouts: 0,
     });
-    expect(await attemptPin(CASHIER, '1234', { now: () => T0 + PIN_LOCK_MS })).toEqual({
-      status: 'ok',
+    expect(await lockOnce()).toBe(60_000);
+  });
+
+  it('keeps a 5-minute lock across a reload and shows it in minutes', async () => {
+    await db.meta.put({
+      key: PIN_LOCK_KEY,
+      value: { failures: 0, lockedUntil: Date.now() + 300_000, lockouts: 2 },
     });
-    expect(await db.meta.get(PIN_LOCK_KEY)).toMatchObject({ value: { failures: 0 } });
+    reload();
+    await openSwitch();
+    fireEvent.click(await screen.findByRole('button', { name: /Bilal/ }));
+    expect(await screen.findByText('Too many wrong PINs. Try again in 5 min.')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: '1' })).toBeDisabled();
+    await expect(attemptPin(CASHIER, '1234')).resolves.toMatchObject({ status: 'locked' });
+  });
+
+  it('loads a lock state saved before lockout levels existed', async () => {
+    await db.meta.put({ key: PIN_LOCK_KEY, value: { failures: 4, lockedUntil: null } });
+    expect(await readPinLock()).toEqual({ failures: 4, lockedUntil: null, lockouts: 0 });
+    await expect(attemptPin(CASHIER, '0000')).resolves.toMatchObject({ status: 'locked' });
+    expect((await readPinLock()).lockouts).toBe(1);
   });
 
   it('refuses deactivated staff even with the right PIN, without counting a try', async () => {

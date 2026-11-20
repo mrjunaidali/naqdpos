@@ -63,13 +63,26 @@ describe('re-sign-in on a set-up device (decision 4)', () => {
     expect(apiWithToken).not.toHaveBeenCalled();
   });
 
-  it('another user of this shop with nothing waiting: accepted, checked with the new token', async () => {
+  it('another owner of this shop with nothing waiting: accepted, checked with the new token', async () => {
     await seedReady();
     vi.mocked(api.me).mockResolvedValue(me([{ role: 'owner', shop: shopRow(), staff: null }]));
     await expect(completeSignIn(signedIn(OTHER))).resolves.toEqual({ status: 'ok' });
     expect(apiWithToken).toHaveBeenCalledWith(`token-${OTHER}`);
     expect((await getStoredSession())?.user_id).toBe(OTHER);
   });
+
+  it.each(['cashier', 'rider'] as const)(
+    'a %s of this shop is refused (only owners sign in on a device); session kept',
+    async (role) => {
+      await seedReady();
+      vi.mocked(api.me).mockResolvedValue(me([{ role, shop: shopRow(), staff: null }]));
+      await expect(completeSignIn(signedIn(OTHER))).resolves.toEqual({ status: 'not_owner' });
+      const session = await getStoredSession();
+      expect(session?.user_id).toBe(USER_ID);
+      expect(session?.token).toBe('stored-token');
+      expect(syncNow).not.toHaveBeenCalled();
+    },
+  );
 
   it('another user of a different shop: refused with the shop name', async () => {
     await seedReady();

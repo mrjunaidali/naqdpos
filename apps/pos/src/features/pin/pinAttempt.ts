@@ -3,7 +3,7 @@
 import {
   canSwitchIn,
   isPinLocked,
-  PIN_LOCK_OPEN,
+  normalizePinLock,
   PIN_MAX_FAILURES,
   recordPinFailure,
   recordPinSuccess,
@@ -15,8 +15,8 @@ import { db as defaultDb, type NaqdDb } from '../../db/schema.ts';
 export const PIN_LOCK_KEY = 'pin_lock';
 
 export async function readPinLock(database: NaqdDb = defaultDb): Promise<PinLockState> {
-  const value = (await database.meta.get(PIN_LOCK_KEY))?.value as PinLockState | undefined;
-  return value ?? PIN_LOCK_OPEN;
+  // Older saved states have no lockout level; normalizePinLock fills it in.
+  return normalizePinLock((await database.meta.get(PIN_LOCK_KEY))?.value);
 }
 
 async function writePinLock(state: PinLockState, database: NaqdDb) {

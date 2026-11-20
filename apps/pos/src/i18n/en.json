@@ -39,7 +39,8 @@
     "backToSignIn": "Back to sign-in",
     "unsyncedOther": "This device has changes not yet synced. Sign in as {{email}} to sync them first.",
     "unsyncedOtherUnknown": "This device has changes not yet synced. Sign in with the previous account to sync them first.",
-    "otherShop": "This device belongs to {{shop}}. Sign in with an account of that shop."
+    "otherShop": "This device belongs to {{shop}}. Sign in with an account of that shop.",
+    "notOwner": "Only the shop owner can sign in on this device"
   },
   "onboarding": {
     "title": "Set up your shop",
@@ -196,7 +197,8 @@
     "someoneElse": "Someone else",
     "nobody": "Nobody can switch in yet. The owner adds staff and PINs under Settings → Staff.",
     "ownerTitle": "Owner PIN needed",
-    "ownerIntro": "Only the owner can open this screen."
+    "ownerIntro": "Only the owner can open this screen.",
+    "lockedMinutes": "Too many wrong PINs. Try again in {{minutes}} min."
   },
   "settings": {
     "title": "Settings",

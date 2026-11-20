@@ -65,13 +65,15 @@ export function PinPad({ staffId, staffName, roles, onSuccess }: Props) {
   }
 
   const message =
-    locked && remaining > 0
-      ? t('pin.locked', { seconds: remaining })
-      : result?.status === 'wrong'
-        ? t('pin.wrong', { count: result.left })
-        : result?.status === 'not_allowed'
-          ? t('pin.notAllowed')
-          : null;
+    locked && remaining > 60
+      ? t('pin.lockedMinutes', { minutes: Math.ceil(remaining / 60) })
+      : locked && remaining > 0
+        ? t('pin.locked', { seconds: remaining })
+        : result?.status === 'wrong'
+          ? t('pin.wrong', { count: result.left })
+          : result?.status === 'not_allowed'
+            ? t('pin.notAllowed')
+            : null;
 
   return (
     <div className="space-y-4">
