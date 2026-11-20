@@ -10,6 +10,7 @@ Read these before any work:
 - `docs/backlog.md` — epics, features, user stories (US###) with acceptance criteria.
 - `docs/progress.md` — what is already built (update it at the end of every story).
 - `docs/features/*.md` — detailed feature specs (rules, permissions, core functions) when a story points to one.
+- `docs/design-theme.md` — colours, look and theme tokens for any UI work (no hard-coded colours).
 
 ## Tech stack (do not add or swap libraries without asking)
 

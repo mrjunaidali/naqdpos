@@ -111,6 +111,14 @@ Compute these with pure functions in `packages/core` (client) and matching SQL v
 ### Receipt numbers offline
 Each registered device gets a short code (`A1`, `A2`, …). Receipt number = device code + per-device counter stored in Dexie. Unique without the network. Codes are assigned by the SQL function `register_device` (`POST /devices`, owner only) in registration order per shop: `A1…A999`, then `B1…`; devices are never deleted, so a code is never reused.
 
+### App version and compatibility (decided 20 Nov 2026)
+Devices can stay offline for days and then push data made by an older app version. Rules:
+- Every API request from `apps/pos` sends the app version in an `X-App-Version` header (from the build, e.g. `package.json` version).
+- **The API stays backward compatible** with older sync payloads: new fields are optional with defaults, and fields are never renamed or removed while devices on older versions are still active. Shared Zod schemas must keep accepting the old shape.
+- **Breaking change (rare):** the API setting `MIN_APP_VERSION` (env var) is raised. `/sync/push` and `/sync/pull` then answer older apps with `426 Upgrade Required` and `{ min_version }`.
+- On `426` the app **pauses sync only — selling continues offline** (rule 1). The outbox keeps every entry. A persistent banner shows "Update required to sync — Reload" (i18n `sync.updateRequired`), and the update check (§6) runs immediately. After reload, sync resumes and pushes the waiting outbox.
+- `syncHealth` treats "update required" as at least `warning` (reason `update_required`).
+
 ## 5. Auth and access
 
 ### Sign-in methods (decided Nov 2026)
@@ -148,7 +156,9 @@ Login runs inside our API with **Better Auth** (open-source library). Users and 
 - **Icons**: 192 and 512 px, a `maskable` 512 px, and `apple-touch-icon` (180 px). Add `apple-mobile-web-app-capable` and `apple-mobile-web-app-status-bar-style` meta tags for iOS.
 - **Precache the full app shell**: all JS/CSS, the Urdu font, icons and i18n JSON. The app must open and complete a sale on first launch after install with the network off.
 - **Updates**: `registerType: 'prompt'`. Show a "New version available — Reload" banner. Never auto-reload, and never show the prompt while a cart has items.
+- **Update checks** (decided 20 Nov 2026): the browser only checks for a new service worker when the app is opened or navigated, and shop PCs may stay open for days. So the app also calls `registration.update()` **every 60 minutes while online**, when the window **becomes visible or regains focus**, and immediately when the API answers `426` (§4). Requires `sw.js` served with `no-cache` (`docs/deployment.md` §4).
 - **Install**: capture `beforeinstallprompt` (Android/desktop) and show our own "Install app" button; on iOS show a short "Share → Add to Home Screen" guide. Installing is a step in owner onboarding.
+- **Desktop install** (shop PCs): same code path. Chrome and Edge (Windows, macOS, Linux, ChromeOS) fire `beforeinstallprompt`, so our button works. Safari on macOS shows a "File → Add to Dock" guide. Firefox desktop has no install support: the guide recommends Chrome or Edge for counter PCs. The installed app opens in its own window and works offline the same as on a phone.
 - Do **not** depend on the Background Sync API (not supported on iOS). Sync triggers in §4 work without it.
 
 ### Storage persistence
@@ -170,7 +180,7 @@ A pure function in `packages/core/src/syncHealth.ts` computes the level from dev
 ```ts
 syncHealth({
   outboxCount, oldestOutboxAt, unsyncedSalesCount, errorCount,
-  isOnline, lastSyncAt, storagePersisted, storageUsedRatio, now,
+  isOnline, lastSyncAt, storagePersisted, storageUsedRatio, updateRequired, now,
 }) => { level: 'ok' | 'pending' | 'reminder' | 'warning' | 'critical', reasons: string[] }
 ```
 
@@ -179,7 +189,7 @@ syncHealth({
 | `ok` | outbox empty, no errors | Small green tick in the header |
 | `pending` | outbox has entries, oldest < 30 min | Amber badge with unsynced count; tap opens the Sync screen |
 | `reminder` | every **25 unsynced sales** since the last reminder, or oldest unsynced entry ≥ **2 h** | Dismissible toast: "25 sales not synced. Connect to internet and tap Sync now." Shown after the sale completes (on the receipt screen), never during cart entry. At most once per 30 min. |
-| `warning` | oldest unsynced ≥ **12 h**, or unsynced sales ≥ **100**, or storage not persisted with any unsynced data, or storage used ≥ **80%** | Persistent amber banner on the sell screen with "Sync now". Cannot be dismissed until the condition clears. |
+| `warning` | oldest unsynced ≥ **12 h**, or unsynced sales ≥ **100**, or storage not persisted with any unsynced data, or storage used ≥ **80%**, or **update required** (§4) | Persistent amber banner on the sell screen with "Sync now" (or "Reload" when an update is required). Cannot be dismissed until the condition clears. |
 | `critical` | oldest unsynced ≥ **24 h**, or storage used ≥ **95%**, or any rejected entries (`errorCount > 0`) | Persistent red banner on every screen. Owner sees a "Needs review" list for rejected entries. Prompt to export a backup. |
 
 Thresholds are constants in `syncHealth.ts`; a per-shop override can come later through shop settings (would need an architecture change — ask first).
@@ -211,6 +221,7 @@ All sync messages go through `t()` with keys under `sync.*` in both `en.json` an
 - WhatsApp Business API provider (US058).
 - Pricing and plans (pricing doc not yet decided).
 - Whether devices report `storage_persisted` and outbox size to the server (would add columns to `devices`) so the owner/admin can see at-risk devices.
+- Whether the server stores each device's last seen app version (`devices.app_version`, from `X-App-Version`) so admin can see which versions are still active before raising `MIN_APP_VERSION` (§4). Would add a column — ask first.
 - Whether `sale_lines` also stores an Urdu name snapshot (`name_ur_snapshot`) so receipts can print in Urdu after a product is renamed.
 
 ## 9. API service (`apps/api`)
@@ -220,5 +231,5 @@ All sync messages go through `t()` with keys under `sync.*` in both `en.json` an
 - **Routes (initial):** `/auth/*` (Better Auth), `POST /shops` (create shop + owner membership + owner staff), `POST /devices` (register), `POST /sync/push`, `GET /sync/pull`, `/reports/*` (owner), `/files/*` (pre-signed upload/download URLs), `/admin/*` (platform admin, 2FA), `GET /health`.
 - **Files:** the API never streams large files. It returns pre-signed S3 URLs; the device uploads directly to storage. Rows store only the key (e.g. `bill-photos/<shop_id>/<expense_id>.jpg`).
 - **Worker:** same package, separate entry point (`pnpm --filter api worker`). Runs pg-boss jobs: WhatsApp/SMS sends, stale-device alerts, nightly backup to storage.
-- **Config:** only environment variables (`DATABASE_URL`, `S3_ENDPOINT`, `S3_BUCKET`, `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY`, `SMTP_*`, `BETTER_AUTH_SECRET`, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `APP_ORIGINS`). `.env.example` lists them all.
+- **Config:** only environment variables (`DATABASE_URL`, `S3_ENDPOINT`, `S3_BUCKET`, `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY`, `SMTP_*`, `BETTER_AUTH_SECRET`, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `APP_ORIGINS`, `MIN_APP_VERSION` (optional; unset = accept all versions, see §4)). `.env.example` lists them all.
 - **Scaling:** stateless; add API copies as load grows. Use a connection pooler (PgBouncer, transaction mode) when copies × pool size gets close to Postgres's connection limit; `set_config(..., true)` is transaction-scoped so it is safe with transaction pooling.
