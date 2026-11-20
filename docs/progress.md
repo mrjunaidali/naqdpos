@@ -346,3 +346,13 @@ Owners switch a registered device between owner phone and shop counter from Sett
 
 **Follow-ups**
 - After owner → shop on the same screen, the owner gate asks for the PIN again (the device is now a shop device); that is intended.
+
+## Step 8 fix — re-pull when the app learns new tables (2026-11-21)
+
+**Bug:** rows of tables an app version does not know are skipped in `applyServerRows`, but the pull cursor still moves past them. After an update that adds a table (`staff_pins` in Step 6), a device never received those rows: device A2 had no `staff_pins` row, so `OwnerPinGate` said "Nobody can switch in yet".
+
+**Fix:** `reconcileCursorTables()` (`apps/pos/src/sync/state.ts`) runs at the start of every pull. The cursor is stored with the sync table names it was built with (`meta.sync_cursor_tables`); when `SYNC_TABLES` contains a table not in that set, or the set is missing while the cursor is above 0 (devices from before this fix, reset once), the cursor goes back to 0 and the new set is saved. Architecture §4 Pull updated.
+
+**Tests**: pos 153 (+4: reset and `since_seq` 0 when a table is new, rows of the new table arrive, no reset when the set is unchanged, one reset for a cursor without a saved set, pending outbox edit not overwritten during the re-pull).
+
+**Note:** a full re-pull reads every row of the shop once; fine at today's sizes. If shops grow large, a per-table cursor could replace it (ask first: it changes the pull contract).

@@ -1,5 +1,6 @@
 import {
   ApiError,
+  SYNC_TABLE_NAMES,
   type StaffRow,
   type SyncPullQuery,
   type SyncPullResponse,
@@ -19,7 +20,7 @@ import {
   type SyncEngineDeps,
   type Timers,
 } from './engine.ts';
-import { readCursor, readSyncState } from './state.ts';
+import { readCursor, readSyncState, SYNC_META } from './state.ts';
 
 // --- helpers -------------------------------------------------------------------------------
 
@@ -435,5 +436,86 @@ describe('sync engine: acting staff', () => {
     expect(server.api.syncPush.mock.calls[0]![0].entries[0]).toMatchObject({
       actor_staff_id: owner,
     });
+  });
+});
+
+describe('sync engine: tables new to this app version', () => {
+  const ALL = [...SYNC_TABLE_NAMES].sort();
+  const WITHOUT_PINS = ALL.filter((t) => t !== 'staff_pins');
+  const pinRow = (seq: number) => ({
+    table: 'staff_pins',
+    row: {
+      staff_id: STAFF(1),
+      shop_id: SHOP_ID,
+      pin_hash: 'pbkdf2-sha256$1000$c2FsdA==$aGFzaA==',
+      device_id: null,
+      created_at: '2026-11-20T10:00:00.000Z',
+      updated_at: '2026-11-20T10:00:00.000Z',
+      deleted_at: null,
+      server_seq: seq,
+    },
+    server_seq: seq,
+  });
+
+  async function cursorBuiltWith(db: NaqdDb, tables: string[], cursor: number) {
+    await db.meta.put({ key: SYNC_META.CURSOR, value: cursor });
+    await db.meta.put({ key: SYNC_META.CURSOR_TABLES, value: tables });
+  }
+
+  it('re-pulls from 0 when SYNC_TABLES has a table the cursor was not built with', async () => {
+    const { db, server, engine } = setup();
+    await cursorBuiltWith(db, WITHOUT_PINS, 120);
+    // The server has the PIN row behind the old cursor (seq 5), skipped by the older app.
+    server.api.syncPull.mockImplementation((q) =>
+      Promise.resolve(
+        q.since_seq < 5
+          ? { rows: [pinRow(5)], next_seq: 5, has_more: false }
+          : { rows: [], next_seq: Math.max(q.since_seq, 120), has_more: false },
+      ),
+    );
+    await engine.syncNow();
+    expect(server.api.syncPull.mock.calls[0]![0].since_seq).toBe(0);
+    expect(await db.staff_pins.get(STAFF(1))).toMatchObject({ server_seq: 5 });
+    expect((await db.meta.get(SYNC_META.CURSOR_TABLES))?.value).toEqual(ALL);
+  });
+
+  it('keeps the cursor when the set of tables is unchanged', async () => {
+    const { db, server, engine } = setup();
+    await cursorBuiltWith(db, ALL, 120);
+    server.api.syncPull.mockResolvedValue({ rows: [], next_seq: 120, has_more: false });
+    await engine.syncNow();
+    expect(server.api.syncPull.mock.calls[0]![0].since_seq).toBe(120);
+    await engine.syncNow();
+    expect(server.api.syncPull.mock.calls[1]![0].since_seq).toBe(120);
+  });
+
+  it('resets once on a device whose cursor predates the check (no saved set)', async () => {
+    const { db, server, engine } = setup();
+    await db.meta.put({ key: SYNC_META.CURSOR, value: 80 });
+    server.api.syncPull.mockResolvedValue({ rows: [], next_seq: 80, has_more: false });
+    await engine.syncNow();
+    await engine.syncNow();
+    expect(server.api.syncPull.mock.calls.map(([q]) => q.since_seq)).toEqual([0, 80]);
+  });
+
+  it('does not overwrite a pending local edit while re-pulling', async () => {
+    const { db, server, engine } = setup();
+    await cursorBuiltWith(db, WITHOUT_PINS, 120);
+    await write(db, 1, { name: 'Local edit' });
+    server.api.syncPush.mockResolvedValueOnce({ accepted: [], conflicts: [], errors: [] });
+    server.api.syncPull.mockResolvedValueOnce({
+      rows: [
+        {
+          table: 'staff',
+          row: { ...staff(1, { name: 'Older server copy' }), server_seq: 3 },
+          server_seq: 3,
+        },
+      ],
+      next_seq: 3,
+      has_more: false,
+    });
+    await engine.syncNow();
+    expect(server.api.syncPull.mock.calls[0]![0].since_seq).toBe(0);
+    expect((await db.staff.get(STAFF(1)))?.name).toBe('Local edit');
   });
 });

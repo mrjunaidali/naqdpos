@@ -22,7 +22,13 @@ import {
 } from '@naqdpos/core';
 import { dataTable, onLocalWrite, rowKey } from '../db/outbox.ts';
 import type { NaqdDb, OutboxEntry } from '../db/schema.ts';
-import { patchSyncState, readCursor, readSyncState, SYNC_META } from './state.ts';
+import {
+  patchSyncState,
+  readCursor,
+  readSyncState,
+  reconcileCursorTables,
+  SYNC_META,
+} from './state.ts';
 
 export const BACKOFF_MS = [5_000, 15_000, 60_000, 300_000] as const;
 export const WRITE_DEBOUNCE_MS = 5_000;
@@ -148,6 +154,8 @@ export function createSyncEngine(deps: SyncEngineDeps) {
   }
 
   async function pullAll(deviceId: string): Promise<void> {
+    // A table new to this app version means rows behind the cursor were skipped: re-pull.
+    await reconcileCursorTables(db);
     let cursor = await readCursor(db);
     for (;;) {
       const page = await api.syncPull({ device_id: deviceId, since_seq: cursor });

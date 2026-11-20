@@ -106,7 +106,8 @@ Compute these with pure functions in `packages/core` (client) and matching SQL v
 ### Pull (server → device)
 1. `GET /sync/pull?device_id&since_seq&limit` (SQL function `sync_pull`, limit default 500, max 1000) returns `{rows: [{table, row, server_seq}], next_seq, has_more}`: rows of the device's shop from all registered tables the device may see (RLS, plus `pull_scope = owner_device` tables only for `owner`-mode devices) where `server_seq > since_seq`, ordered by `server_seq`. It records `last_seq_pulled` and `last_sync_at` on the device.
 2. The device applies them to Dexie and stores the new cursor. Repeat until `has_more` is false. A row with a local edit still in the outbox is not overwritten (that edit is newer on the device and comes back after its push). Tables the app version does not know are skipped.
-3. Pull runs after every successful push.
+3. Because skipped rows lie behind the cursor, the device stores the cursor together with the set of sync table names it was built with (`meta.sync_cursor_tables`). Before each pull, if the app now knows a table that is not in that set (an update added one, e.g. `staff_pins`), or the set is missing while the cursor is above 0, the cursor goes back to 0 and the set is saved: the next pull reads everything again. Pull is idempotent and rows with a pending local edit are still protected (decided 21 Nov 2026).
+4. Pull runs after every successful push.
 
 ### Device modes and what syncs
 The mode is stored in `devices.mode` and applies to pull **and** push.
