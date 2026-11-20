@@ -260,7 +260,11 @@
       "price": "TODO-ur روپے لکھیں، مثلاً 120 یا 120.50۔",
       "negative": "TODO-ur قیمت منفی نہیں ہو سکتی۔",
       "tooManyTerms": "TODO-ur زیادہ سے زیادہ 20 نام۔"
-    }
+    },
+    "picture": "TODO-ur تصویر",
+    "pictureHint": "TODO-ur چیز کے خانے پر دکھائی جاتی ہے تاکہ جلدی ملے۔",
+    "pictureNone": "TODO-ur کوئی تصویر نہیں",
+    "pictureOption": "TODO-ur تصویر {{icon}}"
   },
   "categories": {
     "title": "TODO-ur زمرے",

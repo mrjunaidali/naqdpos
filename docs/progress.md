@@ -381,3 +381,24 @@ An owner who forgot their PIN gets a new one with an emailed code: "Forgot PIN?"
 **Follow-ups**
 - SMTP provider (§8): until then codes reach the console in development only; in production sending fails with 500 and nothing is counted.
 - A second owner on a shop device can only reset their PIN after signing in with their own account there.
+
+## Step 10 — US078 product icons (emoji) (2026-11-21)
+
+Every product can show one emoji picture on its tile, so the counter finds items at a glance. Offline, no uploads.
+
+**Built**
+- Migration `20261121180000_product_icon.sql`: `products.icon text null` checked by `product_icon_ok()` (1–16 characters counted as code points, only emoji blocks U+2190–U+2BFF and U+1F000–U+1FAFF plus variation selectors, zero-width joiner and keycap; no letters, digits, spaces or Urdu text); `icon` added to the products `push_columns`; EXECUTE granted to `naqdpos_app` (the check runs as the inserting role).
+- `packages/core`: `isProductIcon()` (same rule, checked per code point), `PRODUCT_ICON_CHOICES` (46 food emoji), `ProductRow.icon` and the row schema field optional so older payloads still validate, `validateProductForm` takes the picture; `freshProduce.ts` `PRESET_ICONS` (one entry per preset, every line `// verify: Junaid`; null where nothing fits, e.g. turnip, taro root, gourds, okra, red/yellow capsicum, guava, pomegranate, falsa, jamun, loquat).
+- `apps/pos`: Dexie **version 6** (no store change; keeps the version in step with the schema); `createFromPresets` copies the preset icon to new products and, on restore, keeps an existing icon (`existing.icon ?? preset.icon`); `saveProduct` saves the picture; `IconPicker` ("Picture": None + the grid, 44 px buttons, aria-pressed; a picture not in the grid stays selectable); `ProductIcon` (about 32 px, fixed height, decorative) at the top of product tiles and at the start of preset picker and Today's rates rows. en + ur strings.
+
+**Tests**: DB 113 (+16: six valid icons incl. a variation selector, a newer emoji and a joiner sequence, null, seven refusals incl. English, Urdu, digits, mixed text, a space, empty and 17 characters; icon pushed and pulled; an older payload without icon keeps the stored one). Core 204 (+4: icon rule, picker choices, every preset covered and valid with null where nothing fits, form picture). Pos 170 (+7: preset → product icon and null, restore keeps / fills in, picture set on a new product, cleared with None, grid tiles with and without an icon at the same height, preset picker and Today's rates rows).
+
+**Decisions**
+- "16 characters" counts code points on both sides (Postgres `char_length`, JS `[...s].length`).
+- Restoring a hidden preset product keeps the owner's picture; only a missing one is filled from the preset.
+- Rows (preset picker, Today's rates) show the icon at the start of the row; tiles show it on top.
+
+**Follow-ups**
+- Junaid to verify the preset icons (and which "null" items deserve a picture).
+- The sale screen (US029) uses `ProductIcon` on its tiles.
+- Owner photos: US079 (R2), shown instead of the emoji when present.

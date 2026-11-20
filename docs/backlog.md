@@ -23,7 +23,7 @@ Build in this order, not in ID order. "Sheet step" is the step number in the ori
 | 4 | Sync engine (outbox, push/pull, health, app version, update checks) | US003, US005, US006, US004 | 5, 17, 18, 19 | Done (Step 5) |
 | 5 | Staff, PIN switch, permissions | US017, US016, US018 | 8, 9, 10 | Done (Step 6; own-shift sales part of US018 comes with selling) |
 | 6 | Products, categories, produce presets, today's rates | US019, US021, US072, US020 | 11, 12, —, 13 | Done (Step 7); change device mode added (Step 8) |
-| 6b | Product pictures (emoji icons) | US078 | — | **Next** (after the sync re-pull fix and owner PIN reset) |
+| 6b | Product pictures (emoji icons) | US078 | — | Done (Step 10) |
 | 7 | Selling: cart, custom item, cash, wallets/split | US029, US030, US034, US035 | 14, 15, 16, 20 | To do |
 | 8 | Stock, wastage, discounts, FOC | US024, US025, US032, US033 | 21–24 | To do |
 | 9 | Customers and khata | US038, US039, US040, US041 | 25–28 | To do |
@@ -197,7 +197,7 @@ Build in this order, not in ID order. "Sheet step" is the step number in the ori
 - Items whose English name already exists show "Added" and are not created twice
 - Search matches English, Urdu and Roman Urdu ("aalu", "آلو", "potato" → Potato; "chaunsa" → Mango (Chaunsa))
 
-**US078** · Should · 3 · To do — As a cashier, I want a picture on each product tile, so that I find items at a glance without reading (like the 16 Nov prototype).
+**US078** · Should · 3 · Done (icons to be verified by Junaid) — As a cashier, I want a picture on each product tile, so that I find items at a glance without reading (like the 16 Nov prototype).
 - `products.icon` (one emoji, nullable, max 16 chars), pushable and pulled by every device (approved schema change; architecture §3)
 - Every fresh produce preset has an icon (closest emoji, null where nothing fits; verified by Junaid); products created or restored from presets get it
 - Product form has a "Picture" picker (food emoji grid + None), owner only

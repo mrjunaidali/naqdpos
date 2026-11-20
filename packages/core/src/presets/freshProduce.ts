@@ -21,6 +21,8 @@ export interface ProducePreset {
   focDefault: boolean;
   /** Only affects sort order in the picker. */
   seasonal: boolean;
+  /** Tile picture (US078), copied to products.icon; null where no emoji fits. */
+  icon: string | null;
 }
 
 /** The three categories created on demand, with both names (spec "Rules"). */
@@ -28,6 +30,96 @@ export const PRESET_CATEGORIES: Record<PresetCategory, { en: string; ur: string;
   vegetables: { en: 'Vegetables', ur: 'سبزیاں', sort: 1 },
   greens: { en: 'Greens & herbs', ur: 'ساگ اور ہرے مصالحے', sort: 2 },
   fruits: { en: 'Fruits', ur: 'پھل', sort: 3 },
+};
+
+/**
+ * Picture per preset (US078): the closest common food emoji, or null where nothing fits well
+ * (a wrong picture misleads more than none). Not yet checked: every line is `// verify: Junaid`.
+ */
+export const PRESET_ICONS: Record<string, string | null> = {
+  potato: '🥔', // verify: Junaid
+  potato_red: '🥔', // verify: Junaid
+  onion_red: '🧅', // verify: Junaid
+  onion_white: '🧅', // verify: Junaid
+  tomato: '🍅', // verify: Junaid
+  garlic: '🧄', // verify: Junaid
+  ginger: '🫚', // verify: Junaid
+  green_chilli_small: '🌶️', // verify: Junaid
+  green_chilli_big: '🌶️', // verify: Junaid
+  red_chilli_fresh: '🌶️', // verify: Junaid
+  lemon: '🍋', // verify: Junaid
+  cucumber: '🥒', // verify: Junaid
+  carrot: '🥕', // verify: Junaid
+  radish: null, // verify: Junaid (no radish emoji)
+  turnip: null, // verify: Junaid
+  beetroot: null, // verify: Junaid
+  cauliflower: null, // verify: Junaid (🥦 is broccoli)
+  cabbage: '🥬', // verify: Junaid
+  okra: null, // verify: Junaid
+  brinjal: '🍆', // verify: Junaid
+  bottle_gourd: null, // verify: Junaid
+  bitter_gourd: null, // verify: Junaid
+  sponge_gourd: null, // verify: Junaid
+  round_gourd: null, // verify: Junaid
+  pumpkin: null, // verify: Junaid (🎃 is a lantern)
+  taro_root: null, // verify: Junaid
+  peas: '🫛', // verify: Junaid
+  green_beans: '🫛', // verify: Junaid
+  capsicum_green: '🫑', // verify: Junaid
+  capsicum_red: null, // verify: Junaid (🫑 is green)
+  capsicum_yellow: null, // verify: Junaid (🫑 is green)
+  sweet_potato: '🍠', // verify: Junaid
+  lotus_stem: null, // verify: Junaid
+  corn: '🌽', // verify: Junaid
+  coriander: '🌿', // verify: Junaid
+  mint: '🌿', // verify: Junaid
+  curry_leaves: '🌿', // verify: Junaid
+  spinach: '🥬', // verify: Junaid
+  mustard_greens: '🥬', // verify: Junaid
+  fenugreek: '🌿', // verify: Junaid
+  dill: '🌿', // verify: Junaid
+  spring_onion: null, // verify: Junaid
+  lettuce: '🥬', // verify: Junaid
+  banana: '🍌', // verify: Junaid
+  apple_kala_kulu: '🍎', // verify: Junaid
+  apple_gala: '🍎', // verify: Junaid
+  apple_golden: '🍏', // verify: Junaid
+  apple_ambri: '🍎', // verify: Junaid
+  mango_sindhri: '🥭', // verify: Junaid
+  mango_chaunsa: '🥭', // verify: Junaid
+  mango_anwar_ratol: '🥭', // verify: Junaid
+  mango_langra: '🥭', // verify: Junaid
+  mango_dusehri: '🥭', // verify: Junaid
+  kinnow: '🍊', // verify: Junaid
+  malta: '🍊', // verify: Junaid
+  sweet_lime: '🍋', // verify: Junaid
+  grapefruit: '🍊', // verify: Junaid
+  guava: null, // verify: Junaid
+  pomegranate: null, // verify: Junaid
+  pomegranate_kandhari: null, // verify: Junaid
+  grapes_green: '🍇', // verify: Junaid
+  grapes_black: '🍇', // verify: Junaid
+  watermelon: '🍉', // verify: Junaid
+  melon: '🍈', // verify: Junaid
+  papaya: null, // verify: Junaid
+  pear: '🍐', // verify: Junaid
+  peach: '🍑', // verify: Junaid
+  plum: null, // verify: Junaid
+  apricot: null, // verify: Junaid
+  cherry: '🍒', // verify: Junaid
+  lychee: null, // verify: Junaid
+  strawberry: '🍓', // verify: Junaid
+  persimmon: null, // verify: Junaid
+  chikoo: null, // verify: Junaid
+  custard_apple: null, // verify: Junaid
+  jujube: null, // verify: Junaid
+  falsa: null, // verify: Junaid
+  jamun: null, // verify: Junaid
+  loquat: null, // verify: Junaid
+  fig: null, // verify: Junaid
+  coconut: '🥥', // verify: Junaid
+  pineapple: '🍍', // verify: Junaid
+  kiwi: '🥝', // verify: Junaid
 };
 
 interface Options {
@@ -55,6 +147,7 @@ function item(
     unit,
     focDefault: options.foc ?? false,
     seasonal: options.seasonal ?? false,
+    icon: PRESET_ICONS[key] ?? null,
   };
 }
 

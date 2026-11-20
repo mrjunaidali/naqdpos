@@ -5,6 +5,7 @@ import { Alert, Button } from '../../ui/Button.tsx';
 import { useActingOwnerId } from '../pin/actingOwner.ts';
 import { rupeesInput, useCosts, useCostsHere, useShopProducts } from './catalogueData.ts';
 import { saveTodaysRates, type RateChange } from './catalogueRepo.ts';
+import { ProductIcon } from './ProductIcon.tsx';
 
 /** Owner screen (US020): every product's sale price (and cost on owner devices), Save all once. */
 export function TodaysRatesPage() {
@@ -94,6 +95,9 @@ function RatesForm(props: {
       <ul className="divide-y divide-border rounded-2xl border border-border bg-surface">
         {props.products.map((p) => (
           <li key={p.id} className="flex items-center gap-2 px-3 py-2">
+            <span className="w-10 shrink-0 text-center">
+              <ProductIcon icon={p.icon} />
+            </span>
             <span className="min-w-0 flex-1">
               <span className="block truncate font-medium">{displayName(p, i18n.language)}</span>
               <span className="block text-sm text-muted">

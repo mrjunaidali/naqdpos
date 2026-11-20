@@ -40,6 +40,7 @@ const value = (overrides: Partial<Parameters<typeof saveProduct>[1]> = {}) => ({
   cost_price_paisa: null,
   search_terms: ['aloo'],
   track_stock: false,
+  icon: null,
   ...overrides,
 });
 

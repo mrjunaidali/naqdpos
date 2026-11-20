@@ -6,6 +6,7 @@ import { useActingOwnerId } from '../pin/actingOwner.ts';
 import { rupeesInput, useCategories, usePriceLabel, useShopProducts } from './catalogueData.ts';
 import { setSalePrice } from './catalogueRepo.ts';
 import { CategoryTabs } from './CategoryTabs.tsx';
+import { ProductIcon } from './ProductIcon.tsx';
 
 const actionClass =
   'inline-flex min-h-11 items-center rounded-md border border-border bg-surface px-3 text-sm font-medium text-text';
@@ -111,6 +112,7 @@ function ProductCard({ product }: { product: ProductRow }) {
         onClick={() => void navigate(`/products/${product.id}`)}
         className="min-h-11 flex-1 text-start"
       >
+        <ProductIcon icon={product.icon} />
         <span className="block font-semibold leading-tight">
           {displayName(product, i18n.language)}
         </span>

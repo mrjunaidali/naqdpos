@@ -101,6 +101,7 @@ function newProduct(c: Context, fields: Partial<ProductRow> & Pick<ProductRow, '
     packaging_cost_paisa: 0,
     foc_rule: null,
     search_terms: [],
+    icon: null,
     created_at: c.now,
     updated_at: c.now,
     deleted_at: null,
@@ -127,6 +128,7 @@ export async function saveProduct(
     sale_price_paisa: value.sale_price_paisa,
     search_terms: value.search_terms,
     track_stock: value.track_stock,
+    icon: value.icon,
   };
   const product: ProductRow = existing
     ? { ...existing, ...fields, updated_at: c.now }
@@ -312,6 +314,8 @@ export async function createFromPresets(
           ...existing,
           deleted_at: null,
           sale_price_paisa: price,
+          // Keep a picture the owner already chose; otherwise take the preset's.
+          icon: existing.icon ?? preset.icon,
           updated_at: c.now,
         }),
       );
@@ -329,6 +333,7 @@ export async function createFromPresets(
       category_id: categoryFor(preset.category),
       sale_price_paisa: rate ?? 0,
       search_terms: [...preset.roman],
+      icon: preset.icon,
     });
     writes.push(write('products', product));
     if (rate !== null) writes.push(priceRow(c, product.id, rate));

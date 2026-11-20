@@ -5,6 +5,73 @@ import { rupeesToPaisa, type Paisa } from './money.ts';
 export const PRODUCT_UNITS = ['kg', 'g', 'dozen', 'piece', 'bundle', 'litre'] as const;
 export type ProductUnit = (typeof PRODUCT_UNITS)[number];
 
+/** Max characters (code points) of products.icon, as Postgres char_length counts them. */
+export const MAX_ICON_LENGTH = 16;
+
+// Same rule as product_icon_ok() in migration 20261121180000: emoji blocks, variation selectors,
+// zero-width joiner, keycap; no letters, digits or spaces. Checked per code point (a regex
+// character class holding joiners and selectors is easy to misread).
+const ICON_JOINERS = new Set([0xfe0e, 0xfe0f, 0x200d, 0x20e3]);
+function isIconCodePoint(cp: number): boolean {
+  return (cp >= 0x2190 && cp <= 0x2bff) || (cp >= 0x1f000 && cp <= 0x1faff) || ICON_JOINERS.has(cp);
+}
+
+/** A short emoji-like string allowed as a product picture. */
+export function isProductIcon(value: string): boolean {
+  const points = [...value].map((ch) => ch.codePointAt(0)!);
+  return points.length >= 1 && points.length <= MAX_ICON_LENGTH && points.every(isIconCodePoint);
+}
+
+/** The Picture field's choices (US078): common food emoji. */
+export const PRODUCT_ICON_CHOICES = [
+  '🥔',
+  '🧅',
+  '🍅',
+  '🧄',
+  '🫚',
+  '🌶️',
+  '🍋',
+  '🥒',
+  '🥕',
+  '🥬',
+  '🥦',
+  '🍆',
+  '🫛',
+  '🫑',
+  '🍠',
+  '🌽',
+  '🌿',
+  '🍄',
+  '🥜',
+  '🫘',
+  '🍌',
+  '🍎',
+  '🍏',
+  '🥭',
+  '🍊',
+  '🍈',
+  '🍉',
+  '🍐',
+  '🍑',
+  '🍒',
+  '🍓',
+  '🫐',
+  '🥝',
+  '🥥',
+  '🍍',
+  '🍇',
+  '🥚',
+  '🍞',
+  '🍚',
+  '🥛',
+  '🧀',
+  '🍗',
+  '🥩',
+  '🐟',
+  '🧂',
+  '🫙',
+] as const;
+
 /** search_terms limits (products.search_terms check in the migration). */
 export const MAX_SEARCH_TERMS = 20;
 export const MAX_SEARCH_TERM_LENGTH = 40;
@@ -41,6 +108,8 @@ export interface ProductRow extends Synced {
   foc_rule: Record<string, unknown> | null;
   /** Other names and Roman Urdu spellings (aloo, aalu…), for search. */
   search_terms: string[];
+  /** One emoji shown on the tile (US078); absent in rows from before it existed. */
+  icon?: string | null | undefined;
 }
 
 /** Owner-only current cost; only owner devices hold it. */
@@ -120,9 +189,12 @@ export interface ProductFormInput {
   costPrice: string;
   searchTerms: string;
   trackStock: boolean;
+  /** Picture (emoji) or null for none. */
+  icon?: string | null;
 }
 
-export type ProductFormError = 'required' | 'too_long' | 'invalid_unit' | PriceError | 'too_many';
+export type ProductFormError =
+  'required' | 'too_long' | 'invalid_unit' | PriceError | 'too_many' | 'invalid_icon';
 
 export interface ProductFormValue {
   name: string;
@@ -133,11 +205,15 @@ export interface ProductFormValue {
   cost_price_paisa: Paisa | null;
   search_terms: string[];
   track_stock: boolean;
+  icon: string | null;
 }
 
 export interface ProductFormResult {
   errors: Partial<
-    Record<'name' | 'nameUr' | 'unit' | 'salePrice' | 'costPrice' | 'searchTerms', ProductFormError>
+    Record<
+      'name' | 'nameUr' | 'unit' | 'salePrice' | 'costPrice' | 'searchTerms' | 'icon',
+      ProductFormError
+    >
   >;
   value?: ProductFormValue;
 }
@@ -164,6 +240,9 @@ export function validateProductForm(input: ProductFormInput): ProductFormResult 
   if (terms.length > MAX_SEARCH_TERMS) errors.searchTerms = 'too_many';
   else if (terms.some((t) => t.length > MAX_SEARCH_TERM_LENGTH)) errors.searchTerms = 'too_long';
 
+  const icon = input.icon ?? null;
+  if (icon !== null && !isProductIcon(icon)) errors.icon = 'invalid_icon';
+
   if (Object.keys(errors).length > 0 || !unit || sale.paisa === null) return { errors };
   return {
     errors,
@@ -176,6 +255,7 @@ export function validateProductForm(input: ProductFormInput): ProductFormResult 
       cost_price_paisa: cost.paisa,
       search_terms: terms,
       track_stock: input.trackStock,
+      icon,
     },
   };
 }

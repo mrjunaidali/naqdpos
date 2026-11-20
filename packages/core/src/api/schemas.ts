@@ -2,6 +2,7 @@
 // typed client. One definition, so both sides cannot drift apart (CLAUDE.md, Portability 3).
 import { z } from 'zod';
 import {
+  isProductIcon,
   MAX_SEARCH_TERM_LENGTH,
   MAX_SEARCH_TERMS,
   PRODUCT_UNITS,
@@ -266,6 +267,8 @@ export const ProductRowSchema = z.object({
   packaging_cost_paisa: paisa,
   foc_rule: z.record(z.string(), z.unknown()).nullable(),
   search_terms: z.array(z.string().min(1).max(MAX_SEARCH_TERM_LENGTH)).max(MAX_SEARCH_TERMS),
+  // Optional: rows and payloads from before US078 have no icon.
+  icon: z.string().refine(isProductIcon, 'not an emoji icon').nullable().optional(),
   device_id: z.uuid().nullable(),
   created_at: iso,
   updated_at: iso,

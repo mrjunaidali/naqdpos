@@ -6,7 +6,9 @@ Status: **in backlog** as **US072** (R1, build phase 6 with products). Schema ap
 
 Fruit & veg owners should not type potato, onion, tomato… on every new shop. The app ships a built-in list of 83 common items (34 vegetables, 9 greens & herbs, 40 fruits), including common varieties. The owner ticks what they sell, enters today's rate, and the products are created.
 
-Data lives in `packages/core/src/presets/freshProduce.ts` (English, Urdu, Roman Urdu search names, default unit, variety group, FOC default, seasonal flag).
+Data lives in `packages/core/src/presets/freshProduce.ts` (English, Urdu, Roman Urdu search names, default unit, variety group, FOC default, seasonal flag, icon).
+
+Images: **emoji icon now (US078); owner photos later (US079).** Every preset has the closest common food emoji, or none where nothing fits well (a wrong picture misleads more than none); icons are marked `// verify: Junaid`. A product made from a preset gets its icon; restoring a hidden product keeps an icon the owner already chose.
 
 ## Rules
 
@@ -130,4 +132,4 @@ Urdu to be verified by Junaid.
 
 ## Out of scope
 
-Grocery/meat presets (same pattern later), images, barcode items (`global_catalogue`, Release 2), auto-updating mandi rates.
+Grocery/meat presets (same pattern later), product photos (US079), barcode items (`global_catalogue`, Release 2), auto-updating mandi rates.

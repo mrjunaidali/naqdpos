@@ -260,7 +260,11 @@
       "price": "Enter rupees, e.g. 120 or 120.50.",
       "negative": "The price cannot be negative.",
       "tooManyTerms": "Use at most 20 names."
-    }
+    },
+    "picture": "Picture",
+    "pictureHint": "Shown on the product tile so it is quick to find.",
+    "pictureNone": "No picture",
+    "pictureOption": "Picture {{icon}}"
   },
   "categories": {
     "title": "Categories",

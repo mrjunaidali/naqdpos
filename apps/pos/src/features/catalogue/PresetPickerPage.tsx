@@ -12,6 +12,7 @@ import { useTranslation } from 'react-i18next';
 import { useNavigate, useSearchParams } from 'react-router';
 import { Alert, Button } from '../../ui/Button.tsx';
 import { useActingOwnerId } from '../pin/actingOwner.ts';
+import { ProductIcon } from './ProductIcon.tsx';
 import {
   createFromPresets,
   presetStatus,
@@ -117,6 +118,9 @@ export function PresetPickerPage() {
                         onChange={() => toggle(preset)}
                         className="size-5 accent-primary"
                       />
+                      <span className="w-10 shrink-0 text-center">
+                        <ProductIcon icon={preset.icon} />
+                      </span>
                       <span className="flex-1">
                         <span className="block font-medium">{ur ? preset.ur : preset.en}</span>
                         <span className="block text-sm text-muted">

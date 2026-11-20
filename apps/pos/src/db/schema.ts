@@ -100,6 +100,9 @@ export class NaqdDb extends Dexie {
       price_history: 'id, product_id, server_seq',
       product_cost_history: 'id, product_id, server_seq',
     });
+    // products.icon (migration 20261121180000_product_icon): a new field on products, no index,
+    // so no store changes; the bump keeps Dexie in step with the server schema (rule 8).
+    this.version(6).stores({});
   }
 }
 

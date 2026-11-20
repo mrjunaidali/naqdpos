@@ -16,6 +16,7 @@ import { Field } from '../../ui/Field.tsx';
 import { useActingOwnerId } from '../pin/actingOwner.ts';
 import { rupeesInput, useCategories, useCostsHere } from './catalogueData.ts';
 import { saveProduct, setProductHidden } from './catalogueRepo.ts';
+import { IconPicker } from './IconPicker.tsx';
 
 /** /products/new and /products/:productId (owner screen, US019). */
 export function ProductFormPage() {
@@ -70,6 +71,7 @@ function ProductForm(props: {
     costPrice: rupeesInput(props.cost),
     searchTerms: existing?.search_terms.join(', ') ?? '',
     trackStock: existing?.track_stock ?? false,
+    icon: existing?.icon ?? null,
   });
   const [errors, setErrors] = useState<ProductFormResult['errors']>({});
   const [failed, setFailed] = useState(false);
@@ -196,6 +198,7 @@ function ProductForm(props: {
         hint={t('products.searchTermsHint')}
         autoComplete="off"
       />
+      <IconPicker value={values.icon} onChange={(icon) => setValues((v) => ({ ...v, icon }))} />
       <label className="flex min-h-11 items-center gap-3">
         <input
           type="checkbox"

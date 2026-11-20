@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import {
   displayName,
+  isProductIcon,
+  PRODUCT_ICON_CHOICES,
   parseRupees,
   parseSearchTerms,
   PRODUCT_UNITS,
@@ -8,7 +10,12 @@ import {
   validateProductForm,
   type ProductFormInput,
 } from './catalogue.ts';
-import { FRESH_PRODUCE, PRESET_CATEGORIES, presetsForPicker } from './presets/freshProduce.ts';
+import {
+  FRESH_PRODUCE,
+  PRESET_CATEGORIES,
+  PRESET_ICONS,
+  presetsForPicker,
+} from './presets/freshProduce.ts';
 
 const valid: ProductFormInput = {
   name: ' Potato ',
@@ -34,6 +41,7 @@ describe('validateProductForm', () => {
         cost_price_paisa: 6250,
         search_terms: ['aloo', 'aalu'],
         track_stock: false,
+        icon: null,
       },
     });
   });
@@ -136,5 +144,40 @@ describe('fresh produce presets (docs/features/produce-presets.md)', () => {
       ur: 'ساگ اور ہرے مصالحے',
       sort: 2,
     });
+  });
+});
+
+describe('product icons (US078)', () => {
+  it('accepts short emoji, refuses text, digits, spaces and long strings', () => {
+    for (const ok of ['🥔', '🌶️', '🫚', '🧑‍🌾', '🥬']) expect(isProductIcon(ok), ok).toBe(true);
+    for (const bad of ['potato', 'آلو', '12', '🥔 aloo', ' ', '', '🥔'.repeat(17)]) {
+      expect(isProductIcon(bad), bad).toBe(false);
+    }
+    expect(isProductIcon('🥔'.repeat(16))).toBe(true);
+  });
+
+  it('offers about 40 valid food emoji in the picker', () => {
+    expect(PRODUCT_ICON_CHOICES.length).toBeGreaterThanOrEqual(40);
+    expect(PRODUCT_ICON_CHOICES.every(isProductIcon)).toBe(true);
+    expect(new Set(PRODUCT_ICON_CHOICES).size).toBe(PRODUCT_ICON_CHOICES.length);
+  });
+
+  it('gives every preset an icon entry: a valid emoji or null', () => {
+    expect(Object.keys(PRESET_ICONS).sort()).toEqual(FRESH_PRODUCE.map((p) => p.key).sort());
+    for (const p of FRESH_PRODUCE) {
+      expect(p.icon === null || isProductIcon(p.icon), p.key).toBe(true);
+    }
+    expect(FRESH_PRODUCE.find((p) => p.key === 'potato')?.icon).toBe('🥔');
+    // Nothing fits: no picture rather than a misleading one.
+    for (const key of ['turnip', 'taro_root', 'bitter_gourd', 'falsa', 'jamun', 'loquat']) {
+      expect(FRESH_PRODUCE.find((p) => p.key === key)?.icon, key).toBeNull();
+    }
+  });
+
+  it('the form takes a picture or none, and refuses anything else', () => {
+    expect(validateProductForm({ ...valid, icon: '🥔' }).value?.icon).toBe('🥔');
+    expect(validateProductForm({ ...valid, icon: null }).value?.icon).toBeNull();
+    expect(validateProductForm(valid).value?.icon).toBeNull();
+    expect(validateProductForm({ ...valid, icon: 'x' }).errors).toEqual({ icon: 'invalid_icon' });
   });
 });
