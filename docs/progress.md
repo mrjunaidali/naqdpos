@@ -467,3 +467,12 @@ A cart becomes a sale offline: the bill is rounded to the whole rupee, paid in c
 - `customer_id` FKs come with the customers table (khata).
 - Receipt sharing and printing: US036.
 - The rider stories decide what riders see of sales.
+
+## Dev: test on a phone over the LAN (2026-11-21)
+
+- `pnpm dev:lan` (`scripts/dev-lan.ts`): starts the API and the POS dev server, prints `https://<Wi-Fi IP>:5173` (virtual adapters such as WSL/Hyper-V skipped) and the phone steps; the firewall command is a comment, never run.
+- POS dev server in LAN mode (`NAQDPOS_LAN=1`): all interfaces + self-signed HTTPS (`@vitejs/plugin-basic-ssl`, dev dependency). `/api/*` proxy to `http://localhost:8787` in every dev run; headers pass through; the proxy presents the API's own `Origin` so Better Auth accepts sign-in from a LAN origin.
+- `apps/pos/src/api/baseUrl.ts`: on the dev server, an empty or `/api` `VITE_API_URL` means `<origin>/api`; builds use `VITE_API_URL` exactly. Tests: `baseUrl.test.ts` (3).
+- CORS unchanged: the phone's calls are same-origin through the proxy, so no LAN origins are added.
+- `scripts/tsconfig.json`; root `typecheck` also checks `scripts/`; ESLint Node globals for `scripts/`. README added; `docs/deployment.md` §3.
+- Checked by hand: health, the app page, a custom header (`X-Device-Id`) and a sign-in POST with a phone `Origin`, all through `https://…:5173/api`.

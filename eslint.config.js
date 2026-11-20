@@ -29,7 +29,7 @@ export default defineConfig([
   },
 
   {
-    files: ['apps/api/**/*.ts', 'db/**/*.ts'],
+    files: ['apps/api/**/*.ts', 'db/**/*.ts', 'scripts/**/*.ts'],
     languageOptions: { globals: globals.node },
   },
 

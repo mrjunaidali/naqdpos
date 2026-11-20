@@ -8,10 +8,11 @@
   },
   "scripts": {
     "dev": "pnpm --parallel --filter \"./apps/*\" dev",
+    "dev:lan": "node scripts/dev-lan.ts",
     "build": "pnpm -r build",
     "test": "pnpm -r test",
     "lint": "eslint .",
-    "typecheck": "pnpm -r typecheck",
+    "typecheck": "pnpm -r typecheck && tsc --noEmit -p scripts/tsconfig.json",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "db:create": "node db/scripts/db.ts create",
