@@ -1,8 +1,10 @@
 // Completing a sale (US034, US035): ONE Dexie transaction writes sales + sale_lines + payments
 // with their outbox entries, moves the per-device receipt counter and clears the stored cart.
-// All of it or none of it, and it never waits for the network (rule 1).
+// All of it or none of it, and it never waits for the network (rule 1). Tracked products get a
+// 'sale' stock movement in the same transaction (US024); stock never blocks the sale.
 import {
   buildSale,
+  buildSaleMovements,
   receiptCounter,
   receiptNo,
   type PaymentDraft,
@@ -74,10 +76,20 @@ export async function completeSale(
   // A cart write still queued must land before the sale clears the stored cart.
   await cartSaved();
   const cart = useCartStore.getState().lines;
+  // One instant for the sale and its stock movements (same business date).
+  const now = options.now ?? new Date();
 
   const rows = await database.transaction(
     'rw',
-    [database.sales, database.sale_lines, database.payments, database.outbox, database.meta],
+    [
+      database.sales,
+      database.sale_lines,
+      database.payments,
+      database.stock_movements,
+      database.products,
+      database.outbox,
+      database.meta,
+    ],
     async () => {
       const n = (await lastCounter(database, device.code)) + 1;
       const built = buildSale(cart, payments, {
@@ -85,11 +97,27 @@ export async function completeSale(
         deviceId: device.id,
         staffId,
         receiptNo: receiptNo(device.code, n),
-        now: options.now ?? new Date(),
+        now,
       });
       if ('error' in built) throw new SaleNotCompleted(built.error);
 
-      // Sale first, then lines, then payments: the outbox pushes in this order (parents first).
+      const productIds = [
+        ...new Set(built.lines.flatMap((l) => (l.product_id ? [l.product_id] : []))),
+      ];
+      const products = new Map(
+        (await database.products.bulkGet(productIds)).flatMap((p) =>
+          p ? [[p.id, p] as const] : [],
+        ),
+      );
+      const movements = buildSaleMovements(built.lines, products, {
+        shopId: device.shop_id,
+        deviceId: device.id,
+        staffId,
+        now,
+      });
+
+      // Sale first, then lines, payments and stock movements: the outbox pushes in this order
+      // (parents first).
       const writes: LocalWrite[] = [
         { table: 'sales', op: 'insert', row: { ...built.sale } },
         ...built.lines.map((row): LocalWrite => ({
@@ -99,6 +127,11 @@ export async function completeSale(
         })),
         ...built.payments.map((row): LocalWrite => ({
           table: 'payments',
+          op: 'insert',
+          row: { ...row },
+        })),
+        ...movements.map((row): LocalWrite => ({
+          table: 'stock_movements',
           op: 'insert',
           row: { ...row },
         })),

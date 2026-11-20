@@ -458,5 +458,56 @@
     "label": "Name",
     "labelHint": "e.g. SadaPay, NayaPay, cheque",
     "add": "Add method"
+  },
+  "stock": {
+    "title": "Stock",
+    "open": "Stock",
+    "search": "Search stock",
+    "empty": "No products track stock yet. Turn on “Track stock” on a product.",
+    "noMatch": "No products match.",
+    "inStock": "In stock: {{qty}}",
+    "check": "check stock",
+    "cardQty": "Stock {{qty}}",
+    "cardCheck": "{{qty}} · check stock",
+    "wastage": "Wastage",
+    "stockIn": "Stock in",
+    "setStock": "Set stock",
+    "wastageFor": "Wastage: {{name}}",
+    "stockInFor": "Stock in: {{name}}",
+    "setStockFor": "Set stock: {{name}}",
+    "titleFor": {
+      "wastage": "Wastage — {{name}}",
+      "stock_in": "Stock in — {{name}}",
+      "set_stock": "Set stock (count) — {{name}}"
+    },
+    "reasonLabel": "Reason",
+    "reason": {
+      "wastage": "Spoiled",
+      "damaged": "Damaged"
+    },
+    "quantity": "Quantity",
+    "counted": "Counted",
+    "typedQty": "Typed quantity",
+    "difference": "Difference: {{qty}}",
+    "sameAsStock": "Same as the stock: nothing will change.",
+    "note": "Note (optional)",
+    "save": {
+      "wastage": "Save wastage",
+      "stock_in": "Add stock",
+      "set_stock": "Save count"
+    },
+    "saved": "Stock saved",
+    "noChange": "The count matches the stock: nothing changed.",
+    "syncing": "Getting other devices’ sales…",
+    "syncWarning": "Other devices’ sales may be missing — count anyway?",
+    "countAnyway": "Count anyway",
+    "ownerPin": "Stock in and Set stock need the owner.",
+    "errors": {
+      "bad_qty": "Enter a quantity above 0.",
+      "note_too_long": "The note is too long (200 characters at most).",
+      "forbidden": "Only the owner can do this.",
+      "no_device": "This device is not set up.",
+      "no_staff": "Switch to a staff member first."
+    }
   }
 }

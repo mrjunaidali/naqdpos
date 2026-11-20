@@ -255,7 +255,10 @@ describe('pay screen (US034, US035)', () => {
     fireEvent.click(tomato);
     fireEvent.click(within(panel()).getByRole('button', { name: '1 kg' }));
     fireEvent.click(await screen.findByRole('button', { name: 'Charge' }));
-    await waitFor(() => expect(router.state.location.pathname).toBe('/sale/pay'));
+    // Opening the pay screen can take over a second when every package's tests run at once.
+    await waitFor(() => expect(router.state.location.pathname).toBe('/sale/pay'), {
+      timeout: 5000,
+    });
     fireEvent.click(await screen.findByRole('button', { name: 'Exact' }));
     fireEvent.click(screen.getByRole('button', { name: 'Complete sale' }));
     expect(await screen.findByText('Saved offline — will sync when online')).toBeInTheDocument();

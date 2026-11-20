@@ -13,6 +13,7 @@ export * from './qty.ts';
 export * from './sale.ts';
 export * from './search.ts';
 export * from './staff.ts';
+export * from './stock.ts';
 export * from './sync/schemas.ts';
 export * from './sync/tables.ts';
 export * from './syncHealth.ts';

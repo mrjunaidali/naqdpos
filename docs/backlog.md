@@ -25,7 +25,7 @@ Build in this order, not in ID order. "Sheet step" is the step number in the ori
 | 6 | Products, categories, produce presets, today's rates | US019, US021, US072, US020 | 11, 12, —, 13 | Done (Step 7); change device mode added (Step 8) |
 | 6b | Product pictures (emoji icons) | US078 | — | Done (Step 10) |
 | 7 | Selling: cart, custom item, cash, wallets/split | US029, US030, US034, US035 | 14, 15, 16, 20 | Done (Steps 11–12) |
-| 8 | Stock, wastage, discounts, FOC | US024, US025, US032, US033 | 21–24 | To do |
+| 8 | Stock, wastage, discounts, FOC | US024, US025, US032, US033 | 21–24 | Partly done (US024, US025 in Step 13) |
 | 9 | Customers and khata | US038, US039, US040, US041 | 25–28 | To do |
 | 10 | Shop profile and receipts | US014, US036 | 29, 30 | To do |
 | 11 | Expenses | US065, US046, US066 | 30a, 31, 31a | To do |
@@ -217,11 +217,11 @@ Build in this order, not in ID order. "Sheet step" is the step number in the ori
 
 ### F14 · Stock tracking
 
-**US024** · Must · 3 · R1 · To do — As a shop owner, I want stock to reduce automatically when I sell, so that I know what's left.
+**US024** · Must · 3 · R1 · Done — As a shop owner, I want stock to reduce automatically when I sell, so that I know what's left.
 - Sale writes `stock_movements` (reason `sale`) in the same transaction for products with `track_stock`
 - Stock = sum of movements (core function); shown in the product list; tracking can be switched off per product (e.g. loose herbs)
 
-**US025** · Must · 3 · R1 · To do — As a shop owner, I want to record wastage and stock adjustments, so that stock and profit stay accurate for perishables.
+**US025** · Must · 3 · R1 · Done (no cost on movements: the wastage value comes with the reports stories, from `product_cost_history`) — As a shop owner, I want to record wastage and stock adjustments, so that stock and profit stay accurate for perishables.
 - Reasons: spoiled (`wastage`), damaged, count correction; quantity and cost value (cost only on owner devices)
 - Shows in daily and monthly reports
 

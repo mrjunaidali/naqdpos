@@ -70,6 +70,7 @@ describe('sync schemas', () => {
       'staff',
       'staff_pins',
       'staff_salaries',
+      'stock_movements',
     ]);
     expect([...OWNER_DEVICE_TABLES].sort()).toEqual([
       'product_cost_history',

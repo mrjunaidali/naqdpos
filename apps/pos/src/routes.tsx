@@ -19,6 +19,7 @@ import { PayPage } from './features/sale/PayPage.tsx';
 import { SaleDonePage } from './features/sale/SaleDonePage.tsx';
 import { SalePage } from './features/sale/SalePage.tsx';
 import { SalesListPage, SaleViewPage } from './features/sale/SalesListPage.tsx';
+import { StockPage } from './features/stock/StockPage.tsx';
 import { PaymentMethodsPage } from './features/settings/PaymentMethodsPage.tsx';
 import { SettingsPage } from './features/settings/SettingsPage.tsx';
 import { StaffFormPage } from './features/staff/StaffFormPage.tsx';
@@ -149,6 +150,15 @@ export const routes: RouteObject[] = [
           { path: 'new', element: <StaffFormPage /> },
           { path: ':staffId', element: <StaffFormPage /> },
         ],
+      },
+      {
+        // Owners and cashiers (wastage); Stock in and Set stock ask for the owner PIN per action.
+        path: 'stock',
+        element: (
+          <Gate state="ready">
+            <StockPage />
+          </Gate>
+        ),
       },
       {
         // Owner screens (manage_products): one owner check per visit (OwnerPinGate).

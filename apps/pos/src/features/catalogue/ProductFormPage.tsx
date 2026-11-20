@@ -16,6 +16,7 @@ import { Field } from '../../ui/Field.tsx';
 import { useActingOwnerId } from '../pin/actingOwner.ts';
 import { rupeesInput, useCategories, useCostsHere } from './catalogueData.ts';
 import { saveProduct, setProductHidden } from './catalogueRepo.ts';
+import { ProductStockLine } from '../stock/ProductStockLine.tsx';
 import { IconPicker } from './IconPicker.tsx';
 
 /** /products/new and /products/:productId (owner screen, US019). */
@@ -208,6 +209,7 @@ function ProductForm(props: {
         />
         {t('products.trackStock')}
       </label>
+      {existing && values.trackStock && <ProductStockLine product={existing} />}
       <Button type="submit" disabled={busy}>
         {busy ? t('common.wait') : t('products.save')}
       </Button>

@@ -458,5 +458,56 @@
     "label": "نام",
     "labelHint": "TODO-ur مثلاً SadaPay، NayaPay، چیک",
     "add": "TODO-ur طریقہ شامل کریں"
+  },
+  "stock": {
+    "title": "TODO-ur اسٹاک",
+    "open": "TODO-ur اسٹاک",
+    "search": "TODO-ur اسٹاک تلاش کریں",
+    "empty": "TODO-ur ابھی کسی پروڈکٹ کا اسٹاک ٹریک نہیں ہو رہا۔ پروڈکٹ میں “اسٹاک ٹریک کریں” آن کریں۔",
+    "noMatch": "TODO-ur کوئی پروڈکٹ نہیں ملی۔",
+    "inStock": "TODO-ur اسٹاک میں: {{qty}}",
+    "check": "TODO-ur اسٹاک چیک کریں",
+    "cardQty": "TODO-ur اسٹاک {{qty}}",
+    "cardCheck": "TODO-ur {{qty}} · اسٹاک چیک کریں",
+    "wastage": "TODO-ur ضائع",
+    "stockIn": "TODO-ur اسٹاک آیا",
+    "setStock": "TODO-ur اسٹاک گنیں",
+    "wastageFor": "TODO-ur ضائع: {{name}}",
+    "stockInFor": "TODO-ur اسٹاک آیا: {{name}}",
+    "setStockFor": "TODO-ur اسٹاک گنیں: {{name}}",
+    "titleFor": {
+      "wastage": "TODO-ur ضائع — {{name}}",
+      "stock_in": "TODO-ur اسٹاک آیا — {{name}}",
+      "set_stock": "TODO-ur اسٹاک گنیں — {{name}}"
+    },
+    "reasonLabel": "TODO-ur وجہ",
+    "reason": {
+      "wastage": "TODO-ur خراب",
+      "damaged": "TODO-ur ٹوٹا / نقصان"
+    },
+    "quantity": "TODO-ur مقدار",
+    "counted": "TODO-ur گنتی",
+    "typedQty": "TODO-ur لکھی گئی مقدار",
+    "difference": "TODO-ur فرق: {{qty}}",
+    "sameAsStock": "TODO-ur اسٹاک کے برابر: کچھ نہیں بدلے گا۔",
+    "note": "TODO-ur نوٹ (اختیاری)",
+    "save": {
+      "wastage": "TODO-ur ضائع محفوظ کریں",
+      "stock_in": "TODO-ur اسٹاک شامل کریں",
+      "set_stock": "TODO-ur گنتی محفوظ کریں"
+    },
+    "saved": "TODO-ur اسٹاک محفوظ ہو گیا",
+    "noChange": "TODO-ur گنتی اسٹاک کے برابر ہے: کچھ نہیں بدلا۔",
+    "syncing": "TODO-ur دوسرے آلات کی سیل لا رہے ہیں…",
+    "syncWarning": "TODO-ur دوسرے آلات کی سیل شاید شامل نہیں — پھر بھی گنتی محفوظ کریں؟",
+    "countAnyway": "TODO-ur پھر بھی محفوظ کریں",
+    "ownerPin": "TODO-ur اسٹاک آیا اور اسٹاک گنیں کے لیے مالک ضروری ہے۔",
+    "errors": {
+      "bad_qty": "TODO-ur 0 سے زیادہ مقدار لکھیں۔",
+      "note_too_long": "TODO-ur نوٹ بہت لمبا ہے (زیادہ سے زیادہ 200 حروف)۔",
+      "forbidden": "TODO-ur یہ صرف مالک کر سکتا ہے۔",
+      "no_device": "TODO-ur یہ آلہ سیٹ اپ نہیں ہے۔",
+      "no_staff": "TODO-ur پہلے کسی اسٹاف ممبر پر سوئچ کریں۔"
+    }
   }
 }

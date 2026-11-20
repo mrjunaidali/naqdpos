@@ -8,11 +8,13 @@ const OWNERS = ['owner'] as const;
 export function OwnerPinDialog(props: {
   onSuccess: (ownerId: string) => void;
   onClose: () => void;
+  /** Why the owner is needed (default: saving a rate). */
+  message?: string;
 }) {
   const { t } = useTranslation();
   return (
     <Sheet title={t('pin.ownerTitle')} onClose={props.onClose}>
-      <p className="text-muted">{t('sale.ownerPinForRate')}</p>
+      <p className="text-muted">{props.message ?? t('sale.ownerPinForRate')}</p>
       <StaffPinPicker roles={OWNERS} onSuccess={(owner) => props.onSuccess(owner.id)} />
     </Sheet>
   );

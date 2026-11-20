@@ -147,4 +147,5 @@ export const TENANT_TABLES = [
   'sales',
   'sale_lines',
   'payments',
+  'stock_movements',
 ] as const;

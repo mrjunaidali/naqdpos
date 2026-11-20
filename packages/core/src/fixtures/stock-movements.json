@@ -1,0 +1,20 @@
+{
+  "description": "Shared by packages/core (stockByProduct) and db/tests (product_stock view): the same movements give the same stock.",
+  "products": {
+    "tomato": "019a9b8e-0000-7000-8000-00000000a001",
+    "onion": "019a9b8e-0000-7000-8000-00000000a002",
+    "mint": "019a9b8e-0000-7000-8000-00000000a003"
+  },
+  "movements": [
+    { "product": "tomato", "qty_milli": 20000, "reason": "purchase" },
+    { "product": "tomato", "qty_milli": -1300, "reason": "sale" },
+    { "product": "tomato", "qty_milli": -625, "reason": "sale" },
+    { "product": "tomato", "qty_milli": -500, "reason": "wastage" },
+    { "product": "tomato", "qty_milli": 125, "reason": "count_correction" },
+    { "product": "onion", "qty_milli": -2000, "reason": "sale" },
+    { "product": "onion", "qty_milli": -1, "reason": "damaged" },
+    { "product": "mint", "qty_milli": 5000, "reason": "purchase" },
+    { "product": "mint", "qty_milli": -5000, "reason": "count_correction" }
+  ],
+  "expected": { "tomato": 17700, "onion": -2001, "mint": 0 }
+}

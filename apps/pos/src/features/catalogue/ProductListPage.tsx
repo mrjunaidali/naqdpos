@@ -1,8 +1,15 @@
-import { displayName, parseRupees, searchItems, type ProductRow } from '@naqdpos/core';
+import {
+  displayName,
+  needsStockCheck,
+  parseRupees,
+  searchItems,
+  type ProductRow,
+} from '@naqdpos/core';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useNavigate } from 'react-router';
 import { useActingOwnerId } from '../pin/actingOwner.ts';
+import { useStockByProduct, useStockText } from '../stock/stockData.ts';
 import { rupeesInput, useCategories, usePriceLabel, useShopProducts } from './catalogueData.ts';
 import { setSalePrice } from './catalogueRepo.ts';
 import { CategoryTabs } from './CategoryTabs.tsx';
@@ -16,6 +23,7 @@ export function ProductListPage() {
   const { t } = useTranslation();
   const products = useShopProducts();
   const categories = useCategories();
+  const stock = useStockByProduct();
   const [query, setQuery] = useState('');
   const [category, setCategory] = useState<string | null>(null);
   const [showHidden, setShowHidden] = useState(false);
@@ -50,6 +58,9 @@ export function ProductListPage() {
         <Link to="/products/categories" className={actionClass}>
           {t('categories.title')}
         </Link>
+        <Link to="/stock" className={actionClass}>
+          {t('stock.open')}
+        </Link>
       </div>
       <input
         type="search"
@@ -77,7 +88,7 @@ export function ProductListPage() {
       ) : (
         <ul className="grid grid-cols-3 gap-2 sm:grid-cols-4 lg:grid-cols-5">
           {visible.map((p) => (
-            <ProductCard key={p.id} product={p} />
+            <ProductCard key={p.id} product={p} stock={stock?.get(p.id) ?? 0} />
           ))}
         </ul>
       )}
@@ -85,10 +96,11 @@ export function ProductListPage() {
   );
 }
 
-function ProductCard({ product }: { product: ProductRow }) {
+function ProductCard({ product, stock }: { product: ProductRow; stock: number }) {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const priceLabel = usePriceLabel();
+  const stockText = useStockText();
   const actor = useActingOwnerId();
   const [editing, setEditing] = useState(false);
   const [price, setPrice] = useState('');
@@ -117,6 +129,15 @@ function ProductCard({ product }: { product: ProductRow }) {
           {displayName(product, i18n.language)}
         </span>
         {other && <span className="block text-sm text-muted">{other}</span>}
+        {product.track_stock && (
+          <span
+            className={`block text-sm ${needsStockCheck(stock) ? 'font-semibold text-warning' : 'text-muted'}`}
+          >
+            {needsStockCheck(stock)
+              ? t('stock.cardCheck', { qty: stockText(stock, product.unit) })
+              : t('stock.cardQty', { qty: stockText(stock, product.unit) })}
+          </span>
+        )}
         {product.deleted_at !== null && (
           <span className="mt-1 inline-block rounded-full bg-bg px-2 text-xs text-muted">
             {t('products.hidden')}

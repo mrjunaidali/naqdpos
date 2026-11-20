@@ -13,6 +13,7 @@ import {
   type ProductRow,
 } from '../catalogue.ts';
 import { PK_MOBILE_PATTERN } from '../phone.ts';
+import { MAX_STOCK_NOTE_LENGTH, STOCK_REASONS, type StockMovementRow } from '../stock.ts';
 import {
   PAYMENT_KINDS,
   type PaymentMethodRow,
@@ -387,3 +388,21 @@ export const PaymentRowSchema = z.object({
   device_id: z.uuid().nullable(),
   server_seq: z.number().int().nullable(),
 }) satisfies z.ZodType<PaymentRow>;
+
+export const StockMovementRowSchema = z.object({
+  id: z.uuid(),
+  shop_id: z.uuid(),
+  product_id: z.uuid(),
+  business_date: dateOnly,
+  qty_milli: z
+    .number()
+    .int()
+    .refine((n) => n !== 0, 'qty_milli must not be 0'),
+  reason: z.enum(STOCK_REASONS),
+  ref_id: z.uuid().nullable(),
+  note: z.string().max(MAX_STOCK_NOTE_LENGTH).nullable(),
+  staff_id: z.uuid(),
+  created_at: iso,
+  device_id: z.uuid().nullable(),
+  server_seq: z.number().int().nullable(),
+}) satisfies z.ZodType<StockMovementRow>;

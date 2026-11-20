@@ -21,6 +21,10 @@ export const ACTIONS = {
   manage_products: ['owner'],
   /** Enable, disable, add and reorder payment methods (RLS payment_methods_*_owner; write_roles). */
   manage_payment_methods: ['owner'],
+  /** Record wastage / damaged stock (RLS stock_movements_insert_seller; write_roles). */
+  record_wastage: ['owner', 'cashier'],
+  /** Stock in and set stock (count): owner only (stock_movements_check() on the actor). */
+  adjust_stock: ['owner'],
   /** Edit shop settings (RLS shops_update_owner, column grants; write_roles). */
   manage_shop_settings: ['owner'],
 } as const satisfies Record<string, readonly Role[]>;

@@ -1,4 +1,5 @@
 import type {
+  StockMovementRow,
   CategoryRow,
   PaymentMethodRow,
   PaymentRow,
@@ -64,6 +65,7 @@ export class NaqdDb extends Dexie {
   declare sales: EntityTable<SaleRow, 'id'>;
   declare sale_lines: EntityTable<SaleLineRow, 'id'>;
   declare payments: EntityTable<PaymentRow, 'id'>;
+  declare stock_movements: EntityTable<StockMovementRow, 'id'>;
   declare products: EntityTable<ProductRow, 'id'>;
   declare product_costs: EntityTable<ProductCostRow, 'product_id'>;
   declare price_history: EntityTable<PriceHistoryRow, 'id'>;
@@ -118,6 +120,10 @@ export class NaqdDb extends Dexie {
       sales: 'id, shop_id, business_date, receipt_no, server_seq',
       sale_lines: 'id, sale_id, server_seq',
       payments: 'id, sale_id, business_date, server_seq',
+    });
+    // Stock (migration 20261122090000_stock): stock = sum of a product's movements.
+    this.version(8).stores({
+      stock_movements: 'id, shop_id, product_id, business_date, server_seq',
     });
   }
 }

@@ -6,6 +6,7 @@ import {
   CategoryRowSchema,
   PaymentMethodRowSchema,
   PaymentRowSchema,
+  StockMovementRowSchema,
   SaleLineRowSchema,
   SaleRowSchema,
   DeviceRowSchema,
@@ -98,6 +99,14 @@ export const SYNC_TABLES = {
     schema: SaleLineRowSchema,
   },
   payments: { kind: 'append', key: 'id', pushable: true, scope: 'all', schema: PaymentRowSchema },
+  // Stock (US024, US025): pushed after the sale it refers to (creation order).
+  stock_movements: {
+    kind: 'append',
+    key: 'id',
+    pushable: true,
+    scope: 'all',
+    schema: StockMovementRowSchema,
+  },
 } as const satisfies Record<string, SyncTableSpec>;
 
 export type SyncTableName = keyof typeof SYNC_TABLES;

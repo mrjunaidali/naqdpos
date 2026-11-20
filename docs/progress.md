@@ -476,3 +476,36 @@ A cart becomes a sale offline: the bill is rounded to the whole rupee, paid in c
 - CORS unchanged: the phone's calls are same-origin through the proxy, so no LAN origins are added.
 - `scripts/tsconfig.json`; root `typecheck` also checks `scripts/`; ESLint Node globals for `scripts/`. README added; `docs/deployment.md` §3.
 - Checked by hand: health, the app page, a custom header (`X-Device-Id`) and a sign-in POST with a phone `Origin`, all through `https://…:5173/api`.
+
+## Step 13 — US024 stock on sale, US025 wastage, stock in, stock count (2026-11-22)
+
+Stock is the sum of movements. A sale moves stock for tracked products in its own transaction; the Stock screen records wastage / damaged (owners and cashiers), stock in and counts (owner). Everything offline through the outbox.
+
+**Built**
+- Migration `20261122090000_stock.sql`: `stock_movements` (append-only, no cost column, qty ≠ 0, reason check, `ref_id` required for `sale`, composite FKs to the shop's product and staff); RLS owners / cashiers read and insert, riders none, no update / delete; trigger `stock_movements_check()` (sale → its sale must exist, else 23503 = `missing_parent`; purchase / count_correction → owner actor, or owner session for a direct insert); view `product_stock` (`security_invoker`); registry `append`, `pull_scope all`, `write_roles {owner, cashier}`; `sync_push` sets `app.actor_staff_id` per entry and clears it.
+- `packages/core`: `stock.ts` (`STOCK_REASONS`, `StockMovementRow`, `stockOf`, `stockByProduct`, `needsStockCheck`, `canRecordStockReason`, `buildSaleMovements` (tracked lines only, custom items never), `buildStockAction` (wastage / damaged negative, stock in positive, set stock = counted − current or nothing, `countNote` "counted 12.5 kg")); `StockMovementRowSchema`; `SYNC_TABLES.stock_movements`; `ACTIONS.record_wastage` (owner, cashier), `ACTIONS.adjust_stock` (owner); shared fixture `fixtures/stock-movements.json`.
+- `apps/pos`:
+  - Dexie **version 8** (`stock_movements`: shop_id, product_id, business_date, server_seq)
+  - `completeSale()`: products and stock_movements join the one transaction; movements after the payments (pushed after their sale)
+  - `/stock` (`StockPage`, linked from Products and the product form): tracked products with stock ("12.5 kg"; ≤ 0 amber "check stock"), search, Wastage (Spoiled / Damaged, optional note; owners and cashiers), Stock in and Set stock (owner here, or the owner PIN per action via `OwnerPinDialog`, which now takes a message)
+  - `StockActionSheet`: sale keypad rules per unit; set stock shows the difference, runs Sync now first (`syncBeforeCount`, 8 s), else "Other devices' sales may be missing — count anyway?"; `recordStockAction` reads the current stock in the write transaction
+  - product list shows stock on tracked products; the product form shows it under "Track stock"
+  - `useStockText` adds the sign itself (`qtyLabel` is for positive amounts)
+  - en + ur strings (`stock.*`)
+- Pay test: the F2 navigation wait is 5 s (it hit the 1 s default when every package's tests ran at once).
+
+**Tests**: DB 140 (+11: cashier wastage / damaged; stock in and count refused for a cashier actor on an owner session, accepted for the owner, count note kept; cashier session direct insert refused; sale movement → `missing_parent` then accepted, missing ref invalid; zero qty / unknown reason invalid; riders refused; closed day refused; append-only, shop isolation and riders see nothing (also in `product_stock`); other shop's product → `missing_parent`; no cost column; `product_stock` matches the shared fixture; push / pull round trip; actor setting cleared). Core 261 (+18: sums and the fixture, check stock, sale movements tracked only / custom none / unknown product none / no cost, actions and signs, set stock difference and note, equal count = nothing, cashier refused, bad qty and long notes). Pos 222 (+12: sale writes movements only for tracked products, after the sale in the outbox; nothing written when the sale fails; negative stock shown amber and the sale goes through; list shows stock for tracked products; cashier damaged with a note offline through the outbox; cashier asked for the owner PIN; cashier actor refused in core; owner stock in; set stock syncs first and counts against the synced stock; offline warning then count anyway; failed sync cancelled; equal count writes nothing).
+
+**Decisions**
+- No cost on `stock_movements`; wastage value in owner reports from `product_cost_history`.
+- Stock never blocks a sale and can go negative (amber "check stock").
+- Stock in (`purchase`, no supplier) and Set stock (`count_correction`) are owner-only until purchases (R2).
+- Set stock syncs first; offline it warns and allows the count; the counted quantity is always kept in the note.
+- FOC lines will move stock too (the goods leave the shop) when FOC is built.
+
+**Follow-ups**
+- Cashiers reach `/stock` only by address until the Home tiles link it (Products is an owner screen).
+- Closed days: the client check comes with `day_closes` (US044); the server already refuses.
+- Combos (`combo_component`), returns and purchases add their own reasons later.
+- Wastage in daily and monthly reports (with value from cost history) comes with the reports stories.
+- Stock is summed from every movement on the device; cache it if large shops get slow.
