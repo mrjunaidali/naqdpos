@@ -1,6 +1,6 @@
 # NaqdPOS — visual theme
 
-Decided: 19–20 Nov 2026 (Junaid). Professional, pleasant, corporate look in **black, white and grey**. Accent: **near-black primary** (monochrome). Home screen direction (20 Nov): black hero card with today's sales + 7-day trend + sync chip, two small stat cards, a row of four action tiles, a "Recent" list, and a floating black nav bar with a white "Sale" pill. Not a copy of the earlier blue screens.
+Decided: 19–20 Nov 2026 (Junaid). Professional, pleasant, corporate look in **black, white and grey**. Accent: **near-black primary** (monochrome). Home screen direction (20 Nov): black hero card with today's sales + 7-day trend + sync chip, two small stat cards, a row of four action tiles, a "Recent" list, and a floating black nav bar with a white "Sale" pill. Not a copy of the earlier blue screens. Sale screen direction approved 20 Nov (see Screens).
 
 ## Look
 - Page background: light grey (`zinc-100`).
@@ -15,6 +15,25 @@ Decided: 19–20 Nov 2026 (Junaid). Professional, pleasant, corporate look in **
 - **Primary** (main buttons, nav bar, hero card, active state): near-black with white text.
 - **Secondary buttons:** white with grey border and dark text.
 - Colour only where it carries meaning: green = success/synced, amber = pending/warning, red = critical/errors/destructive.
+
+## Screens (approved direction, 20 Nov 2026)
+
+### Home
+- Header: brand mark (`<BrandMark />`), greeting + shop name, bell button.
+- **Hero card** (near-black): today's sales total, invoice count, cash / wallet split, 7-day bar trend (today highlighted), sync chip (green dot "Synced", amber "N pending", red "Needs review"). Cashiers see only their own shift sales here.
+- Two small stat cards: khata owed, low stock (owner only).
+- Row of four action tiles: Product, Customer, Purchase, Expense (tiles hidden when the role can't use them).
+- "Recent" card: last few sales and khata entries, "See all".
+- **Floating nav bar** (near-black, rounded) with Home, Sales, white **Sale** pill in the centre, Products, More.
+
+### Sale (new sale)
+- Header: back, "New sale", cashier name + device code (e.g. `Ali · A1`), **Customer** chip (attach khata customer).
+- Search box (English, Urdu and Roman Urdu: aloo, tamatar, کیلا) with a barcode button.
+- Category chips; selected chip is near-black.
+- **Product grid, 3 columns** on phones (more on tablet/PC): English name, Urdu name below, rate per unit (`Rs 160/kg`). A product in the cart gets a near-black 2px border and a qty badge (`1.5 kg`). FOC items show a dashed border and a green "FOC" label.
+- **Quantity panel** for the selected product: quick buttons (250 g, 500 g, 1 kg, 1.5 kg for kg items; 1, 2, 6, 12 for dozen/piece), or type kg or an amount in Rs (Rs → qty calculated in `packages/core`).
+- **Cart bar** fixed at the bottom (near-black): item count, total, white **Charge** button → payment screen (cash / wallet / khata, change due).
+- Selling works fully offline (rule 1); no network spinners in this flow.
 
 ## Implementation (must support branding later — see below)
 - **All colours are CSS variables** (e.g. `--color-bg`, `--color-surface`, `--color-border`, `--color-text`, `--color-muted`, `--color-primary`, `--color-primary-fg`, `--color-hero`, `--color-success`, `--color-warning`, `--color-danger`). Tailwind's theme maps its colour names to these variables (`primary: 'rgb(var(--color-primary) / <alpha-value>)'`).

@@ -1,6 +1,6 @@
 # Feature: Preloaded fresh produce list
 
-Status: **proposal** — story number TBD, needs a backlog entry. Schema approved (Urdu + English names in the same row, recorded in `docs/architecture.md` §3).
+Status: **in backlog** as **US072** (R1, build phase 6 with products). Schema approved (Urdu + English names in the same row, recorded in `docs/architecture.md` §3).
 
 ## Goal
 
