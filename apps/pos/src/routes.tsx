@@ -6,6 +6,8 @@ import { RootLayout } from './app/RootLayout.tsx';
 import { GoogleCallbackPage } from './features/auth/GoogleCallbackPage.tsx';
 import { SignInGate } from './features/auth/SignInGate.tsx';
 import { CatalogueLayout } from './features/catalogue/CatalogueLayout.tsx';
+import { DeviceModePage } from './features/devices/DeviceModePage.tsx';
+import { OwnerPinGate } from './features/pin/OwnerPinGate.tsx';
 import { CategoriesPage } from './features/catalogue/CategoriesPage.tsx';
 import { PresetPickerPage } from './features/catalogue/PresetPickerPage.tsx';
 import { ProductFormPage } from './features/catalogue/ProductFormPage.tsx';
@@ -63,6 +65,17 @@ export const routes: RouteObject[] = [
         element: (
           <Gate state="ready">
             <SettingsPage />
+          </Gate>
+        ),
+      },
+      {
+        // Owner screen (manage_devices): owner PIN on shop devices.
+        path: 'settings/device',
+        element: (
+          <Gate state="ready">
+            <OwnerPinGate>
+              <DeviceModePage />
+            </OwnerPinGate>
           </Gate>
         ),
       },

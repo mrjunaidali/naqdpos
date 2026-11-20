@@ -160,6 +160,32 @@ describe('other routes', () => {
   });
 });
 
+describe('POST /devices/{id}/mode', () => {
+  const path = '/devices/019a9b8e-1c2d-7e3f-8a4b-5c6d7e8f9a0e/mode';
+  it('needs a session', async () => {
+    const res = await app().request(path, {
+      method: 'POST',
+      body: JSON.stringify({ mode: 'owner' }),
+    });
+    expect(res.status).toBe(401);
+  });
+
+  it('accepts only owner or shop, and a UUID id', async () => {
+    const bad = await app().request(path, {
+      method: 'POST',
+      headers: signedIn,
+      body: JSON.stringify({ mode: 'rider' }),
+    });
+    expect(bad.status).toBe(400);
+    const badId = await app().request('/devices/phone-1/mode', {
+      method: 'POST',
+      headers: signedIn,
+      body: JSON.stringify({ mode: 'owner' }),
+    });
+    expect(badId.status).toBe(400);
+  });
+});
+
 describe('/sync/* (architecture §4)', () => {
   const DEVICE = '019a9b8e-1c2d-7e3f-8a4b-5c6d7e8f9a0e';
   const pull = (headers: Record<string, string>, deps: Partial<AppDeps> = {}) =>

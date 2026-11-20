@@ -150,6 +150,10 @@ export const RegisterDeviceRequest = z.object({
 });
 export type RegisterDeviceRequest = z.input<typeof RegisterDeviceRequest>;
 
+/** POST /devices/{id}/mode: owner switches a device between owner phone and shop counter. */
+export const SetDeviceModeRequest = z.object({ mode: z.enum(['owner', 'shop']) });
+export type SetDeviceModeRequest = z.infer<typeof SetDeviceModeRequest>;
+
 /** GET /me: who is signed in and which shops they belong to. */
 export const MeResponse = z.object({
   user: z.object({ id: z.uuid(), email: z.string(), name: z.string() }),

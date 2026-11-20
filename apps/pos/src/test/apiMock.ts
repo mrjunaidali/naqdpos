@@ -18,6 +18,7 @@ export const api = {
   me: vi.fn(),
   createShop: vi.fn(),
   registerDevice: vi.fn(),
+  setDeviceMode: vi.fn(),
   syncPush: vi.fn(),
   syncPull: vi.fn(),
 } satisfies Record<keyof ApiClient, Mock>;

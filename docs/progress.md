@@ -323,3 +323,26 @@ Owners manage the catalogue offline: products (English and Urdu names, unit, cat
 - Owner-only data on a shop device "fetched online" (architecture §4) is still not built.
 - Barcode, FOC rule, minimum quantity and combo editing: later stories (columns exist with safe defaults).
 - Product images and grocery/meat presets are out of scope.
+
+## Step 8 — change device mode (2026-11-21)
+
+Owners switch a registered device between owner phone and shop counter from Settings. Closes the Step 5 follow-up (clearing owner-only stores when leaving owner mode).
+
+**Built**
+- Migration `20261121120000_device_mode.sql`: `set_device_mode(device_id, mode)`, security definer, owner of the device's shop only (unknown and foreign devices both 42501), a retry with the same mode changes nothing, otherwise updates `mode` (bumping `server_seq`) and writes `device.mode` to `audit_log` with `{from, to}`.
+- `packages/core`: `SetDeviceModeRequest` (`owner` | `shop`), client `setDeviceMode(deviceId, mode)`.
+- `apps/api`: `POST /devices/{id}/mode`: `can(role, 'manage_devices')` on the caller's role in the device's shop, then `set_device_mode`; 200 / 400 / 401 / 403.
+- `apps/pos`:
+  - `features/devices/deviceMode.ts` `changeDeviceMode()`: refuses with a non-empty outbox; server first (nothing local changes if it fails); then one Dexie transaction: device row + `meta.device.mode`, owner-only stores emptied on owner → shop, pull cursor back to 0; then Sync now
+  - `DeviceModePage` at `/settings/device` behind `OwnerPinGate`: current mode, the same "Who uses this device?" choice as setup, "Sync first" with Sync now while changes wait; Settings link for `can(role, 'manage_devices')`
+  - en + ur strings (`deviceMode.*`, `TODO-ur`)
+
+**Tests**: DB 90 (+5: owner switches both ways with a `server_seq` bump, audit row with from/to, same-mode retry is a no-op, cashier / other owner / unknown device / no user refused, unknown mode refused). API DB 28 (+2: owner both ways and retry, another user's and an unknown device 403). API unit 37 (+2: 401, invalid mode and id 400). Pos 149 (+8: shop → owner resets the cursor and updates meta and the device row, owner → shop empties staff_salaries / product_costs / product_cost_history and keeps the rest, refused with a pending outbox without calling the server, nothing changes when the server fails, link for owners only, owner PIN on a shop device then switch, "Sync first" with Sync now).
+
+**Decisions**
+- A new SQL function and route instead of widening `register_device`, so registration stays idempotent and the mode change is audited on its own.
+- Server first, then local: a failed or offline call leaves the device exactly as it was.
+- Rider mode is not offered here (rider devices come with the rider stories).
+
+**Follow-ups**
+- After owner → shop on the same screen, the owner gate asks for the PIN again (the device is now a shop device); that is intended.

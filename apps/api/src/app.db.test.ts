@@ -473,3 +473,36 @@ describe('/sync/push and /sync/pull', () => {
     expect(await res.json()).toEqual({ error: 'forbidden' });
   });
 });
+
+describe('POST /devices/{id}/mode', () => {
+  async function ownerWithDevice() {
+    const o = await owner();
+    const id = randomUUID();
+    expect(
+      (await post('/devices', { id, shop_id: o.shop.shop_id, name: 'Counter' }, o.token)).status,
+    ).toBe(201);
+    return { ...o, deviceId: id };
+  }
+
+  it('lets the owner switch the device to owner phone and back', async () => {
+    const o = await ownerWithDevice();
+    const toOwner = await post(`/devices/${o.deviceId}/mode`, { mode: 'owner' }, o.token);
+    expect(toOwner.status).toBe(200);
+    expect(await toOwner.json()).toMatchObject({ id: o.deviceId, mode: 'owner' });
+    const retry = await post(`/devices/${o.deviceId}/mode`, { mode: 'owner' }, o.token);
+    expect(await retry.json()).toMatchObject({ mode: 'owner' });
+    const back = await post(`/devices/${o.deviceId}/mode`, { mode: 'shop' }, o.token);
+    expect(await back.json()).toMatchObject({ mode: 'shop' });
+  });
+
+  it("refuses another user's device and an unknown device with 403", async () => {
+    const o = await ownerWithDevice();
+    const other = await signIn();
+    expect((await post(`/devices/${o.deviceId}/mode`, { mode: 'owner' }, other.token)).status).toBe(
+      403,
+    );
+    expect((await post(`/devices/${randomUUID()}/mode`, { mode: 'owner' }, o.token)).status).toBe(
+      403,
+    );
+  });
+});

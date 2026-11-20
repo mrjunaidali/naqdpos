@@ -44,6 +44,11 @@ export function SettingsPage() {
             {t('products.title')}
           </Link>
         )}
+        {can(role, 'manage_devices') && (
+          <Link to="/settings/device" className={linkClass}>
+            {t('deviceMode.title')}
+          </Link>
+        )}
         <Link to="/sync" className={linkClass}>
           {t('sync.title')}
         </Link>

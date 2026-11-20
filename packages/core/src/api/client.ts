@@ -13,6 +13,7 @@ import {
   OneTimeTokenResponse,
   RegisterDeviceRequest,
   SendCodeRequest,
+  SetDeviceModeRequest,
   SessionResponse,
   SignInResponse,
   SignInWithCodeRequest,
@@ -149,6 +150,14 @@ export function createApiClient(options: ApiClientOptions) {
       request('POST', '/shops', CreateShopResponse, CreateShopRequest.parse(input)),
     registerDevice: async (input: RegisterDeviceRequest) =>
       request('POST', '/devices', DeviceRowSchema, RegisterDeviceRequest.parse(input)),
+    /** Owner phone ↔ shop counter (owner only, audit-logged). */
+    setDeviceMode: async (deviceId: string, mode: SetDeviceModeRequest['mode']) =>
+      request(
+        'POST',
+        `/devices/${encodeURIComponent(deviceId)}/mode`,
+        DeviceRowSchema,
+        SetDeviceModeRequest.parse({ mode }),
+      ),
 
     /** Sends up to 200 outbox entries (architecture §4). */
     syncPush: async (input: SyncPushRequest) =>

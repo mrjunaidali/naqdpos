@@ -301,5 +301,13 @@
     "error": "Check the prices marked in red.",
     "saved_one": "{{count}} product updated.",
     "saved_other": "{{count}} products updated."
+  },
+  "deviceMode": {
+    "title": "Device mode",
+    "current": "This device is now: {{mode}}.",
+    "change": "Change mode",
+    "done": "Mode changed. The device is syncing under the new mode.",
+    "syncFirst_one": "{{count}} change is not synced yet. Sync first, then change the mode.",
+    "syncFirst_other": "{{count}} changes are not synced yet. Sync first, then change the mode."
   }
 }

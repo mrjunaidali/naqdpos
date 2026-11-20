@@ -301,5 +301,13 @@
     "error": "TODO-ur سرخ نشان والی قیمتیں دیکھیں۔",
     "saved_one": "TODO-ur {{count}} چیز اپڈیٹ ہوئی۔",
     "saved_other": "TODO-ur {{count}} اشیاء اپڈیٹ ہوئیں۔"
+  },
+  "deviceMode": {
+    "title": "TODO-ur ڈیوائس کی قسم",
+    "current": "TODO-ur یہ ڈیوائس ابھی: {{mode}}۔",
+    "change": "TODO-ur قسم بدلیں",
+    "done": "TODO-ur قسم بدل گئی۔ ڈیوائس نئی قسم کے مطابق سنک ہو رہی ہے۔",
+    "syncFirst_one": "TODO-ur {{count}} تبدیلی ابھی سنک نہیں ہوئی۔ پہلے سنک کریں، پھر قسم بدلیں۔",
+    "syncFirst_other": "TODO-ur {{count}} تبدیلیاں ابھی سنک نہیں ہوئیں۔ پہلے سنک کریں، پھر قسم بدلیں۔"
   }
 }

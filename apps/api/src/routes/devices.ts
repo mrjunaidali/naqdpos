@@ -1,5 +1,12 @@
 import { createRoute, OpenAPIHono } from '@hono/zod-openapi';
-import { can, DeviceRowSchema, ErrorResponse, RegisterDeviceRequest } from '@naqdpos/core';
+import {
+  can,
+  DeviceRowSchema,
+  ErrorResponse,
+  RegisterDeviceRequest,
+  SetDeviceModeRequest,
+} from '@naqdpos/core';
+import { z } from 'zod';
 import { sql } from 'kysely';
 import type { AppDeps, AppEnv } from '../app.ts';
 import { withUserTx } from '../db/index.ts';
@@ -30,9 +37,51 @@ const route = createRoute({
   },
 });
 
+const modeRoute = createRoute({
+  method: 'post',
+  path: '/devices/{id}/mode',
+  summary: 'Switch a device between owner phone and shop counter (owner only, audit-logged)',
+  security: [{ bearer: [] }],
+  request: {
+    params: z.object({ id: z.uuid() }),
+    body: { required: true, content: json(SetDeviceModeRequest) },
+  },
+  responses: {
+    200: { description: 'The device with its mode', content: json(DeviceRowSchema) },
+    400: { description: 'Invalid input', content: json(ErrorResponse) },
+    401: { description: 'Not signed in', content: json(ErrorResponse) },
+    403: {
+      description: "Not the owner of the device's shop (or no such device)",
+      content: json(ErrorResponse),
+    },
+  },
+});
+
 export function deviceRoutes(deps: Pick<AppDeps, 'db' | 'auth'>) {
   const app = new OpenAPIHono<AppEnv>();
   app.use('/devices', requireUser(deps.auth));
+  app.use('/devices/*', requireUser(deps.auth));
+
+  app.openapi(modeRoute, async (c) => {
+    const { id } = c.req.valid('param');
+    const { mode } = c.req.valid('json');
+    // Both layers (rule 7): can() on the caller's role in the device's shop, then
+    // set_device_mode checks the owner role again and writes the audit row.
+    const row = await withUserTx(deps.db, c.get('tx'), async (tx) => {
+      const { rows: found } = await sql<{ shop_id: string }>`
+        select shop_id from devices where id = ${id} and deleted_at is null`.execute(tx);
+      const shopId = found[0]?.shop_id;
+      if (!shopId || !can(await shopRole(tx, shopId), 'manage_devices')) return null;
+      const { rows } = await sql<Selectable<DevicesTable>>`
+        select * from set_device_mode(${id}, ${mode})`.execute(tx);
+      return rows[0]!;
+    }).catch((error: unknown) => {
+      if (pgCode(error) === '42501') return null;
+      throw error;
+    });
+    if (!row) return c.json(errorBody('forbidden'), 403);
+    return c.json(toDeviceRow(row), 200);
+  });
 
   return app.openapi(route, async (c) => {
     const body = c.req.valid('json');
