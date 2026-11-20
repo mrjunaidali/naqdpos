@@ -14,6 +14,13 @@ import {
 } from '../catalogue.ts';
 import { PK_MOBILE_PATTERN } from '../phone.ts';
 import {
+  PAYMENT_KINDS,
+  type PaymentMethodRow,
+  type PaymentRow,
+  type SaleLineRow,
+  type SaleRow,
+} from '../sale.ts';
+import {
   DEVICE_MODES,
   ROLES,
   SHOP_STATUSES,
@@ -308,3 +315,75 @@ export const ProductCostHistoryRowSchema = z.object({
   device_id: z.uuid().nullable(),
   server_seq: z.number().int().nullable(),
 }) satisfies z.ZodType<ProductCostHistoryRow>;
+
+// --- Sales ledgers and payment methods (migration 20261121210000_sales) ---
+
+const dateOnly = z.string().regex(/^\d{4}-\d{2}-\d{2}$/);
+
+export const PaymentMethodRowSchema = z.object({
+  id: z.uuid(),
+  shop_id: z.uuid(),
+  code: z.string().regex(/^[a-z0-9_]{1,32}$/),
+  label: z.string().min(1).max(40),
+  active: z.boolean(),
+  sort: z.number().int(),
+  device_id: z.uuid().nullable(),
+  created_at: iso,
+  updated_at: iso,
+  deleted_at: iso.nullable(),
+  server_seq: z.number().int().nullable(),
+}) satisfies z.ZodType<PaymentMethodRow>;
+
+export const SaleRowSchema = z.object({
+  id: z.uuid(),
+  shop_id: z.uuid(),
+  receipt_no: z.string().regex(/^[A-Z][0-9]{1,3}-[0-9]{6,}$/),
+  business_date: dateOnly,
+  staff_id: z.uuid(),
+  customer_id: z.uuid().nullable(),
+  order_type: z.enum(['walk_in', 'delivery']),
+  source: z.string().regex(/^[a-z_]{1,32}$/),
+  subtotal_paisa: paisa,
+  discount_paisa: paisa,
+  rounding_paisa: z.number().int().min(-50).max(50),
+  total_paisa: paisa,
+  note: z.string().max(500).nullable(),
+  created_at: iso,
+  device_id: z.uuid().nullable(),
+  server_seq: z.number().int().nullable(),
+}) satisfies z.ZodType<SaleRow>;
+
+export const SaleLineRowSchema = z.object({
+  id: z.uuid(),
+  shop_id: z.uuid(),
+  sale_id: z.uuid(),
+  product_id: z.uuid().nullable(),
+  name_snapshot: z.string().min(1).max(100),
+  name_ur_snapshot: z.string().max(100).nullable(),
+  unit_snapshot: z.enum(PRODUCT_UNITS),
+  qty_milli: z.number().int().positive(),
+  unit_price_paisa: paisa,
+  discount_paisa: paisa,
+  is_foc: z.boolean(),
+  by_amount: z.boolean(),
+  line_total_paisa: paisa,
+  created_at: iso,
+  device_id: z.uuid().nullable(),
+  server_seq: z.number().int().nullable(),
+}) satisfies z.ZodType<SaleLineRow>;
+
+export const PaymentRowSchema = z.object({
+  id: z.uuid(),
+  shop_id: z.uuid(),
+  business_date: dateOnly,
+  kind: z.enum(PAYMENT_KINDS),
+  sale_id: z.uuid().nullable(),
+  customer_id: z.uuid().nullable(),
+  method_code: z.string().regex(/^[a-z0-9_]{1,32}$/),
+  amount_paisa: z.number().int().positive(),
+  reference: z.string().max(64).nullable(),
+  staff_id: z.uuid(),
+  created_at: iso,
+  device_id: z.uuid().nullable(),
+  server_seq: z.number().int().nullable(),
+}) satisfies z.ZodType<PaymentRow>;

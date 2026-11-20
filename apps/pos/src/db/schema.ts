@@ -1,5 +1,9 @@
 import type {
   CategoryRow,
+  PaymentMethodRow,
+  PaymentRow,
+  SaleLineRow,
+  SaleRow,
   DeviceRow,
   PriceHistoryRow,
   ProductCostHistoryRow,
@@ -56,6 +60,10 @@ export class NaqdDb extends Dexie {
   declare staff_salaries: EntityTable<StaffSalaryRow, 'staff_id'>;
   declare staff_pins: EntityTable<StaffPinRow, 'staff_id'>;
   declare categories: EntityTable<CategoryRow, 'id'>;
+  declare payment_methods: EntityTable<PaymentMethodRow, 'id'>;
+  declare sales: EntityTable<SaleRow, 'id'>;
+  declare sale_lines: EntityTable<SaleLineRow, 'id'>;
+  declare payments: EntityTable<PaymentRow, 'id'>;
   declare products: EntityTable<ProductRow, 'id'>;
   declare product_costs: EntityTable<ProductCostRow, 'product_id'>;
   declare price_history: EntityTable<PriceHistoryRow, 'id'>;
@@ -103,6 +111,14 @@ export class NaqdDb extends Dexie {
     // products.icon (migration 20261121180000_product_icon): a new field on products, no index,
     // so no store changes; the bump keeps Dexie in step with the server schema (rule 8).
     this.version(6).stores({});
+    // Sales (migration 20261121210000_sales). receipt_no is indexed so the per-device counter can
+    // be checked against the sales already on the device.
+    this.version(7).stores({
+      payment_methods: 'id, shop_id, server_seq',
+      sales: 'id, shop_id, business_date, receipt_no, server_seq',
+      sale_lines: 'id, sale_id, server_seq',
+      payments: 'id, sale_id, business_date, server_seq',
+    });
   }
 }
 

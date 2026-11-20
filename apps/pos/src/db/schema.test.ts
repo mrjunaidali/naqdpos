@@ -72,19 +72,23 @@ describe('NaqdDb schema', () => {
     }
   });
 
-  it('is version 6 with the tenancy, sync and catalogue tables', async () => {
+  it('is version 7 with the tenancy, sync, catalogue and sales tables', async () => {
     const db = track(new NaqdDb('naqdpos-test-schema'));
     await db.open();
-    expect(db.verno).toBe(6);
+    expect(db.verno).toBe(7);
     expect(db.tables.map((table) => table.name).sort()).toEqual([
       'categories',
       'devices',
       'meta',
       'outbox',
+      'payment_methods',
+      'payments',
       'price_history',
       'product_cost_history',
       'product_costs',
       'products',
+      'sale_lines',
+      'sales',
       'shops',
       'staff',
       'staff_pins',
@@ -124,7 +128,7 @@ describe('NaqdDb schema', () => {
 
     const db = track(new NaqdDb(name));
     await db.open();
-    expect(db.verno).toBe(6);
+    expect(db.verno).toBe(7);
     expect(await db.shops.get(SHOP_ID)).toEqual(shop);
     expect(await db.meta.get('device')).toEqual({ key: 'device', value: { id: device.id } });
     expect(await db.outbox.count()).toBe(0);
@@ -190,7 +194,7 @@ describe('NaqdDb schema', () => {
 
     const db = track(new NaqdDb(name));
     await db.open();
-    expect(db.verno).toBe(6);
+    expect(db.verno).toBe(7);
     expect(await db.meta.get('storage_persisted')).toEqual({
       key: 'storage_persisted',
       value: false,

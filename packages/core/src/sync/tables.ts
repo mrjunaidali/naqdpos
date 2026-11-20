@@ -4,6 +4,10 @@
 import type { z } from 'zod';
 import {
   CategoryRowSchema,
+  PaymentMethodRowSchema,
+  PaymentRowSchema,
+  SaleLineRowSchema,
+  SaleRowSchema,
   DeviceRowSchema,
   PriceHistoryRowSchema,
   ProductCostHistoryRowSchema,
@@ -77,6 +81,23 @@ export const SYNC_TABLES = {
     scope: 'owner_device',
     schema: ProductCostHistoryRowSchema,
   },
+  payment_methods: {
+    kind: 'mutable',
+    key: 'id',
+    pushable: true,
+    scope: 'all',
+    schema: PaymentMethodRowSchema,
+  },
+  // Ledgers (append-only). Pushed in creation order: a sale before its lines and payments.
+  sales: { kind: 'append', key: 'id', pushable: true, scope: 'all', schema: SaleRowSchema },
+  sale_lines: {
+    kind: 'append',
+    key: 'id',
+    pushable: true,
+    scope: 'all',
+    schema: SaleLineRowSchema,
+  },
+  payments: { kind: 'append', key: 'id', pushable: true, scope: 'all', schema: PaymentRowSchema },
 } as const satisfies Record<string, SyncTableSpec>;
 
 export type SyncTableName = keyof typeof SYNC_TABLES;

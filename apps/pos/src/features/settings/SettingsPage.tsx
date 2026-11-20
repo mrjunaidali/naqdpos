@@ -44,6 +44,11 @@ export function SettingsPage() {
             {t('products.title')}
           </Link>
         )}
+        {can(role, 'manage_payment_methods') && (
+          <Link to="/settings/payment-methods" className={linkClass}>
+            {t('paymentMethods.title')}
+          </Link>
+        )}
         {can(role, 'manage_devices') && (
           <Link to="/settings/device" className={linkClass}>
             {t('deviceMode.title')}

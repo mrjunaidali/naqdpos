@@ -1,15 +1,17 @@
 import { useTranslation } from 'react-i18next';
+import { useNavigate } from 'react-router';
 import { useCartTotals } from './cartStore.ts';
 import { useRs } from './saleFormat.ts';
 
 /**
- * Cart bar fixed at the bottom (docs/design-theme.md, Sale): item count, total, Charge. Payment
- * is the next story, so Charge is disabled for now.
+ * Cart bar fixed at the bottom (docs/design-theme.md, Sale): item count, total, Charge (opens the
+ * pay screen; F2 on a keyboard).
  */
 export function CartBar({ onOpen }: { onOpen: () => void }) {
   const { t } = useTranslation();
   const totals = useCartTotals();
   const rs = useRs();
+  const navigate = useNavigate();
   if (totals.itemCount === 0) return null;
   return (
     <div className="fixed inset-x-0 bottom-0 z-20 p-3">
@@ -25,19 +27,13 @@ export function CartBar({ onOpen }: { onOpen: () => void }) {
             {rs(totals.total_paisa)}
           </span>
         </button>
-        <div className="text-end">
-          <button
-            type="button"
-            disabled
-            aria-describedby="charge-note"
-            className="min-h-12 rounded-xl bg-surface px-5 font-semibold text-text opacity-60"
-          >
-            {t('sale.charge')}
-          </button>
-          <span id="charge-note" className="block text-xs">
-            {t('sale.paymentNext')}
-          </span>
-        </div>
+        <button
+          type="button"
+          onClick={() => void navigate('/sale/pay')}
+          className="min-h-12 rounded-xl bg-surface px-6 text-lg font-bold text-text"
+        >
+          {t('sale.charge')}
+        </button>
       </div>
     </div>
   );

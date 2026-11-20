@@ -143,4 +143,8 @@ export const TENANT_TABLES = [
   'product_costs',
   'price_history',
   'product_cost_history',
+  'payment_methods',
+  'sales',
+  'sale_lines',
+  'payments',
 ] as const;

@@ -33,6 +33,8 @@ import {
 export const BACKOFF_MS = [5_000, 15_000, 60_000, 300_000] as const;
 export const WRITE_DEBOUNCE_MS = 5_000;
 export const SYNC_INTERVAL_MS = 60_000;
+/** How long a missing_parent entry is retried before it shows as an error. */
+export const MISSING_PARENT_RETRY_MS = 24 * 60 * 60 * 1000;
 
 export interface SyncApi {
   syncPush(input: SyncPushRequest): Promise<SyncPushResponse>;
@@ -55,8 +57,11 @@ export interface SyncEngineDeps {
   isOnline?: () => boolean;
   /** 426: run the service-worker update check at once (architecture §6). */
   onUpdateRequired?: () => void;
-  /** After a successful run; `pushed` = entries the server settled. */
-  onSynced?: (pushed: number) => void;
+  /**
+   * After a successful run; `pushed` = entries the server settled; `recovered` = the run before
+   * was offline, failed or paused (for "Synced N records", architecture §7).
+   */
+  onSynced?: (pushed: number, recovered: boolean) => void;
   /** Where the `online` event comes from (window in the app). */
   events?: Pick<EventTarget, 'addEventListener' | 'removeEventListener'> | null;
   timers?: Timers;
@@ -79,6 +84,7 @@ export function createSyncEngine(deps: SyncEngineDeps) {
   const isOnline = deps.isOnline ?? (() => true);
 
   let running: Promise<SyncOutcome> | null = null;
+  let lastOutcome: SyncOutcome | null = null;
   let rerun = false;
   let failures = 0;
   let backoffTimer: Handle | null = null;
@@ -112,6 +118,14 @@ export function createSyncEngine(deps: SyncEngineDeps) {
       for (const error of result.errors) {
         const entry = byId.get(error.id);
         if (!entry) continue;
+        // The parent row is not on the server yet: keep the entry and retry it next time. After a
+        // day of retries it becomes a normal error, so it is still seen (architecture §4).
+        if (
+          error.code === 'missing_parent' &&
+          Date.now() - Date.parse(entry.created_at) < MISSING_PARENT_RETRY_MS
+        ) {
+          continue;
+        }
         settled.add(entry.id);
         await db.sync_errors.put({
           ...entry,
@@ -201,7 +215,7 @@ export function createSyncEngine(deps: SyncEngineDeps) {
         authProblem: null,
         updateRequired: null,
       });
-      deps.onSynced?.(pushed);
+      deps.onSynced?.(pushed, lastOutcome !== null && lastOutcome !== 'synced');
       return 'synced';
     } catch (error) {
       if (error instanceof ApiError && [401, 403, 426].includes(error.status)) {
@@ -233,7 +247,12 @@ export function createSyncEngine(deps: SyncEngineDeps) {
       rerun = true;
       return running;
     }
-    running = syncOnce(manual).finally(() => {
+    running = syncOnce(manual).then((outcome) => {
+      // not_registered says nothing about the network; keep the previous outcome then
+      if (outcome !== 'not_registered') lastOutcome = outcome;
+      return outcome;
+    });
+    running = running.finally(() => {
       running = null;
       if (rerun) {
         rerun = false;

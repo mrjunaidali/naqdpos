@@ -519,3 +519,96 @@ describe('sync engine: tables new to this app version', () => {
     expect((await db.staff.get(STAFF(1)))?.name).toBe('Local edit');
   });
 });
+
+describe('sync engine: parents first, missing parents retried', () => {
+  /** A server that refuses a child until its parent (row.parent) has been accepted. */
+  function parentServer() {
+    const accepted = new Set<string>();
+    const syncPush = vi.fn((req: SyncPushRequest): Promise<SyncPushResponse> => {
+      const ok: string[] = [];
+      const errors: SyncPushResponse['errors'] = [];
+      for (const e of req.entries) {
+        const parent = e.row.parent as string | undefined;
+        if (parent && !accepted.has(parent)) {
+          errors.push({ id: e.id, code: 'missing_parent' });
+        } else {
+          accepted.add(e.row.id as string);
+          ok.push(e.id);
+        }
+      }
+      return Promise.resolve({ accepted: ok, conflicts: [], errors });
+    });
+    const syncPull = vi.fn(() => Promise.resolve({ rows: [], next_seq: 0, has_more: false }));
+    return { api: { syncPush, syncPull }, accepted };
+  }
+
+  it('pushes in creation order across batches (a sale whose lines span two batches)', async () => {
+    const server = parentServer();
+    const { db, engine } = setup({ api: server.api });
+    // staff rows stand in for a sale (parent) and 250 lines (children): 251 entries, 2 batches
+    await localWriteMany(
+      [
+        { table: 'staff', op: 'upsert', row: { ...staff(1) } },
+        ...Array.from({ length: 250 }, (_, i) => ({
+          table: 'staff' as const,
+          op: 'upsert' as const,
+          row: { ...staff(i + 2), parent: STAFF(1) },
+        })),
+      ],
+      db,
+    );
+    await engine.syncNow();
+    expect(server.api.syncPush.mock.calls.map(([r]) => r.entries.length)).toEqual([200, 51]);
+    expect(await db.outbox.count()).toBe(0);
+    expect(await db.sync_errors.count()).toBe(0);
+  });
+
+  it('keeps a child pushed before its parent and sends it again next time', async () => {
+    const server = parentServer();
+    const { db, engine } = setup({ api: server.api });
+    // The child is older in the outbox than its parent (e.g. parent queued by another flow later).
+    await localWrite({ table: 'staff', op: 'upsert', row: { ...staff(2), parent: STAFF(9) } }, db);
+    await engine.syncNow();
+    expect(await db.outbox.count()).toBe(1);
+    expect(await db.sync_errors.count()).toBe(0);
+    expect((await db.outbox.toArray())[0]?.attempts).toBe(1);
+
+    await localWrite({ table: 'staff', op: 'upsert', row: { ...staff(9) } }, db);
+    await engine.syncNow(); // first push: child still missing, parent accepted
+    await engine.syncNow(); // next push: child accepted
+    expect(await db.outbox.count()).toBe(0);
+    expect(await db.sync_errors.count()).toBe(0);
+  });
+
+  it('after 24 hours of retries a missing parent becomes a normal error', async () => {
+    const server = parentServer();
+    const { db, engine } = setup({ api: server.api });
+    await db.outbox.add({
+      id: STAFF(50),
+      table: 'staff',
+      op: 'upsert',
+      row: { ...staff(50), parent: STAFF(99) },
+      row_key: `staff:${STAFF(50)}`,
+      created_at: new Date(Date.now() - 25 * 60 * 60 * 1000).toISOString(),
+      attempts: 40,
+      actor_staff_id: null,
+    });
+    await engine.syncNow();
+    expect(await db.outbox.count()).toBe(0);
+    expect(await db.sync_errors.get(STAFF(50))).toMatchObject({ code: 'missing_parent' });
+  });
+
+  it('tells the app when a push gets through after being offline', async () => {
+    let online = false;
+    const onSynced = vi.fn();
+    const { db, engine } = setup({ isOnline: () => online, onSynced });
+    await write(db, 1);
+    await expect(engine.syncNow()).resolves.toBe('offline');
+    online = true;
+    await engine.syncNow();
+    expect(onSynced).toHaveBeenLastCalledWith(1, true);
+    await write(db, 2);
+    await engine.syncNow();
+    expect(onSynced).toHaveBeenLastCalledWith(1, false);
+  });
+});

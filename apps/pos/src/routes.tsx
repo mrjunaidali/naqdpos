@@ -15,7 +15,11 @@ import { ProductListPage } from './features/catalogue/ProductListPage.tsx';
 import { TodaysRatesPage } from './features/catalogue/TodaysRatesPage.tsx';
 import { SignInPage } from './features/auth/SignInPage.tsx';
 import { SetupPage } from './features/onboarding/SetupPage.tsx';
+import { PayPage } from './features/sale/PayPage.tsx';
+import { SaleDonePage } from './features/sale/SaleDonePage.tsx';
 import { SalePage } from './features/sale/SalePage.tsx';
+import { SalesListPage, SaleViewPage } from './features/sale/SalesListPage.tsx';
+import { PaymentMethodsPage } from './features/settings/PaymentMethodsPage.tsx';
 import { SettingsPage } from './features/settings/SettingsPage.tsx';
 import { StaffFormPage } from './features/staff/StaffFormPage.tsx';
 import { StaffLayout } from './features/staff/StaffLayout.tsx';
@@ -59,6 +63,49 @@ export const routes: RouteObject[] = [
         element: (
           <Gate state="ready">
             <SalePage />
+          </Gate>
+        ),
+      },
+      {
+        path: 'sale/pay',
+        element: (
+          <Gate state="ready">
+            <PayPage />
+          </Gate>
+        ),
+      },
+      {
+        path: 'sale/done/:saleId',
+        element: (
+          <Gate state="ready">
+            <SaleDonePage />
+          </Gate>
+        ),
+      },
+      {
+        // Owners see all of today's sales, cashiers their own (US018).
+        path: 'sales',
+        element: (
+          <Gate state="ready">
+            <SalesListPage />
+          </Gate>
+        ),
+      },
+      {
+        path: 'sales/:saleId',
+        element: (
+          <Gate state="ready">
+            <SaleViewPage />
+          </Gate>
+        ),
+      },
+      {
+        path: 'settings/payment-methods',
+        element: (
+          <Gate state="ready">
+            <OwnerPinGate>
+              <PaymentMethodsPage />
+            </OwnerPinGate>
           </Gate>
         ),
       },

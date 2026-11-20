@@ -24,7 +24,7 @@ Build in this order, not in ID order. "Sheet step" is the step number in the ori
 | 5 | Staff, PIN switch, permissions | US017, US016, US018 | 8, 9, 10 | Done (Step 6; own-shift sales part of US018 comes with selling) |
 | 6 | Products, categories, produce presets, today's rates | US019, US021, US072, US020 | 11, 12, —, 13 | Done (Step 7); change device mode added (Step 8) |
 | 6b | Product pictures (emoji icons) | US078 | — | Done (Step 10) |
-| 7 | Selling: cart, custom item, cash, wallets/split | US029, US030, US034, US035 | 14, 15, 16, 20 | Partly done (US029, US030 in Step 11; payment next) |
+| 7 | Selling: cart, custom item, cash, wallets/split | US029, US030, US034, US035 | 14, 15, 16, 20 | Done (Steps 11–12) |
 | 8 | Stock, wastage, discounts, FOC | US024, US025, US032, US033 | 21–24 | To do |
 | 9 | Customers and khata | US038, US039, US040, US041 | 25–28 | To do |
 | 10 | Shop profile and receipts | US014, US036 | 29, 30 | To do |
@@ -276,12 +276,12 @@ Build in this order, not in ID order. "Sheet step" is the step number in the ori
 
 ### F18 · Payments (R1)
 
-**US034** · Must · 2 · To do — As a cashier, I want to take cash and see the change due, and complete the sale.
+**US034** · Must · 2 · Done (closed-day check waits for `day_closes`) — As a cashier, I want to take cash and see the change due, and complete the sale.
 - Tendered amount, change from core; quick buttons Rs 100 / 500 / 1000 / 5000
 - On confirm: `sales`, `sale_lines`, `payments` in one Dexie transaction with outbox entries; `receipt_no` = device code + per-device counter; `business_date` in Asia/Karachi; blocked if the day is closed
 - Cart cleared; receipt/success screen (reminder toast lives here, §7)
 
-**US035** · Must · 3 · To do — As a cashier, I want to record JazzCash, Easypaisa, bank or split payments, so that closing matches each method.
+**US035** · Must · 3 · Done — As a cashier, I want to record JazzCash, Easypaisa, bank or split payments, so that closing matches each method.
 - `payment_methods` per shop (seed cash, JazzCash, Easypaisa, bank); owner enables, disables, adds
 - Split a bill across methods with remaining amount shown; optional reference number
 

@@ -5,6 +5,7 @@ import { otherLanguage } from '../i18n/index.ts';
 import { SyncChip } from '../sync/SyncChip.tsx';
 import { UpdateRequiredBanner } from '../sync/UpdateRequiredBanner.tsx';
 import { BrandMark } from '../ui/BrandMark.tsx';
+import { Toaster } from '../ui/Toaster.tsx';
 import { useAppState } from './appState.ts';
 import { useSessionCheck } from './sessionCheck.ts';
 import { useLiveQuery } from 'dexie-react-hooks';
@@ -78,6 +79,7 @@ export function RootLayout() {
       <main className="flex-1 p-4">
         <Outlet />
       </main>
+      <Toaster />
     </div>
   );
 }

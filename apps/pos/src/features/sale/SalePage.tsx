@@ -2,7 +2,7 @@ import { displayName, searchItems, type CartLine, type ProductRow } from '@naqdp
 import { useLiveQuery } from 'dexie-react-hooks';
 import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Link } from 'react-router';
+import { Link, useNavigate } from 'react-router';
 import { getStoredDevice } from '../../db/session.ts';
 import { useCurrentStaff } from '../../staff/currentStaff.ts';
 import { useCategories, usePriceLabel, useShopProducts } from '../catalogue/catalogueData.ts';
@@ -42,6 +42,7 @@ export function SalePage() {
   const [category, setCategory] = useState<string | null>(null);
   const [open, setOpen] = useState<Open>(null);
   const search = useRef<HTMLInputElement>(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     void hydrate();
@@ -56,10 +57,16 @@ export function SalePage() {
         e.preventDefault();
         search.current?.focus();
       }
+      // F2 = Charge (desktop counters)
+      // Read the cart now, not from the render the listener was made in.
+      if (e.key === 'F2' && useCartStore.getState().lines.length > 0) {
+        e.preventDefault();
+        void navigate('/sale/pay');
+      }
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, []);
+  }, [navigate]);
 
   const canSell = current?.valid === true;
   const visible = searchItems(

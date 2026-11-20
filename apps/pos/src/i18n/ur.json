@@ -18,7 +18,8 @@
   "home": {
     "welcome": "خوش آمدید",
     "deviceCode": "یہ ڈیوائس: {{code}}",
-    "newSale": "TODO-ur نئی سیل"
+    "newSale": "TODO-ur نئی سیل",
+    "todaysSales": "TODO-ur آج کی سیل"
   },
   "signIn": {
     "title": "سائن ان",
@@ -152,7 +153,11 @@
       "device_unlinked": "TODO-ur یہ ڈیوائس اب دکان سے منسلک نہیں",
       "rejected_entries": "TODO-ur کچھ تبدیلیاں قبول نہیں ہوئیں۔ نیچے دیکھیں۔"
     },
-    "signInAgain": "TODO-ur دوبارہ سائن ان کریں"
+    "signInAgain": "TODO-ur دوبارہ سائن ان کریں",
+    "reminderToast_one": "TODO-ur {{count}} تبدیلی سنک نہیں ہوئی۔ انٹرنیٹ سے جڑیں اور ابھی سنک کریں دبائیں۔",
+    "reminderToast_other": "TODO-ur {{count}} تبدیلیاں سنک نہیں ہوئیں۔ انٹرنیٹ سے جڑیں اور ابھی سنک کریں دبائیں۔",
+    "syncedRecords_one": "TODO-ur {{count}} ریکارڈ سنک ہوا",
+    "syncedRecords_other": "TODO-ur {{count}} ریکارڈ سنک ہوئے"
   },
   "role": {
     "owner": "مالک",
@@ -374,7 +379,6 @@
     "openCart_one": "TODO-ur ٹوکری کھولیں، {{count}} چیز",
     "openCart_other": "TODO-ur ٹوکری کھولیں، {{count}} اشیاء",
     "charge": "TODO-ur وصول کریں",
-    "paymentNext": "TODO-ur ادائیگی اگلے مرحلے میں",
     "customTitle": "TODO-ur کسٹم آئٹم",
     "customName": "TODO-ur چیز کا نام",
     "customPrice": "TODO-ur فی اکائی قیمت (روپے)",
@@ -388,5 +392,71 @@
       "rate": "TODO-ur 0 سے زیادہ ریٹ لکھیں۔",
       "price": "TODO-ur 0 سے زیادہ قیمت لکھیں۔"
     }
+  },
+  "payment": {
+    "method": {
+      "cash": "نقد",
+      "jazzcash": "JazzCash",
+      "easypaisa": "Easypaisa",
+      "bank": "TODO-ur بینک ٹرانسفر"
+    }
+  },
+  "pay": {
+    "title": "TODO-ur ادائیگی",
+    "total": "TODO-ur ادا کرنا ہے",
+    "rounding": "TODO-ur بل {{subtotal}}، گول {{sign}}{{amount}}",
+    "remaining": "TODO-ur باقی {{amount}}",
+    "method": "TODO-ur ادائیگی کا طریقہ",
+    "exact": "TODO-ur پورا",
+    "tendered": "TODO-ur وصول نقد",
+    "amount": "TODO-ur رقم",
+    "change": "TODO-ur بقایا: {{amount}}",
+    "reference": "TODO-ur حوالہ نمبر (اختیاری)",
+    "addPayment": "TODO-ur ادائیگی شامل کریں",
+    "complete": "TODO-ur سیل مکمل کریں",
+    "removePayment": "TODO-ur یہ ادائیگی نکالیں",
+    "backToCart": "TODO-ur ٹوکری پر واپس",
+    "errors": {
+      "zero": "TODO-ur 0 سے زیادہ رقم لکھیں۔",
+      "tooMuch": "TODO-ur یہ طریقہ باقی رقم سے زیادہ ادا نہیں کر سکتا۔",
+      "nothingDue": "TODO-ur کچھ باقی نہیں۔",
+      "empty_cart": "TODO-ur ٹوکری خالی ہے۔",
+      "not_paid": "TODO-ur ادائیگیاں ابھی بل پوری نہیں کرتیں۔",
+      "overpaid": "TODO-ur ادائیگیاں بل سے زیادہ ہیں۔",
+      "bad_payment": "TODO-ur ایک ادائیگی کی رقم درست نہیں۔",
+      "no_device": "TODO-ur یہ ڈیوائس سیٹ اپ نہیں۔",
+      "no_staff": "TODO-ur کوئی کام پر نہیں۔ پہلے عملہ تبدیل کریں۔"
+    }
+  },
+  "done": {
+    "title": "TODO-ur سیل محفوظ ہو گئی",
+    "savedOffline": "TODO-ur آف لائن محفوظ — انٹرنیٹ آنے پر سنک ہو گی",
+    "rounding": "TODO-ur گول کرنا",
+    "change": "TODO-ur بقایا",
+    "newSale": "TODO-ur نئی سیل",
+    "receipt": "TODO-ur رسید",
+    "receiptLater": "TODO-ur رسیدیں (واٹس ایپ، پرنٹ) اگلے مرحلے میں"
+  },
+  "sales": {
+    "title": "TODO-ur آج کی سیل",
+    "allToday": "TODO-ur آج کی تمام سیل۔",
+    "yoursToday": "TODO-ur آج آپ کی سیل۔",
+    "count_one": "TODO-ur {{count}} سیل",
+    "count_other": "TODO-ur {{count}} سیلز",
+    "none": "TODO-ur آج ابھی کوئی سیل نہیں۔",
+    "notFound": "TODO-ur یہ سیل اس ڈیوائس پر نہیں۔",
+    "back": "TODO-ur آج کی سیل پر واپس"
+  },
+  "paymentMethods": {
+    "title": "TODO-ur ادائیگی کے طریقے",
+    "intro": "TODO-ur کاؤنٹر پر کون سے طریقے ہوں، چنیں۔ نقد ہمیشہ آن ہے۔",
+    "on": "TODO-ur آن",
+    "off": "TODO-ur آف",
+    "toggle": "TODO-ur {{name}} آن یا آف کریں",
+    "cashAlwaysOn": "TODO-ur نقد ہمیشہ آن ہے",
+    "addTitle": "TODO-ur طریقہ شامل کریں",
+    "label": "نام",
+    "labelHint": "TODO-ur مثلاً SadaPay، NayaPay، چیک",
+    "add": "TODO-ur طریقہ شامل کریں"
   }
 }

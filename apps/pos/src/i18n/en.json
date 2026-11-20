@@ -18,7 +18,8 @@
   "home": {
     "welcome": "Welcome",
     "deviceCode": "This device: {{code}}",
-    "newSale": "New sale"
+    "newSale": "New sale",
+    "todaysSales": "Today’s sales"
   },
   "signIn": {
     "title": "Sign in",
@@ -152,7 +153,11 @@
       "device_unlinked": "This device is no longer linked to the shop",
       "rejected_entries": "Some changes were not accepted. See below."
     },
-    "signInAgain": "Sign in again"
+    "signInAgain": "Sign in again",
+    "reminderToast_one": "{{count}} change not synced. Connect to internet and tap Sync now.",
+    "reminderToast_other": "{{count}} changes not synced. Connect to internet and tap Sync now.",
+    "syncedRecords_one": "Synced {{count}} record",
+    "syncedRecords_other": "Synced {{count}} records"
   },
   "role": {
     "owner": "Owner",
@@ -374,7 +379,6 @@
     "openCart_one": "Open cart, {{count}} item",
     "openCart_other": "Open cart, {{count}} items",
     "charge": "Charge",
-    "paymentNext": "Payment comes next",
     "customTitle": "Custom item",
     "customName": "Item name",
     "customPrice": "Price per unit (Rs)",
@@ -388,5 +392,71 @@
       "rate": "Enter a rate above 0.",
       "price": "Enter a price above 0."
     }
+  },
+  "payment": {
+    "method": {
+      "cash": "Cash",
+      "jazzcash": "JazzCash",
+      "easypaisa": "Easypaisa",
+      "bank": "Bank transfer"
+    }
+  },
+  "pay": {
+    "title": "Payment",
+    "total": "To pay",
+    "rounding": "Bill {{subtotal}}, rounded {{sign}}{{amount}}",
+    "remaining": "Remaining {{amount}}",
+    "method": "Paid by",
+    "exact": "Exact",
+    "tendered": "Cash received",
+    "amount": "Amount",
+    "change": "Change: {{amount}}",
+    "reference": "Reference number (optional)",
+    "addPayment": "Add payment",
+    "complete": "Complete sale",
+    "removePayment": "Remove this payment",
+    "backToCart": "Back to cart",
+    "errors": {
+      "zero": "Enter an amount above 0.",
+      "tooMuch": "This method cannot pay more than what is left.",
+      "nothingDue": "Nothing is left to pay.",
+      "empty_cart": "The cart is empty.",
+      "not_paid": "The payments do not cover the bill yet.",
+      "overpaid": "The payments are more than the bill.",
+      "bad_payment": "A payment amount is not valid.",
+      "no_device": "This device is not set up.",
+      "no_staff": "Nobody is switched in. Switch staff first."
+    }
+  },
+  "done": {
+    "title": "Sale saved",
+    "savedOffline": "Saved offline — will sync when online",
+    "rounding": "Rounding",
+    "change": "Change",
+    "newSale": "New sale",
+    "receipt": "Receipt",
+    "receiptLater": "Receipts (WhatsApp, print) come next"
+  },
+  "sales": {
+    "title": "Today’s sales",
+    "allToday": "All sales today.",
+    "yoursToday": "Your sales today.",
+    "count_one": "{{count}} sale",
+    "count_other": "{{count}} sales",
+    "none": "No sales yet today.",
+    "notFound": "This sale is not on this device.",
+    "back": "Back to today’s sales"
+  },
+  "paymentMethods": {
+    "title": "Payment methods",
+    "intro": "Choose which methods the counter offers. Cash is always on.",
+    "on": "On",
+    "off": "Off",
+    "toggle": "Switch {{name}} on or off",
+    "cashAlwaysOn": "Cash is always on",
+    "addTitle": "Add a method",
+    "label": "Name",
+    "labelHint": "e.g. SadaPay, NayaPay, cheque",
+    "add": "Add method"
   }
 }

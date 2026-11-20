@@ -89,3 +89,22 @@ describe('create_shop', () => {
     expect(rows).toEqual([{ actor_user_id: f.outsider, action: 'shop.create', entity: 'shops' }]);
   });
 });
+
+describe('create_shop payment methods (migration 20261121210000)', () => {
+  it('seeds cash, JazzCash, Easypaisa and bank, all active', async () => {
+    await asUser(f.outsider, async (q) => {
+      const shopId = randomUUID();
+      await q(CALL, [shopId, randomUUID(), null]);
+      const { rows } = await q<{ code: string; active: boolean }>(
+        'select code, active from payment_methods where shop_id = $1 order by sort',
+        [shopId],
+      );
+      expect(rows).toEqual([
+        { code: 'cash', active: true },
+        { code: 'jazzcash', active: true },
+        { code: 'easypaisa', active: true },
+        { code: 'bank', active: true },
+      ]);
+    });
+  });
+});

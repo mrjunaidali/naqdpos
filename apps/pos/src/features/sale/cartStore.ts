@@ -36,8 +36,13 @@ export const useCartStore = create<CartState>((set, get) => ({
   hydrate: async () => {
     if (get().ready) return;
     const stored = (await db.meta.get(CART_KEY))?.value as { lines?: CartLine[] } | undefined;
-    // Anything added before loading finished stays, after the stored lines.
-    set((state) => ({ lines: [...(stored?.lines ?? []), ...state.lines], ready: true }));
+    // Anything added before loading finished stays, after the stored lines; a line that was
+    // already persisted is not counted twice.
+    set((state) => {
+      const saved = stored?.lines ?? [];
+      const ids = new Set(saved.map((l) => l.id));
+      return { lines: [...saved, ...state.lines.filter((l) => !ids.has(l.id))], ready: true };
+    });
   },
   put: (line) => {
     const lines = get().lines.some((l) => l.id === line.id)

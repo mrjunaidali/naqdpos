@@ -19,6 +19,8 @@ export const ACTIONS = {
    * write_roles). Cashiers entering a rate at first sale is decided with US029.
    */
   manage_products: ['owner'],
+  /** Enable, disable, add and reorder payment methods (RLS payment_methods_*_owner; write_roles). */
+  manage_payment_methods: ['owner'],
   /** Edit shop settings (RLS shops_update_owner, column grants; write_roles). */
   manage_shop_settings: ['owner'],
 } as const satisfies Record<string, readonly Role[]>;

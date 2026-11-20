@@ -11,6 +11,7 @@ const EXPECTED: Record<Action, Role[]> = {
   see_reports: ['owner'],
   manage_shop_settings: ['owner'],
   manage_products: ['owner'],
+  manage_payment_methods: ['owner'],
 };
 
 describe('can(role, action)', () => {

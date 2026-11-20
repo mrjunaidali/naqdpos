@@ -10,6 +10,7 @@ export * from './pin.ts';
 export * from './pinLock.ts';
 export * from './presets/freshProduce.ts';
 export * from './qty.ts';
+export * from './sale.ts';
 export * from './search.ts';
 export * from './staff.ts';
 export * from './sync/schemas.ts';

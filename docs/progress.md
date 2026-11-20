@@ -430,3 +430,40 @@ Anyone switched in can build a cart offline: search or tap products, enter a qua
 - The payment story must store `by_amount` on `sale_lines` (not in architecture §3 yet: ask before the migration), and decide whether `sale_lines` keeps the Urdu name snapshot (§8 open question).
 - Discounts and FOC (US032, US033) add fields to the line and to `cartTotals()`.
 - The floating nav bar and the Home hero card are still to come.
+
+## Step 12 — US034 cash and complete sale, US035 wallets / bank / split, payment methods (2026-11-21)
+
+A cart becomes a sale offline: the bill is rounded to the whole rupee, paid in cash (with change), wallets, bank or a split, and written in one Dexie transaction with a receipt number from the device. Owners manage payment methods; Today's sales lists sales (owners all, cashiers their own).
+
+**Built**
+- **Monotonic `uuidv7()`** (RFC 9562 counter in `rand_a`): ids made in the same millisecond, or when the clock steps back, still increase, so the outbox pushes in creation order. Before this, a child row (a sale line, a first price row) could be pushed before its parent within the same millisecond.
+- Migration `20261121210000_sales.sql`: `payment_methods` (sort, cash always active, seeded for every shop and by `create_shop` via `seed_payment_methods()`), `sales` (`rounding_paisa` between −50 and +50, total check, unique `(shop_id, receipt_no)`), `sale_lines` (`shop_id`, `name_ur_snapshot`, `by_amount`), `payments` (amount > 0, sale id required for kind `sale`); composite FKs (line → sale, payment → sale, staff, method → `payment_methods(shop_id, code)`, product). RLS: owners and cashiers read and insert the ledgers, no update or delete; payment methods members read, owners write. Registry: ledgers append-only, `pull_scope all`, `write_roles {owner, cashier}`; payment methods `{owner}`. `sync_push`: a foreign-key violation returns **`missing_parent`**.
+- `packages/core`: `sale.ts` (`roundBill`, `changeDue`, `applyPayment` (cash may exceed what is due, the row records the applied amount; other methods may not), `remainingDue`, `businessDate` (Asia/Karachi), `receiptNo` / `receiptCounter`, `buildSale` (at least one line, payments add up exactly to the rounded total)); ledger and payment method row schemas and `SYNC_TABLES` entries; `missing_parent` error code; `ACTIONS.manage_payment_methods` (owner).
+- `apps/pos`:
+  - Dexie **version 7** (`payment_methods`, `sales` with `receipt_no` and `business_date` indexes, `sale_lines`, `payments`)
+  - engine: `missing_parent` entries stay in the outbox (attempts counted) and are retried; after 24 hours they move to `sync_errors`; `onSynced(pushed, recovered)` for "Synced N records" after an outage
+  - `completeSale()`: one `rw` transaction over sales, sale_lines, payments, outbox and meta: receipt counter = max(stored counter, highest receipt of this device code in local sales) + 1, rows from `buildSale`, `localWriteMany` with the current staff as actor and `staff_id`, counter and cleared cart saved; waits for queued cart writes first; refuses with nobody valid switched in. `reconcileReceiptCounter()` runs at start
+  - `PayPage` (`/sale/pay`, from Charge or F2): rounded total with the rounding line, method chips (active methods; Cash even before methods are pulled), cash with quick Rs 100 / 500 / 1000 / 5000 and Exact, change, split payments with remaining and optional reference, "Complete sale" when the last payment covers the rest
+  - `SaleDonePage` (`/sale/done/:id`): receipt number, items, rounding, total, methods, change; "Saved offline — will sync when online"; New sale; Receipt (disabled until US036); the §7 reminder toast at most once per 30 minutes (`meta.sync_reminder_shown_at`)
+  - `SalesListPage` (`/sales`, Home → Today's sales) and `SaleViewPage` (`/sales/:id`): owners see all of today's sales, cashiers only their own (UI rule, architecture §5)
+  - `PaymentMethodsPage` (`/settings/payment-methods`, owner PIN gate): on / off (cash locked on), ↑ / ↓, add a custom method (`custom_<8 hex>`)
+  - global toasts (`ui/toastStore`, `Toaster`); "Synced N records" from the engine
+  - cart: `hydrate()` no longer counts a line twice when it was added before the stored cart finished loading (found by the tests)
+  - en + ur strings (`pay.*`, `done.*`, `sales.*`, `paymentMethods.*`, `payment.method.*`, sync toasts)
+
+**Tests**: DB 129 (+16: cashier pushes sale / line / payment and a retry adds nothing, rounding and snapshots stored, rider refused by session and as actor, closed day refused, receipt numbers unique, line before its sale → `missing_parent` then accepted, sale of a product made in the same batch, unknown method → `missing_parent`, total and rounding checks, append-only for owners too, shop isolation and riders see nothing, line pointing at another shop's sale, push / pull round trip incl. payment methods, methods seeded, owner-only writes, cash cannot be switched off, owner-only method push, `create_shop` seeds four methods). API DB 36. Core 243 (+23: rounding x.50 up / x.49 down / whole / after discount, change, cash vs wallet payments, split remaining, Karachi midnight edges, receipt numbers, `buildSale` rows, order and refusals, monotonic ids within one millisecond and across a clock step back). Pos 207 (+21: one transaction with outbox order sale → lines → payments, nothing written on a failure, short payment refused, counter increments and continues after the counter is lost, cash with change and success screen, Exact, split with reference, wallet overpay refused and disabled methods hidden, offline end to end with no API call, F2, reminder toast once, owner sees all and cashier only own sales, payment methods screen (owner gate, cash locked, switch off via outbox, add custom, reorder), engine: two batches in order, a child before its parent retried then accepted, 24 h → error, synced-after-outage signal).
+
+**Decisions**
+- Bill rounded to the nearest whole rupee, half up; `sales.rounding_paisa` signed.
+- `sale_lines` stores `name_ur_snapshot` (closes the §8 item) and `by_amount`.
+- `payment_methods.sort`; built-in method names through i18n; custom codes `custom_<8 hex>`.
+- Riders get no sales; "own sales only" for cashiers is a UI rule (architecture §5).
+- Foreign-key violations are retried as `missing_parent` for 24 hours before they show as errors.
+- Receipt numbers never repeat: the counter is checked against local sales before every sale and at start.
+
+**Follow-ups**
+- Closed days: `is_day_closed()` is still the stub; the client check comes with `day_closes` (US044).
+- Server-side check that a sale's lines and payments add up (now only in core before writing).
+- `customer_id` FKs come with the customers table (khata).
+- Receipt sharing and printing: US036.
+- The rider stories decide what riders see of sales.

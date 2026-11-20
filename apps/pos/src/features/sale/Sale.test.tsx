@@ -106,8 +106,7 @@ describe('sale screen (US029)', () => {
     expect(t.className).toContain('border-primary');
     expect(within(t).getByText('500 g')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /Open cart, 1 item/ })).toHaveTextContent('Rs 80');
-    expect(screen.getByRole('button', { name: 'Charge' })).toBeDisabled();
-    expect(screen.getByText('Payment comes next')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Charge' })).toBeEnabled();
   });
 
   it('tapping a product in the cart edits its line; the keypad takes decimals for kg; remove', async () => {
