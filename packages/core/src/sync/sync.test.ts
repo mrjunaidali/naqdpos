@@ -56,13 +56,22 @@ describe('sync schemas', () => {
 
   it('registers the tenancy tables; salaries are owner-device only', () => {
     expect(Object.keys(SYNC_TABLES).sort()).toEqual([
+      'categories',
       'devices',
+      'price_history',
+      'product_cost_history',
+      'product_costs',
+      'products',
       'shops',
       'staff',
       'staff_pins',
       'staff_salaries',
     ]);
-    expect(OWNER_DEVICE_TABLES).toEqual(['staff_salaries']);
+    expect([...OWNER_DEVICE_TABLES].sort()).toEqual([
+      'product_cost_history',
+      'product_costs',
+      'staff_salaries',
+    ]);
     expect(SYNC_TABLES.staff_pins.scope).toBe('counter_device');
     expect(SYNC_TABLES.devices.pushable).toBe(false);
     expect(isSyncTable('staff')).toBe(true);

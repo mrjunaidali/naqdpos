@@ -5,6 +5,12 @@ import { NotFoundPage } from './app/NotFoundPage.tsx';
 import { RootLayout } from './app/RootLayout.tsx';
 import { GoogleCallbackPage } from './features/auth/GoogleCallbackPage.tsx';
 import { SignInGate } from './features/auth/SignInGate.tsx';
+import { CatalogueLayout } from './features/catalogue/CatalogueLayout.tsx';
+import { CategoriesPage } from './features/catalogue/CategoriesPage.tsx';
+import { PresetPickerPage } from './features/catalogue/PresetPickerPage.tsx';
+import { ProductFormPage } from './features/catalogue/ProductFormPage.tsx';
+import { ProductListPage } from './features/catalogue/ProductListPage.tsx';
+import { TodaysRatesPage } from './features/catalogue/TodaysRatesPage.tsx';
 import { SignInPage } from './features/auth/SignInPage.tsx';
 import { SetupPage } from './features/onboarding/SetupPage.tsx';
 import { SettingsPage } from './features/settings/SettingsPage.tsx';
@@ -72,6 +78,23 @@ export const routes: RouteObject[] = [
           { index: true, element: <StaffListPage /> },
           { path: 'new', element: <StaffFormPage /> },
           { path: ':staffId', element: <StaffFormPage /> },
+        ],
+      },
+      {
+        // Owner screens (manage_products): one owner check per visit (OwnerPinGate).
+        path: 'products',
+        element: (
+          <Gate state="ready">
+            <CatalogueLayout />
+          </Gate>
+        ),
+        children: [
+          { index: true, element: <ProductListPage /> },
+          { path: 'new', element: <ProductFormPage /> },
+          { path: 'categories', element: <CategoriesPage /> },
+          { path: 'presets', element: <PresetPickerPage /> },
+          { path: 'rates', element: <TodaysRatesPage /> },
+          { path: ':productId', element: <ProductFormPage /> },
         ],
       },
       { path: '*', element: <NotFoundPage /> },

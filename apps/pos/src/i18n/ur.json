@@ -7,7 +7,8 @@
     "wait": "براہ کرم انتظار کریں…",
     "loading": "لوڈ ہو رہا ہے…",
     "retry": "دوبارہ کوشش کریں",
-    "close": "بند کریں"
+    "close": "بند کریں",
+    "cancel": "منسوخ کریں"
   },
   "errors": {
     "offline": "انٹرنیٹ کنکشن نہیں ہے۔ کنیکٹ کر کے دوبارہ کوشش کریں۔",
@@ -207,5 +208,98 @@
     "signOut": "TODO-ur سائن آؤٹ",
     "signOutBlocked_one": "TODO-ur {{count}} تبدیلی ابھی سنک نہیں ہوئی۔ سائن آؤٹ سے پہلے سنک کریں۔",
     "signOutBlocked_other": "TODO-ur {{count}} تبدیلیاں ابھی سنک نہیں ہوئیں۔ سائن آؤٹ سے پہلے سنک کریں۔"
+  },
+  "nav": {
+    "home": "ہوم"
+  },
+  "unit": {
+    "kg": "کلو",
+    "g": "گرام",
+    "dozen": "درجن",
+    "piece": "عدد",
+    "bundle": "گٹھی",
+    "litre": "لیٹر"
+  },
+  "products": {
+    "title": "TODO-ur اشیاء",
+    "add": "TODO-ur چیز شامل کریں",
+    "addTitle": "TODO-ur چیز شامل کریں",
+    "editTitle": "TODO-ur چیز میں ترمیم",
+    "search": "TODO-ur اشیاء تلاش کریں",
+    "searchPlaceholder": "تلاش: aloo, آلو, potato",
+    "showHidden": "TODO-ur چھپی ہوئی اشیاء دکھائیں",
+    "empty": "TODO-ur ابھی کوئی چیز نہیں۔ شامل کریں یا تیار فہرست سے چنیں۔",
+    "noHidden": "TODO-ur کوئی چھپی ہوئی چیز نہیں۔",
+    "hidden": "TODO-ur چھپی ہوئی",
+    "hiddenNotice": "TODO-ur یہ چیز چھپی ہوئی ہے اور فروخت میں نظر نہیں آتی۔",
+    "name": "TODO-ur نام (انگریزی)",
+    "nameUr": "TODO-ur نام (اردو)",
+    "unit": "TODO-ur اکائی",
+    "category": "TODO-ur زمرہ",
+    "noCategory": "TODO-ur کوئی زمرہ نہیں",
+    "salePrice": "TODO-ur قیمتِ فروخت (روپے)",
+    "salePriceHint": "TODO-ur فی {{unit}} قیمت۔ 0 = پہلی فروخت پر ریٹ پوچھیں۔",
+    "costPrice": "TODO-ur قیمتِ خرید (روپے، اختیاری)",
+    "costPriceHint": "TODO-ur یہ صرف مالک دیکھتا ہے۔",
+    "costElsewhere": "TODO-ur قیمتِ خرید مالک کی ڈیوائس (مالک کے اپنے فون) پر لکھی جاتی ہے۔",
+    "searchTerms": "TODO-ur دوسرے نام / ہجے",
+    "searchTermsHint": "TODO-ur کاما سے الگ کریں، مثلاً aloo, aalu۔ کاؤنٹر پر تلاش آسان ہوتی ہے۔",
+    "trackStock": "TODO-ur اس چیز کا اسٹاک رکھیں",
+    "save": "محفوظ کریں",
+    "hide": "TODO-ur چیز چھپائیں",
+    "show": "TODO-ur چیز دوبارہ دکھائیں",
+    "noRate": "TODO-ur ابھی ریٹ نہیں",
+    "pricePerUnit": "Rs {{amount}}/{{unit}}",
+    "editPriceFor": "TODO-ur {{name}} کی قیمت بدلیں",
+    "newPriceFor": "TODO-ur {{name}} کی نئی قیمت روپوں میں",
+    "savePrice": "TODO-ur قیمت محفوظ کریں",
+    "errors": {
+      "required": "یہ ضروری ہے۔",
+      "tooLong": "TODO-ur یہ بہت لمبا ہے۔",
+      "unit": "TODO-ur اکائی منتخب کریں۔",
+      "price": "TODO-ur روپے لکھیں، مثلاً 120 یا 120.50۔",
+      "negative": "TODO-ur قیمت منفی نہیں ہو سکتی۔",
+      "tooManyTerms": "TODO-ur زیادہ سے زیادہ 20 نام۔"
+    }
+  },
+  "categories": {
+    "title": "TODO-ur زمرے",
+    "all": "TODO-ur سب",
+    "tabsLabel": "TODO-ur زمرے",
+    "add": "TODO-ur زمرہ شامل کریں",
+    "renameTitle": "TODO-ur زمرے کا نام بدلیں",
+    "renameLabel": "TODO-ur {{name}} کا نام بدلیں",
+    "name": "TODO-ur نام (انگریزی)",
+    "nameUr": "TODO-ur نام (اردو)",
+    "save": "محفوظ کریں",
+    "moveUp": "TODO-ur {{name}} اوپر کریں",
+    "moveDown": "TODO-ur {{name}} نیچے کریں"
+  },
+  "presets": {
+    "open": "TODO-ur فہرست سے شامل کریں",
+    "title": "TODO-ur اپنی اشیاء چنیں",
+    "intro": "TODO-ur جو بیچتے ہیں اس پر نشان لگائیں۔ آج کا ریٹ اختیاری ہے؛ ورنہ پہلی فروخت پر پوچھا جائے گا۔",
+    "search": "TODO-ur فہرست میں تلاش کریں",
+    "searchPlaceholder": "تلاش: aalu, آلو, potato",
+    "added": "TODO-ur شامل ہے",
+    "hidden": "TODO-ur چھپی ہوئی",
+    "focHint": "TODO-ur عموماً مفت",
+    "rateFor": "TODO-ur {{name}} کا آج کا ریٹ روپوں میں",
+    "ratePlaceholder": "TODO-ur آج کا ریٹ فی {{unit}} (اختیاری)",
+    "rateError": "TODO-ur سرخ نشان والے ریٹ دیکھیں۔",
+    "skip": "TODO-ur ابھی نہیں",
+    "save_one": "TODO-ur {{count}} چیز شامل کریں",
+    "save_other": "TODO-ur {{count}} اشیاء شامل کریں"
+  },
+  "rates": {
+    "title": "TODO-ur آج کے ریٹ",
+    "introOwner": "TODO-ur فی اکائی قیمتِ فروخت اور خرید۔ سب ایک ساتھ محفوظ کریں۔",
+    "perUnit": "TODO-ur فی {{unit}}",
+    "saleFor": "TODO-ur {{name}} کی قیمتِ فروخت",
+    "costFor": "TODO-ur {{name}} کی قیمتِ خرید",
+    "saveAll": "TODO-ur سب محفوظ کریں",
+    "error": "TODO-ur سرخ نشان والی قیمتیں دیکھیں۔",
+    "saved_one": "TODO-ur {{count}} چیز اپڈیٹ ہوئی۔",
+    "saved_other": "TODO-ur {{count}} اشیاء اپڈیٹ ہوئیں۔"
   }
 }

@@ -10,6 +10,9 @@ import { syncEngine } from '../../sync/index.ts';
 
 type ShopEntry = MeResponse['shops'][number];
 
+/** meta key: where to go right after setup (read once by Home). */
+export const AFTER_SETUP_KEY = 'after_setup';
+
 /** Modes offered during setup; rider devices come with the rider story. */
 export type SetupMode = Extract<DeviceMode, 'owner' | 'shop'>;
 
@@ -31,6 +34,8 @@ export async function registerThisDevice(input: {
   /** The owner's PIN hash when it was just set here (onboarding), so PIN switching works offline
    * before the first pull. */
   ownerPinHash?: string;
+  /** Screen to open once setup is done (e.g. the produce picker); Home forwards there once. */
+  next?: string;
 }): Promise<void> {
   // Idempotent on the server: a retry with the same id returns the same code.
   const device = await api.registerDevice({
@@ -68,6 +73,9 @@ export async function registerThisDevice(input: {
     }
     await db.devices.put(device);
     await db.meta.put({ key: META_KEYS.DEVICE, value: stored });
+    // Written with the device, so whichever navigation wins (the setup gate or the form), Home
+    // forwards to it.
+    if (input.next) await db.meta.put({ key: AFTER_SETUP_KEY, value: input.next });
     // The owner who set the device up is the first one working on it (US016).
     if (entry.staff) await writeCurrentStaffId(entry.staff.id);
   });

@@ -41,10 +41,16 @@ export function RootLayout() {
   return (
     <div className="flex min-h-dvh flex-col">
       <header className="flex items-center gap-2 border-b border-border bg-surface px-4 py-2">
-        <BrandMark />
-        <span className="min-w-0 flex-1 truncate text-lg font-semibold">
-          {shopName ?? t('app.name')}
-        </span>
+        <Link
+          to="/"
+          aria-label={t('nav.home')}
+          className="flex min-h-11 min-w-0 flex-1 items-center gap-2 rounded-md text-text"
+        >
+          <BrandMark />
+          <span className="min-w-0 truncate text-lg font-semibold">
+            {shopName ?? t('app.name')}
+          </span>
+        </Link>
         {ready ? (
           <>
             <StaffChip />

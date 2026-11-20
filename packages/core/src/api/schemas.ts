@@ -1,6 +1,16 @@
 // Request and response shapes shared by the API (route validation, OpenAPI docs) and the apps'
 // typed client. One definition, so both sides cannot drift apart (CLAUDE.md, Portability 3).
 import { z } from 'zod';
+import {
+  MAX_SEARCH_TERM_LENGTH,
+  MAX_SEARCH_TERMS,
+  PRODUCT_UNITS,
+  type CategoryRow,
+  type PriceHistoryRow,
+  type ProductCostHistoryRow,
+  type ProductCostRow,
+  type ProductRow,
+} from '../catalogue.ts';
 import { PK_MOBILE_PATTERN } from '../phone.ts';
 import {
   DEVICE_MODES,
@@ -203,3 +213,75 @@ export type ErrorResponse = z.infer<typeof ErrorResponse>;
 
 /** Better Auth's own error body, e.g. { code: 'INVALID_OTP', message: '…' }. */
 export const AuthErrorResponse = z.object({ code: z.string().optional(), message: z.string() });
+
+// --- Catalogue rows (architecture §3, migration 20261121090000_catalogue) ---
+
+const paisa = z.number().int().nonnegative();
+
+export const CategoryRowSchema = z.object({
+  id: z.uuid(),
+  shop_id: z.uuid(),
+  name: z.string().min(1).max(60),
+  name_ur: z.string().max(60).nullable(),
+  sort: z.number().int(),
+  device_id: z.uuid().nullable(),
+  created_at: iso,
+  updated_at: iso,
+  deleted_at: iso.nullable(),
+  server_seq: z.number().int().nullable(),
+}) satisfies z.ZodType<CategoryRow>;
+
+export const ProductRowSchema = z.object({
+  id: z.uuid(),
+  shop_id: z.uuid(),
+  category_id: z.uuid().nullable(),
+  name: z.string().min(1).max(100),
+  name_ur: z.string().max(100).nullable(),
+  unit: z.enum(PRODUCT_UNITS),
+  sale_price_paisa: paisa,
+  barcode: z.string().max(64).nullable(),
+  track_stock: z.boolean(),
+  min_qty_milli: z.number().int().nonnegative().nullable(),
+  is_combo: z.boolean(),
+  packaging_cost_paisa: paisa,
+  foc_rule: z.record(z.string(), z.unknown()).nullable(),
+  search_terms: z.array(z.string().min(1).max(MAX_SEARCH_TERM_LENGTH)).max(MAX_SEARCH_TERMS),
+  device_id: z.uuid().nullable(),
+  created_at: iso,
+  updated_at: iso,
+  deleted_at: iso.nullable(),
+  server_seq: z.number().int().nullable(),
+}) satisfies z.ZodType<ProductRow>;
+
+export const ProductCostRowSchema = z.object({
+  product_id: z.uuid(),
+  shop_id: z.uuid(),
+  cost_price_paisa: paisa,
+  device_id: z.uuid().nullable(),
+  created_at: iso,
+  updated_at: iso,
+  deleted_at: iso.nullable(),
+  server_seq: z.number().int().nullable(),
+}) satisfies z.ZodType<ProductCostRow>;
+
+export const PriceHistoryRowSchema = z.object({
+  id: z.uuid(),
+  shop_id: z.uuid(),
+  product_id: z.uuid(),
+  sale_price_paisa: paisa,
+  effective_at: iso,
+  created_at: iso,
+  device_id: z.uuid().nullable(),
+  server_seq: z.number().int().nullable(),
+}) satisfies z.ZodType<PriceHistoryRow>;
+
+export const ProductCostHistoryRowSchema = z.object({
+  id: z.uuid(),
+  shop_id: z.uuid(),
+  product_id: z.uuid(),
+  cost_price_paisa: paisa,
+  effective_at: iso,
+  created_at: iso,
+  device_id: z.uuid().nullable(),
+  server_seq: z.number().int().nullable(),
+}) satisfies z.ZodType<ProductCostHistoryRow>;

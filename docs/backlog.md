@@ -22,7 +22,7 @@ Build in this order, not in ID order. "Sheet step" is the step number in the ori
 | 3 | Owner sign-in, onboarding, device registration | US015, (US012 self-service part) | 6 | Done (Step 4) |
 | 4 | **Sync engine** (outbox, push/pull, health, app version, update checks) | US003, US005, US006, US004 | 5, 17, 18, 19 | **Next** |
 | 5 | Staff, PIN switch, permissions | US017, US016, US018 | 8, 9, 10 | Done (Step 6) |
-| 6 | Products, categories, produce presets, today's rates | US019, US021, US072, US020 | 11, 12, —, 13 | To do |
+| 6 | Products, categories, produce presets, today's rates | US019, US021, US072, US020 | 11, 12, —, 13 | Done (Step 7) |
 | 7 | Selling: cart, custom item, cash, wallets/split | US029, US030, US034, US035 | 14, 15, 16, 20 | To do |
 | 8 | Stock, wastage, discounts, FOC | US024, US025, US032, US033 | 21–24 | To do |
 | 9 | Customers and khata | US038, US039, US040, US041 | 25–28 | To do |
@@ -180,16 +180,16 @@ Build in this order, not in ID order. "Sheet step" is the step number in the ori
 
 ### F11 · Product management (R1)
 
-**US019** · Must · 5 · To do — As a shop owner, I want to add a product with name (English and Urdu), unit, sale price and cost price, so that I can sell and track profit.
+**US019** · Must · 5 · Done — As a shop owner, I want to add a product with name (English and Urdu), unit, sale price and cost price, so that I can sell and track profit.
 - Name and unit and sale price required; `name_ur` and cost optional; units kg, g, dozen, piece, bundle, litre
 - Prices entered in rupees, stored as paisa; cost saved to owner-only `product_costs`
 - Decimal quantities for kg/litre; quick price edit from the list; `price_history` row on every price change
 - Varieties are separate products
 
-**US020** · Must · 3 · To do — As a shop owner, I want to update today's prices on one screen, so that I keep up with daily mandi rates.
+**US020** · Must · 3 · Done — As a shop owner, I want to update today's prices on one screen, so that I keep up with daily mandi rates.
 - Bulk list with editable sale price (and cost for owners); "Save all" in one Dexie transaction with `price_history` rows; works offline
 
-**US072** · Must · 3 · To do — As a fruit & veg owner, I want to pick my products from a ready-made list, so that I don't type potato, onion, tomato on every new shop. (Spec: `docs/features/produce-presets.md`.)
+**US072** · Must · 3 · Done (Roman Urdu spellings to be verified; rate prompt on first sale comes with US029) — As a fruit & veg owner, I want to pick my products from a ready-made list, so that I don't type potato, onion, tomato on every new shop. (Spec: `docs/features/produce-presets.md`.)
 - Checklist of the 83 presets grouped by category (varieties together), in onboarding for `fruit_veg` shops and under Products → "Add from list"
 - Ticking items and Save creates one `products` row each (`name` + `name_ur`) plus the needed categories, in one Dexie transaction with outbox entries, offline
 - Optional today's rate per item → `sale_price_paisa` + `price_history`; blank → 0 and a rate prompt on first sale
@@ -198,7 +198,7 @@ Build in this order, not in ID order. "Sheet step" is the step number in the ori
 
 ### F13 · Categories (R1)
 
-**US021** · Must · 2 · To do — As a shop owner, I want to group products into categories, so that the cashier finds items faster.
+**US021** · Must · 2 · Done — As a shop owner, I want to group products into categories, so that the cashier finds items faster.
 - Create, rename (English and Urdu), reorder categories
 - Reusable `CategoryTabs` component for the sale screen
 

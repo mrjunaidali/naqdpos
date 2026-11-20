@@ -267,3 +267,37 @@ describe('setup for an owner who already has a shop', () => {
     );
   });
 });
+
+describe('after onboarding (US072)', () => {
+  async function onboard(shopType: string) {
+    serverAccepts();
+    mocked.me.mockResolvedValueOnce(me());
+    const { router } = renderAt('/setup');
+    await screen.findByRole('heading', { name: 'Set up your shop' });
+    fireEvent.change(screen.getByLabelText('Shop type'), { target: { value: shopType } });
+    fillValidForm();
+    fireEvent.click(screen.getByRole('button', { name: 'Create shop' }));
+    return router;
+  }
+
+  it('a fruit & veg shop goes on to pick products from the ready-made list', async () => {
+    const router = await onboard('fruit_veg');
+    // Default mode is Shop counter, so the owner screen asks for the PIN just set (decision 5).
+    await screen.findByRole('heading', { name: 'Owner PIN needed' });
+    for (const digit of '4821') fireEvent.click(await screen.findByRole('button', { name: digit }));
+    expect(await screen.findByRole('heading', { name: 'Pick your products' })).toBeInTheDocument();
+    // Stays there (the setup gate's own redirect must not win).
+    await new Promise((r) => setTimeout(r, 300));
+    expect(router.state.location.pathname).toBe('/products/presets');
+    expect(screen.getByRole('button', { name: 'Skip for now' })).toBeInTheDocument();
+  });
+
+  it('other shop types go straight home', async () => {
+    const router = await onboard('grocery');
+    await waitFor(() => expect(router.state.location.pathname).toBe('/'));
+    await waitFor(() =>
+      expect(screen.getByRole('heading', { name: 'Welcome' })).toBeInTheDocument(),
+    );
+    expect(await db.meta.get('after_setup')).toBeUndefined();
+  });
+});

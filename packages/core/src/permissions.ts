@@ -14,6 +14,11 @@ export const ACTIONS = {
   see_cost_prices: ['owner'],
   /** Totals, profit and reports beyond the own shift (/reports/*, owner-only). */
   see_reports: ['owner'],
+  /**
+   * Products, categories, sale prices, today's rates, presets (RLS *_owner on the catalogue;
+   * write_roles). Cashiers entering a rate at first sale is decided with US029.
+   */
+  manage_products: ['owner'],
   /** Edit shop settings (RLS shops_update_owner, column grants; write_roles). */
   manage_shop_settings: ['owner'],
 } as const satisfies Record<string, readonly Role[]>;

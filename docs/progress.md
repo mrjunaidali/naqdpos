@@ -282,3 +282,44 @@ Two rules tightened after review (the Step 6 plan had said a flat 1-minute lock 
 - Architecture §5 and the US016 acceptance line updated.
 
 **Tests**: core 171 (+3 net: each lock step, staying at 15 min, reset after success, old state loads). Pos 119 (+4: escalation through `attemptPin` and reset, reload during a 5-minute lock, old saved state, cashier and rider refused with the session kept).
+
+## Step 7 — US019 products, US021 categories, US072 produce presets, US020 today's rates (2026-11-21)
+
+Owners manage the catalogue offline: products (English and Urdu names, unit, category, sale price, owner-only cost, other names / spellings), categories, the built-in fresh produce list and a one-screen "Today's rates". Product search matches English, Urdu and Roman Urdu.
+
+**Built**
+- Migration `20261121090000_catalogue.sql`: `categories`, `products` (every §3 column with safe defaults plus `search_terms text[]`, checked by `search_terms_ok()`), `product_costs`, `price_history` (sale prices only) and `product_cost_history` (decisions 2a/2b, 20 Nov 2026). Composite FKs keep categories, costs and history in the product's shop. RLS on all: members read products, categories and sale history; owners write; costs and cost history are owner-only. The two history tables have no update privilege (append-only). Registered in `sync_tables` with `write_roles {owner}`; costs and cost history `owner_device`.
+- `packages/core`:
+  - `catalogue.ts`: row types, `PRODUCT_UNITS`, `validateProductForm` (name required, unit, sale price ≥ 0 in rupees → paisa, optional cost, search term limits), `parseRupees`, `parseSearchTerms` (comma or Urdu comma), `displayName` (current language, fallback), `validateCategoryName`
+  - `search.ts`: `normaliseForSearch` (case, spacing, brackets, Urdu diacritics, Arabic/Urdu letter forms), `matchesSearch`, `searchItems` (prefix matches first)
+  - `presets/freshProduce.ts`: 83 presets (34 / 9 / 40) with key, category, group, en, ur, Roman spellings (**every list marked `// verify: Junaid`**), unit, FOC default, seasonal; `PRESET_CATEGORIES` (three categories with Urdu names); `presetsForPicker()` order
+  - schemas and `SYNC_TABLES` entries for the five tables; `ACTIONS.manage_products` (owner)
+- `apps/pos`:
+  - Dexie **version 5**: `categories`, `products`, `product_costs`, `price_history`, `product_cost_history`
+  - `features/catalogue/catalogueRepo.ts`: every write through `localWriteMany` with the acting owner; `saveProduct` (price history only when the sale price changes; cost + cost history only on owner devices and only when it changes), `setSalePrice` (quick edit), `setProductHidden`, `saveCategory`, `moveCategory` (renumbers 1…n), `createFromPresets` (one transaction: categories on demand matched by English name, products with `search_terms`, history for given rates, skips active duplicates, **restores hidden matches with the new rate**), `saveTodaysRates` (one transaction)
+  - screens behind `OwnerPinGate` (`/products` layout): product grid (3 columns on phones, English + Urdu name, "Rs 160/kg", search, `CategoryTabs`, show hidden, quick price edit), product form, categories (rename in both languages, ↑/↓), preset picker (grouped, searchable, "Added" / "Hidden", FOC hint, optional rate per item), today's rates (Save all)
+  - `CategoryTabs` (reusable chip row for the sale screen)
+  - cost fields only on owner devices; elsewhere "Cost prices are set on an owner device (the owner's own phone)."
+  - onboarding: fruit & veg shops continue to the picker ("Skip for now"); the next screen is stored in `meta.after_setup` with the device and Home forwards once, so the setup gate's own redirect cannot win the race
+  - Settings: Products link for `can(role, 'manage_products')`
+  - en + ur strings (units, products, categories, presets, rates); Urdu category names from the spec
+- Also included: the header home link (`nav.home`) that was already in the working tree.
+
+**Tests**: DB 85 (+10: shop A/B isolation, cashier reads products and sale history but never costs or cost history, cashier cannot write products / categories / prices, history append-only, category from another shop refused, unit / price / search term checks, shop device never pulls costs or cost history while owner devices do, `product_costs` push refused from a shop device and from a cashier actor and accepted from an owner on an owner device, product + first price row pushed twice without duplicates, cashier actor product edit refused). Core 200 (+29: search incl. "aalu", "آلو" (alef madda, lam, waw, checked by code point), "potato", "chaunsa", letter folding; preset counts and integrity; form validation; helpers). Pos 141 (+22: product writes and history rules, cost only when asked, hide/restore, form validation, owner-device form, shop-device form without cost, Products hidden from cashiers, quick price edit, category tabs and Roman search, categories create/rename/reorder incl. buttons, presets one transaction / categories on demand / rate vs blank / no duplicates / hidden restored / picker badges and restore, today's rates one transaction + screen + no cost column on a shop device, onboarding to the picker for fruit & veg only).
+
+**Decisions**
+- `price_history` keeps sale prices only; costs go to the owner-only `product_cost_history` (2a).
+- `products.search_terms text[]` for Roman Urdu and other names (2b).
+- `manage_products` is owner-only; whether cashiers may set a rate at the first sale is decided with US029 (3).
+- No cost fields on shop devices (4). **A shop whose only device is a shop device cannot record costs until the owner registers an owner device.**
+- Category reorder uses up/down buttons; preset categories are matched by English name (5).
+- Hiding = `deleted_at`; the picker shows "Hidden" for a hidden match and restores it when ticked (6).
+- A blank preset rate gives price 0 and no history row; a typed rate (even 0) writes one.
+
+**Follow-ups**
+- Junaid to verify the Roman Urdu spellings (and the Urdu names, per the spec).
+- US029: rate prompt for 0-price products at the first sale, and who may enter it.
+- Leaving owner mode must also clear `product_costs` and `product_cost_history` (`OWNER_DEVICE_TABLES`).
+- Owner-only data on a shop device "fetched online" (architecture §4) is still not built.
+- Barcode, FOC rule, minimum quantity and combo editing: later stories (columns exist with safe defaults).
+- Product images and grocery/meat presets are out of scope.

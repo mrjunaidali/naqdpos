@@ -81,6 +81,8 @@ export function OnboardingForm({ onDone }: { onDone: () => void }) {
         name: values.deviceName.trim(),
         mode: values.deviceMode,
         ownerPinHash,
+        // Fruit & veg shops pick their products from the built-in list next (US072).
+        ...(values.shopType === 'fruit_veg' && { next: '/products/presets?from=onboarding' }),
       });
       onDone();
     } catch (e) {

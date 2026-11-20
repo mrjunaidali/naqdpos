@@ -1,5 +1,10 @@
 import type {
+  CategoryRow,
   DeviceRow,
+  PriceHistoryRow,
+  ProductCostHistoryRow,
+  ProductCostRow,
+  ProductRow,
   OutboxOp,
   ShopRow,
   StaffPinRow,
@@ -50,6 +55,11 @@ export class NaqdDb extends Dexie {
   declare devices: EntityTable<DeviceRow, 'id'>;
   declare staff_salaries: EntityTable<StaffSalaryRow, 'staff_id'>;
   declare staff_pins: EntityTable<StaffPinRow, 'staff_id'>;
+  declare categories: EntityTable<CategoryRow, 'id'>;
+  declare products: EntityTable<ProductRow, 'id'>;
+  declare product_costs: EntityTable<ProductCostRow, 'product_id'>;
+  declare price_history: EntityTable<PriceHistoryRow, 'id'>;
+  declare product_cost_history: EntityTable<ProductCostHistoryRow, 'id'>;
   declare outbox: EntityTable<OutboxEntry, 'id'>;
   declare sync_errors: EntityTable<SyncErrorRow, 'id'>;
 
@@ -80,6 +90,15 @@ export class NaqdDb extends Dexie {
     // pull them; rider devices never do.
     this.version(4).stores({
       staff_pins: 'staff_id, shop_id, server_seq',
+    });
+    // Catalogue (migration 20261121090000_catalogue). product_costs and product_cost_history are
+    // owner-only: only owner devices pull them.
+    this.version(5).stores({
+      categories: 'id, shop_id, server_seq',
+      products: 'id, shop_id, category_id, server_seq',
+      product_costs: 'product_id, shop_id, server_seq',
+      price_history: 'id, product_id, server_seq',
+      product_cost_history: 'id, product_id, server_seq',
     });
   }
 }

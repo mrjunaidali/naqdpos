@@ -3,7 +3,12 @@
 // here. The API validates pushed rows with `schema`; the app stores pulled rows by `key`.
 import type { z } from 'zod';
 import {
+  CategoryRowSchema,
   DeviceRowSchema,
+  PriceHistoryRowSchema,
+  ProductCostHistoryRowSchema,
+  ProductCostRowSchema,
+  ProductRowSchema,
   ShopRowSchema,
   StaffRowSchema,
   StaffPinRowSchema,
@@ -43,6 +48,35 @@ export const SYNC_TABLES = {
     schema: StaffPinRowSchema,
   },
   devices: { kind: 'mutable', key: 'id', pushable: false, scope: 'all', schema: DeviceRowSchema },
+  categories: {
+    kind: 'mutable',
+    key: 'id',
+    pushable: true,
+    scope: 'all',
+    schema: CategoryRowSchema,
+  },
+  products: { kind: 'mutable', key: 'id', pushable: true, scope: 'all', schema: ProductRowSchema },
+  product_costs: {
+    kind: 'mutable',
+    key: 'product_id',
+    pushable: true,
+    scope: 'owner_device',
+    schema: ProductCostRowSchema,
+  },
+  price_history: {
+    kind: 'append',
+    key: 'id',
+    pushable: true,
+    scope: 'all',
+    schema: PriceHistoryRowSchema,
+  },
+  product_cost_history: {
+    kind: 'append',
+    key: 'id',
+    pushable: true,
+    scope: 'owner_device',
+    schema: ProductCostHistoryRowSchema,
+  },
 } as const satisfies Record<string, SyncTableSpec>;
 
 export type SyncTableName = keyof typeof SYNC_TABLES;

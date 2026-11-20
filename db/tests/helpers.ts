@@ -138,4 +138,9 @@ export const TENANT_TABLES = [
   'staff_salaries',
   'staff_pins',
   'devices',
+  'categories',
+  'products',
+  'product_costs',
+  'price_history',
+  'product_cost_history',
 ] as const;

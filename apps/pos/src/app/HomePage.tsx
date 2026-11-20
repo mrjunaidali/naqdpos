@@ -1,15 +1,28 @@
 import { useLiveQuery } from 'dexie-react-hooks';
+import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useNavigate } from 'react-router';
 import { db } from '../db/schema.ts';
 import { getStoredDevice } from '../db/session.ts';
+import { AFTER_SETUP_KEY } from '../features/onboarding/setup.ts';
 
 export function HomePage() {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const info = useLiveQuery(async () => {
     const device = await getStoredDevice();
     const shop = device ? await db.shops.get(device.shop_id) : undefined;
     return { shopName: shop?.name, code: device?.code };
   });
+
+  // Right after setup: open the next step once (e.g. the produce picker for fruit & veg shops).
+  useEffect(() => {
+    void db.meta.get(AFTER_SETUP_KEY).then(async (entry) => {
+      if (typeof entry?.value !== 'string') return;
+      await db.meta.delete(AFTER_SETUP_KEY);
+      void navigate(entry.value, { replace: true });
+    });
+  }, [navigate]);
 
   return (
     <section className="space-y-2">

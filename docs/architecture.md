@@ -55,10 +55,11 @@ Money: `*_paisa bigint`. Quantity: `*_milli bigint` (thousandths of the product'
 
 ### Catalogue (mutable, last-write-wins)
 Product and category names are stored in both languages in the same row: `name` (English) and `name_ur` (Urdu, nullable). The UI shows the name for the current language and falls back to the other one if empty. Only English and Urdu are supported (Pakistan only).
-- `categories` — id, shop_id, name, name_ur null, sort.
-- `products` — id, shop_id, category_id, name, name_ur null, unit (`kg` | `g` | `dozen` | `piece` | `bundle` | `litre`), sale_price_paisa, barcode null, track_stock bool, min_qty_milli null, is_combo bool, packaging_cost_paisa, foc_rule jsonb null. Varieties (e.g. small and big green chilli, Sindhri and Chaunsa mango) are separate products. Products can be created from the built-in fresh produce list (`docs/features/produce-presets.md`).
-- `product_costs` — product_id, shop_id, cost_price_paisa. **Separate table so it never syncs to cashier-mode devices.**
-- `price_history` (append-only) — product_id, sale_price_paisa, cost_price_paisa null, effective_at.
+- `categories` — id, shop_id, name, name_ur null, sort. Owners write (RLS + `write_roles {owner}`); every device pulls.
+- `products` — id, shop_id, category_id, name, name_ur null, unit (`kg` | `g` | `dozen` | `piece` | `bundle` | `litre`), sale_price_paisa, barcode null, track_stock bool, min_qty_milli null, is_combo bool, packaging_cost_paisa, foc_rule jsonb null, search_terms text[] (other names and Roman Urdu spellings such as aloo / aalu, at most 20 terms of 1–40 characters; filled from the preset, editable as "Other names / spellings"; decided 20 Nov 2026). Owners write; every device pulls. Hidden products have `deleted_at` set. Varieties (e.g. small and big green chilli, Sindhri and Chaunsa mango) are separate products. Products can be created from the built-in fresh produce list (`docs/features/produce-presets.md`).
+- `product_costs` — product_id, shop_id, cost_price_paisa. **Separate table so it never syncs to cashier-mode devices**: owners only (RLS), `pull_scope = owner_device`, `write_roles {owner}`. A shop device never shows cost fields (it holds no costs and its pushes would be refused); costs are set on an owner device.
+- `price_history` (append-only) — id, shop_id, product_id, sale_price_paisa, effective_at. **Sale prices only** (decided 20 Nov 2026): every device pulls it, so it must not carry costs. One row on every sale price change.
+- `product_cost_history` (append-only) — id, shop_id, product_id, cost_price_paisa, effective_at. Owners only, `pull_scope = owner_device`. One row on every cost change.
 - `combo_items` — combo_product_id, item_product_id, qty_milli.
 - `customers` — id, shop_id, mobile (E.164, unique per shop), name, address, credit_limit_paisa null, whatsapp_opt_in bool.
 - `payment_methods` — id, shop_id, code (`cash` | `jazzcash` | `easypaisa` | `bank` | custom), label, active.

@@ -7,7 +7,8 @@
     "wait": "Please wait…",
     "loading": "Loading…",
     "retry": "Try again",
-    "close": "Close"
+    "close": "Close",
+    "cancel": "Cancel"
   },
   "errors": {
     "offline": "No internet connection. Connect and try again.",
@@ -207,5 +208,98 @@
     "signOut": "Sign out",
     "signOutBlocked_one": "{{count}} change is not synced yet. Sync before signing out.",
     "signOutBlocked_other": "{{count}} changes are not synced yet. Sync before signing out."
+  },
+  "nav": {
+    "home": "Home"
+  },
+  "unit": {
+    "kg": "kg",
+    "g": "g",
+    "dozen": "dozen",
+    "piece": "piece",
+    "bundle": "bundle",
+    "litre": "litre"
+  },
+  "products": {
+    "title": "Products",
+    "add": "Add product",
+    "addTitle": "Add product",
+    "editTitle": "Edit product",
+    "search": "Search products",
+    "searchPlaceholder": "Search: aloo, آلو, potato",
+    "showHidden": "Show hidden products",
+    "empty": "No products yet. Add one, or pick from the ready-made list.",
+    "noHidden": "No hidden products.",
+    "hidden": "Hidden",
+    "hiddenNotice": "This product is hidden and not shown for sale.",
+    "name": "Name (English)",
+    "nameUr": "Name (Urdu)",
+    "unit": "Unit",
+    "category": "Category",
+    "noCategory": "No category",
+    "salePrice": "Sale price (Rs)",
+    "salePriceHint": "Price per {{unit}}. 0 = ask for the rate at the first sale.",
+    "costPrice": "Cost price (Rs, optional)",
+    "costPriceHint": "Only owners see this.",
+    "costElsewhere": "Cost prices are set on an owner device (the owner’s own phone).",
+    "searchTerms": "Other names / spellings",
+    "searchTermsHint": "Comma separated, e.g. aloo, aalu. Helps the counter find it.",
+    "trackStock": "Track stock for this product",
+    "save": "Save",
+    "hide": "Hide product",
+    "show": "Show product again",
+    "noRate": "No rate yet",
+    "pricePerUnit": "Rs {{amount}}/{{unit}}",
+    "editPriceFor": "Change price of {{name}}",
+    "newPriceFor": "New price of {{name}} in rupees",
+    "savePrice": "Save price",
+    "errors": {
+      "required": "This is required.",
+      "tooLong": "This is too long.",
+      "unit": "Choose a unit.",
+      "price": "Enter rupees, e.g. 120 or 120.50.",
+      "negative": "The price cannot be negative.",
+      "tooManyTerms": "Use at most 20 names."
+    }
+  },
+  "categories": {
+    "title": "Categories",
+    "all": "All",
+    "tabsLabel": "Categories",
+    "add": "Add category",
+    "renameTitle": "Rename category",
+    "renameLabel": "Rename {{name}}",
+    "name": "Name (English)",
+    "nameUr": "Name (Urdu)",
+    "save": "Save",
+    "moveUp": "Move {{name}} up",
+    "moveDown": "Move {{name}} down"
+  },
+  "presets": {
+    "open": "Add from list",
+    "title": "Pick your products",
+    "intro": "Tick what you sell. Today’s rate is optional; without it the rate is asked at the first sale.",
+    "search": "Search the list",
+    "searchPlaceholder": "Search: aalu, آلو, potato",
+    "added": "Added",
+    "hidden": "Hidden",
+    "focHint": "usually free",
+    "rateFor": "Today’s rate for {{name}} in rupees",
+    "ratePlaceholder": "Today’s rate per {{unit}} (optional)",
+    "rateError": "Check the rates marked in red.",
+    "skip": "Skip for now",
+    "save_one": "Add {{count}} product",
+    "save_other": "Add {{count}} products"
+  },
+  "rates": {
+    "title": "Today’s rates",
+    "introOwner": "Sale price and cost per unit. Save all at once.",
+    "perUnit": "per {{unit}}",
+    "saleFor": "Sale price of {{name}}",
+    "costFor": "Cost price of {{name}}",
+    "saveAll": "Save all",
+    "error": "Check the prices marked in red.",
+    "saved_one": "{{count}} product updated.",
+    "saved_other": "{{count}} products updated."
   }
 }

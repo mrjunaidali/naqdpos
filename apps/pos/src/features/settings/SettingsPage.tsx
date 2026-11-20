@@ -39,6 +39,11 @@ export function SettingsPage() {
             {t('staff.title')}
           </Link>
         )}
+        {can(role, 'manage_products') && (
+          <Link to="/products" className={linkClass}>
+            {t('products.title')}
+          </Link>
+        )}
         <Link to="/sync" className={linkClass}>
           {t('sync.title')}
         </Link>

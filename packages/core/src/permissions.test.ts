@@ -10,6 +10,7 @@ const EXPECTED: Record<Action, Role[]> = {
   see_cost_prices: ['owner'],
   see_reports: ['owner'],
   manage_shop_settings: ['owner'],
+  manage_products: ['owner'],
 };
 
 describe('can(role, action)', () => {
