@@ -14,6 +14,8 @@ function stubAuth(overrides: Partial<AuthService> = {}): AuthService {
     getUser: (headers) =>
       Promise.resolve(headers.get('authorization') === 'Bearer good' ? USER : null),
     createOneTimeToken: () => Promise.resolve('ott'),
+    sendPinResetCode: () => Promise.resolve(),
+    verifyPinResetCode: () => Promise.resolve('invalid' as const),
     ...overrides,
   };
 }

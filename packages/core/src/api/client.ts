@@ -12,12 +12,15 @@ import {
   MeResponse,
   OneTimeTokenResponse,
   RegisterDeviceRequest,
+  PinResetCodeResponse,
+  ResetOwnerPinRequest,
   SendCodeRequest,
   SetDeviceModeRequest,
   SessionResponse,
   SignInResponse,
   SignInWithCodeRequest,
   SocialSignInResponse,
+  StaffPinRowSchema,
 } from './schemas.ts';
 import {
   SyncPullQuery,
@@ -150,6 +153,22 @@ export function createApiClient(options: ApiClientOptions) {
       request('POST', '/shops', CreateShopResponse, CreateShopRequest.parse(input)),
     registerDevice: async (input: RegisterDeviceRequest) =>
       request('POST', '/devices', DeviceRowSchema, RegisterDeviceRequest.parse(input)),
+    /** Emails a PIN reset code to the signed-in owner (their own staff row only). */
+    sendPinResetCode: async (staffId: string) =>
+      request(
+        'POST',
+        '/staff/' + encodeURIComponent(staffId) + '/pin-code',
+        PinResetCodeResponse,
+        {},
+      ),
+    /** Checks the emailed code and saves the new PIN; returns the staff_pins row. */
+    resetOwnerPin: async (staffId: string, input: ResetOwnerPinRequest) =>
+      request(
+        'POST',
+        '/staff/' + encodeURIComponent(staffId) + '/pin',
+        StaffPinRowSchema,
+        ResetOwnerPinRequest.parse(input),
+      ),
     /** Owner phone ↔ shop counter (owner only, audit-logged). */
     setDeviceMode: async (deviceId: string, mode: SetDeviceModeRequest['mode']) =>
       request(

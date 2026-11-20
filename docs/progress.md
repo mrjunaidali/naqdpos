@@ -356,3 +356,28 @@ Owners switch a registered device between owner phone and shop counter from Sett
 **Tests**: pos 153 (+4: reset and `since_seq` 0 when a table is new, rows of the new table arrive, no reset when the set is unchanged, one reset for a cursor without a saved set, pending outbox edit not overwritten during the re-pull).
 
 **Note:** a full re-pull reads every row of the shop once; fine at today's sizes. If shops grow large, a per-table cursor could replace it (ask first: it changes the pull contract).
+
+## Step 9 — owner PIN reset by email code (2026-11-21)
+
+An owner who forgot their PIN gets a new one with an emailed code: "Forgot PIN?" on the owner keypad, online only.
+
+**Built**
+- Migration `20261121150000_owner_pin_reset.sql`: `owner_pin_target()` (internal: active, not deleted owner row with `membership_user_id = current_user_id()` in a shop the caller owns, else 42501), `request_pin_reset_code()` (60 s cooldown and 10 per 24 h per user from `audit_log` `pin.code_sent`, advisory lock against races, records the send), `reset_owner_pin()` (upsert `staff_pins`, `server_seq` bumps, `audit_log` `pin.reset` with `{ staff_id }` only).
+- **No backfill needed:** `create_shop` has set `membership_user_id` on the owner's staff row since the first migration (foundation, onboarding and staff_pins versions); a test proves it. Owners added on the Staff screen have no account and cannot reset by email.
+- `apps/api`:
+  - `auth.ts`: `sendPinResetCode(email)` (email-OTP type `email-verification`) and `verifyPinResetCode(email, code)` (`verifyEmailOTP`: uses the code up, 3 wrong tries, 5 minutes, creates no session); `otpEmail()` words these mails "PIN reset code"
+  - `routes/pins.ts`: `POST /staff/{id}/pin-code` (route check with `can(role, 'manage_staff')` and the linked owner row, then the SQL limits, then the email inside the transaction so a failed send is not counted; 200 / 403 / 429 `code_cooldown` / 429 `code_daily_cap`) and `POST /staff/{id}/pin` (eligibility checked before the code so others can't burn it; 400 `invalid_code` / `code_expired`, 429 `too_many_attempts`, 403)
+- `packages/core`: `ResetOwnerPinRequest`, `PinResetCodeResponse`, error codes, client `sendPinResetCode` / `resetOwnerPin`.
+- `apps/pos`: `features/pin/forgotPin.ts` (eligibility, reset, `storeResetPin`: `staff_pins` row + `meta.pin_lock` cleared + current staff in one transaction) and `ForgotPinFlow` (email → code + new PIN + confirm, Resend, offline message, server messages); `StaffPinPicker` shows "Forgot PIN?" for the linked owner on the keypad and also when the device has no PIN for anyone yet. en + ur strings (`forgotPin.*`).
+
+**Tests**: DB 97 (+7: own reset with `server_seq` bump and audit without secrets, pulled by the shop device, cashier / rider / other shop's owner / unlinked owner row / inactive owner / no user refused, malformed hash, cooldown, daily cap incl. 24 h window, send rows without payload). API DB 36 (+8: owner link from `create_shop`, full flow with the captured "email-verification" code and audit without code or hash, reused code, wrong code then too many tries, expired code, cooldown and daily cap, refusals without any email sent, 401 / 400). API unit 38 (+1: email wording). Pos 163 (+10: link for the linked owner only, not for cashiers or unlinked owners, offline message, full flow with lock cleared, owner switched in, no outbox entry and the new PIN working offline, server error messages, both limit messages, link when no PIN is on the device).
+
+**Decisions**
+- Email-verification OTP checked server-side with `verifyEmailOTP` (no extra session), mails say "PIN reset code" (decision 1).
+- Two routes, always the session's email (decision 2).
+- 60 s cooldown and 10 per 24 h from `audit_log`, no schema change (decision 3).
+- "Forgot PIN?" is also shown when no PIN is on the device for anyone, so a device like A2 in the Step 8 fix can recover.
+
+**Follow-ups**
+- SMTP provider (§8): until then codes reach the console in development only; in production sending fails with 500 and nothing is counted.
+- A second owner on a shop device can only reset their PIN after signing in with their own account there.

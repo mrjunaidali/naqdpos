@@ -309,5 +309,21 @@
     "done": "Mode changed. The device is syncing under the new mode.",
     "syncFirst_one": "{{count}} change is not synced yet. Sync first, then change the mode.",
     "syncFirst_other": "{{count}} changes are not synced yet. Sync first, then change the mode."
+  },
+  "forgotPin": {
+    "link": "Forgot PIN?",
+    "title": "New PIN for {{name}}",
+    "intro": "We will email a 6-digit code to {{email}}. Then you choose a new PIN.",
+    "send": "Email me a code",
+    "sent": "We sent a 6-digit code to {{email}}.",
+    "newPin": "New 4-digit PIN",
+    "save": "Save new PIN",
+    "back": "Back",
+    "offline": "Connect to the internet to reset your PIN",
+    "wrongCode": "That code is not right. Check the email and try again.",
+    "expired": "That code has expired. Ask for a new one.",
+    "tooManyAttempts": "Too many wrong codes. Ask for a new code.",
+    "cooldown": "A code was just sent. Wait a minute before asking for another.",
+    "dailyCap": "Too many codes today. Try again tomorrow."
   }
 }

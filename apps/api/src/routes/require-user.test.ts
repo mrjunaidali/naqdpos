@@ -13,6 +13,8 @@ const auth: AuthService = {
   handleOAuthCallback: () => Promise.resolve(new Response()),
   getUser: (h) => Promise.resolve(h.get('authorization') === 'Bearer good' ? USER : null),
   createOneTimeToken: () => Promise.resolve('ott'),
+  sendPinResetCode: () => Promise.resolve(),
+  verifyPinResetCode: () => Promise.resolve('invalid' as const),
 };
 
 // The route echoes the transaction context withUserTx would receive.

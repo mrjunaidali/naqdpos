@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { addOneTimeTokenToRedirect } from './auth.ts';
+import { addOneTimeTokenToRedirect, otpEmail } from './auth.ts';
 
 const ORIGINS = ['https://pos.naqd.pk', 'http://localhost:5173'];
 
@@ -54,5 +54,14 @@ describe('addOneTimeTokenToRedirect (Google sign-in hand-off)', () => {
     expect(await addOneTimeTokenToRedirect(original, ORIGINS, () => Promise.resolve('x'))).toBe(
       original,
     );
+  });
+});
+
+describe('otpEmail', () => {
+  it('words PIN reset codes as "PIN reset code"', () => {
+    const mail = otpEmail('email-verification', '123456');
+    expect(mail.subject).toBe('NaqdPOS PIN reset code');
+    expect(mail.text).toContain('PIN reset code is 123456');
+    expect(otpEmail('sign-in', '123456').subject).toBe('NaqdPOS sign-in code');
   });
 });

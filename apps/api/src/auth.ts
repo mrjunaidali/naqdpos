@@ -2,12 +2,32 @@
 // bearer session tokens for the installed PWA, and single-use tokens to hand a Google sign-in
 // back to the app. Users and sessions are rows in our Postgres.
 import { betterAuth, type BetterAuthOptions } from 'better-auth';
+import { isAPIError } from 'better-auth/api';
 import { bearer, emailOTP, oneTimeToken, twoFactor } from 'better-auth/plugins';
 import pg from 'pg';
 import type { Env } from './env.ts';
 import type { Logger } from './logger.ts';
 
 export type SendOtp = (email: string, otp: string, type: string) => Promise<void>;
+
+/**
+ * Subject and text of an OTP email. This app uses the plugin's 'email-verification' type only for
+ * owner PIN resets (architecture §5), so those mails say "PIN reset code".
+ */
+export function otpEmail(type: string, otp: string): { subject: string; text: string } {
+  if (type === 'email-verification') {
+    return {
+      subject: 'NaqdPOS PIN reset code',
+      text: `Your NaqdPOS PIN reset code is ${otp}. It is valid for 5 minutes. If you did not ask to reset your PIN, ignore this email.`,
+    };
+  }
+  return {
+    subject: 'NaqdPOS sign-in code',
+    text: `Your NaqdPOS sign-in code is ${otp}. It is valid for 5 minutes.`,
+  };
+}
+
+export type PinResetCodeCheck = 'ok' | 'invalid' | 'expired' | 'too_many';
 
 export interface AuthUser {
   id: string;
@@ -26,6 +46,13 @@ export interface AuthService {
   getUser(headers: Headers): Promise<AuthUser | null>;
   /** Mints a single-use, short-lived token for a session (server side only). */
   createOneTimeToken(sessionToken: string): Promise<string>;
+  /** Emails a fresh PIN reset code (email-verification OTP) to this address. */
+  sendPinResetCode(email: string): Promise<void>;
+  /**
+   * Checks and USES UP a PIN reset code (single use, 3 wrong tries, 5 minutes): verifyEmailOTP
+   * consumes it and creates no session.
+   */
+  verifyPinResetCode(email: string, code: string): Promise<PinResetCodeCheck>;
 }
 
 const DAY = 60 * 60 * 24;
@@ -115,7 +142,10 @@ export function authOptions(env: Env, deps: AuthDeps) {
     ((email, otp, type) => {
       if (env.NODE_ENV === 'development') {
         // Development only: there is no SMTP yet (architecture §8), so the code goes to the console.
-        deps.logger.info({ email, otp, type }, 'email OTP (development only)');
+        deps.logger.info(
+          { email, otp, type, subject: otpEmail(type, otp).subject },
+          'email OTP (development only)',
+        );
         return Promise.resolve();
       }
       return Promise.reject(new Error('Email OTP: SMTP is not configured yet'));
@@ -225,5 +255,21 @@ export function createAuth(env: Env, deps: AuthDeps): AuthService {
       return { id, email, name };
     },
     createOneTimeToken,
+    async sendPinResetCode(email) {
+      await auth.api.sendVerificationOTP({ body: { email, type: 'email-verification' } });
+    },
+    async verifyPinResetCode(email, code) {
+      try {
+        await auth.api.verifyEmailOTP({ body: { email, otp: code } });
+        return 'ok';
+      } catch (error) {
+        if (!isAPIError(error)) throw error;
+        const reason = (error.body as { code?: string } | undefined)?.code;
+        if (reason === 'OTP_EXPIRED') return 'expired';
+        if (reason === 'TOO_MANY_ATTEMPTS') return 'too_many';
+        if (reason === 'INVALID_OTP') return 'invalid';
+        throw error;
+      }
+    },
   };
 }

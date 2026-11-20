@@ -150,6 +150,16 @@ export const RegisterDeviceRequest = z.object({
 });
 export type RegisterDeviceRequest = z.input<typeof RegisterDeviceRequest>;
 
+/** POST /staff/{id}/pin-code answers this once the PIN reset code is on its way. */
+export const PinResetCodeResponse = z.object({ sent: z.literal(true) });
+
+/** POST /staff/{id}/pin: the emailed 6-digit code and the new PIN's hash (never the PIN). */
+export const ResetOwnerPinRequest = z.object({
+  code: z.string().regex(/^[0-9]{6}$/),
+  pin_hash: pinHash,
+});
+export type ResetOwnerPinRequest = z.infer<typeof ResetOwnerPinRequest>;
+
 /** POST /devices/{id}/mode: owner switches a device between owner phone and shop counter. */
 export const SetDeviceModeRequest = z.object({ mode: z.enum(['owner', 'shop']) });
 export type SetDeviceModeRequest = z.infer<typeof SetDeviceModeRequest>;
@@ -205,6 +215,12 @@ export const API_ERROR_CODES = [
   'conflict',
   'not_found',
   'upgrade_required',
+  // Owner PIN reset (POST /staff/{id}/pin-code, /pin)
+  'invalid_code',
+  'code_expired',
+  'too_many_attempts',
+  'code_cooldown',
+  'code_daily_cap',
   'internal',
 ] as const;
 export const ErrorResponse = z.object({
