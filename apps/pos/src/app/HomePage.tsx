@@ -1,7 +1,7 @@
 import { useLiveQuery } from 'dexie-react-hooks';
 import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useNavigate } from 'react-router';
+import { Link, useNavigate } from 'react-router';
 import { db } from '../db/schema.ts';
 import { getStoredDevice } from '../db/session.ts';
 import { AFTER_SETUP_KEY } from '../features/onboarding/setup.ts';
@@ -30,6 +30,12 @@ export function HomePage() {
       {info?.shopName && <p className="text-lg">{info.shopName}</p>}
       {info?.code && <p className="text-muted">{t('home.deviceCode', { code: info.code })}</p>}
       <p className="text-muted">{t('app.tagline')}</p>
+      <Link
+        to="/sale"
+        className="mt-4 flex min-h-16 items-center justify-center rounded-2xl bg-primary text-xl font-bold text-primary-fg"
+      >
+        {t('home.newSale')}
+      </Link>
     </section>
   );
 }

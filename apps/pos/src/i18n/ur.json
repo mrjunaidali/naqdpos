@@ -17,7 +17,8 @@
   },
   "home": {
     "welcome": "خوش آمدید",
-    "deviceCode": "یہ ڈیوائس: {{code}}"
+    "deviceCode": "یہ ڈیوائس: {{code}}",
+    "newSale": "TODO-ur نئی سیل"
   },
   "signIn": {
     "title": "سائن ان",
@@ -218,7 +219,8 @@
     "dozen": "درجن",
     "piece": "عدد",
     "bundle": "گٹھی",
-    "litre": "لیٹر"
+    "litre": "لیٹر",
+    "ml": "ملی لیٹر"
   },
   "products": {
     "title": "TODO-ur اشیاء",
@@ -329,5 +331,62 @@
     "tooManyAttempts": "TODO-ur بہت زیادہ غلط کوڈ۔ نیا کوڈ منگوائیں۔",
     "cooldown": "TODO-ur ابھی کوڈ بھیجا گیا ہے۔ دوسرا منگوانے سے پہلے ایک منٹ رکیں۔",
     "dailyCap": "TODO-ur آج بہت زیادہ کوڈ منگوائے گئے۔ کل دوبارہ کوشش کریں۔"
+  },
+  "sale": {
+    "title": "TODO-ur نئی سیل",
+    "back": "TODO-ur ہوم پر واپس",
+    "customer": "TODO-ur گاہک",
+    "customerLater": "TODO-ur گاہک کھاتے کے ساتھ آئیں گے",
+    "search": "TODO-ur اشیاء تلاش کریں",
+    "noMatch": "TODO-ur کچھ نہیں ملا۔ اسے کسٹم آئٹم کے طور پر شامل کریں۔",
+    "noProducts": "TODO-ur ابھی کوئی چیز نہیں۔ مالک سیٹنگز ← اشیاء میں شامل کرتا ہے۔",
+    "customItem": "TODO-ur کسٹم آئٹم",
+    "rs": "Rs {{amount}}",
+    "qty": "{{amount}} {{unit}}",
+    "decimalPoint": "TODO-ur اعشاریہ",
+    "rateForSale": "TODO-ur اس سیل کا ریٹ (روپے فی {{unit}})",
+    "saveAsTodaysRate": "TODO-ur آج کے ریٹ کے طور پر بھی محفوظ کریں",
+    "ownerPinForRate": "TODO-ur آج کا ریٹ محفوظ کرنے سے چیز بدلتی ہے۔ مالک اپنے PIN سے تصدیق کرے۔",
+    "continue": "TODO-ur آگے",
+    "entryMode": "TODO-ur کیسے لکھیں",
+    "byQty": "TODO-ur مقدار سے",
+    "byAmount": "TODO-ur رقم سے",
+    "qtyLabel": "TODO-ur مقدار {{unit}} میں",
+    "amountLabel": "TODO-ur رقم روپوں میں",
+    "approxFor": "≈ {{qty}} — {{amount}}",
+    "lineTotal": "{{qty}} × {{rate}} = {{total}}",
+    "add": "TODO-ur ٹوکری میں ڈالیں",
+    "update": "TODO-ur اپڈیٹ کریں",
+    "remove": "TODO-ur ٹوکری سے نکالیں",
+    "cartTitle": "TODO-ur ٹوکری",
+    "cartEmpty": "TODO-ur ٹوکری خالی ہے۔",
+    "editLine": "TODO-ur {{name}} بدلیں",
+    "removeLine": "TODO-ur {{name}} نکالیں",
+    "custom": "TODO-ur کسٹم",
+    "lineQty": "{{qty}} × {{rate}}",
+    "lineByAmount": "TODO-ur ≈ {{qty}} (رقم سے)",
+    "total": "TODO-ur کل",
+    "clearCart": "TODO-ur ٹوکری خالی کریں",
+    "clearConfirm": "TODO-ur ٹوکری سے سب کچھ نکال دیں؟",
+    "clearYes": "TODO-ur ہاں، خالی کریں",
+    "items_one": "TODO-ur {{count}} چیز",
+    "items_other": "TODO-ur {{count}} اشیاء",
+    "openCart_one": "TODO-ur ٹوکری کھولیں، {{count}} چیز",
+    "openCart_other": "TODO-ur ٹوکری کھولیں، {{count}} اشیاء",
+    "charge": "TODO-ur وصول کریں",
+    "paymentNext": "TODO-ur ادائیگی اگلے مرحلے میں",
+    "customTitle": "TODO-ur کسٹم آئٹم",
+    "customName": "TODO-ur چیز کا نام",
+    "customPrice": "TODO-ur فی اکائی قیمت (روپے)",
+    "customQty": "TODO-ur مقدار",
+    "errors": {
+      "qty": "TODO-ur 0 سے زیادہ مقدار لکھیں۔",
+      "decimals": "TODO-ur اس اکائی کے لیے بہت زیادہ اعشاریہ۔",
+      "tooLarge": "TODO-ur ایک لائن میں 9,999 سے زیادہ نہیں۔",
+      "rateNeeded": "TODO-ur پہلے ریٹ لکھیں۔",
+      "amountTooSmall": "TODO-ur اس ریٹ پر رقم بہت کم ہے۔",
+      "rate": "TODO-ur 0 سے زیادہ ریٹ لکھیں۔",
+      "price": "TODO-ur 0 سے زیادہ قیمت لکھیں۔"
+    }
   }
 }

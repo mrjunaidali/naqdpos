@@ -1,5 +1,6 @@
 export * from './api/index.ts';
 export * from './appVersion.ts';
+export * from './cart.ts';
 export * from './catalogue.ts';
 export * from './ids.ts';
 export * from './money.ts';

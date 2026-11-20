@@ -15,6 +15,7 @@ import { ProductListPage } from './features/catalogue/ProductListPage.tsx';
 import { TodaysRatesPage } from './features/catalogue/TodaysRatesPage.tsx';
 import { SignInPage } from './features/auth/SignInPage.tsx';
 import { SetupPage } from './features/onboarding/SetupPage.tsx';
+import { SalePage } from './features/sale/SalePage.tsx';
 import { SettingsPage } from './features/settings/SettingsPage.tsx';
 import { StaffFormPage } from './features/staff/StaffFormPage.tsx';
 import { StaffLayout } from './features/staff/StaffLayout.tsx';
@@ -49,6 +50,15 @@ export const routes: RouteObject[] = [
         element: (
           <Gate state="setup">
             <SetupPage />
+          </Gate>
+        ),
+      },
+      {
+        // Anyone switched in can sell: no owner gate.
+        path: 'sale',
+        element: (
+          <Gate state="ready">
+            <SalePage />
           </Gate>
         ),
       },

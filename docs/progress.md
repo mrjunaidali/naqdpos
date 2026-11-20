@@ -402,3 +402,31 @@ Every product can show one emoji picture on its tile, so the counter finds items
 - Junaid to verify the preset icons (and which "null" items deserve a picture).
 - The sale screen (US029) uses `ProductIcon` on its tiles.
 - Owner photos: US079 (R2), shown instead of the emoji when present.
+
+## Step 11 — US029 sale screen + cart, US030 custom item (2026-11-21)
+
+Anyone switched in can build a cart offline: search or tap products, enter a quantity (quick buttons, keypad, or "By amount" for kg / litre), set a rate for products that have none, add custom items. Payment (sales, sale_lines, payments) is the next story; Charge is disabled with "Payment comes next".
+
+**Built**
+- `packages/core/src/cart.ts`: `CartLine` (snapshots: name, Urdu name, unit, icon, unit price; `is_custom`, `by_amount`), `makeLine()` (total = `priceForQty`, half away from zero to whole paisa), `makeAmountLine()` (**the typed amount is the line total**; qty = amount ÷ rate rounded half up to 5 g / 5 ml in BigInt; refused at rate 0), `qtyForAmount()`, `cartTotals()` (item count, subtotal, total = subtotal until discounts), `UNIT_RULES` (decimals, by-amount, quick buttons per unit), `parseQtyInput()` (per-unit decimals, > 0, at most 9,999 units per line; `g` in whole grams), `qtyLabel()` (g / ml below 1 kg / 1 litre, "½ dozen").
+- `apps/pos`:
+  - `features/sale/cartStore.ts`: Zustand store with lines, persisted to Dexie `meta.cart_current` on every change (serialised writes; never synced), loaded at start; `itemCount` for the update banners is now derived from the lines
+  - `SalePage` at `/sale` (no owner gate; "New sale" button on Home): header (back, "New sale", "Ali · A1", Customer chip disabled until khata), search with core search ("/" focuses it), `CategoryTabs`, product grid (3 columns on phones, up to 6 wider) with icon, both names and "Rs 160/kg"; a product in the cart has the 2 px primary border and a qty badge; tiles are disabled while nobody valid is switched in (the header asks "Who is working?")
+  - `QuantityPanel`: quick buttons per unit (kg 250 g…1.5 kg, litre 250 ml…, dozen ½–3, piece 1/2/6/12, bundle 1/2/3/5), keypad (decimal key only where the unit allows), "By amount" for kg / litre with "≈ 315 g for Rs 50", live "1.5 kg × Rs 160 = Rs 240", edit (the first key replaces the old value) and remove; for a 0-price product a "Rate for this sale" step first, with "Also save as today's rate" (owner on an owner device, or the owner PIN via `OwnerPinDialog`; then `setSalePrice`: product + `price_history` through the outbox with the owner as actor)
+  - `CustomItemDialog` (name, price per unit, qty, unit default piece; `product_id` null, shown as "Custom"), `CartSheet` (lines, edit, remove, "Clear cart" with confirm), `CartBar` (fixed, primary: item count, total, disabled Charge)
+  - shared `ui/Sheet`, `NumberPad` (always `dir="ltr"`), `useOwnerHere()` (the owner who may act without a PIN), `saleFormat` helpers
+  - en + ur strings (`sale.*`, `unit.ml`, `home.newSale`)
+
+**Tests**: core 220 (+16: quantity lines for kg / dozen / piece, half-paisa rounding incl. 1.3 kg × Rs 165 = Rs 214.50, by-amount Rs 50 at Rs 160/kg → 315 g with total exactly Rs 50, 5 g half-up edges, rate 0 refused, large values exact, keypad rules per unit, quick buttons, totals, labels). Pos 186 (+16: Home → sale, search in English / Urdu / Roman Urdu and "/", quick-button add with border, badge and cart bar, edit with keypad decimals and remove, quick buttons and keypad per unit, by amount, line-only rate with no outbox write, save as today's rate with the owner PIN from a cashier on a shop device (owner as actor), by amount refused without a rate, custom item and its form checks, cart survives a reload and is not synced, clear cart confirm, fully offline with no API call, "Who is working?" with disabled tiles, Urdu RTL with an LTR keypad). Update banners hidden while the cart has items: SyncPage tests, now with real cart lines.
+
+**Decisions**
+- Rate for a 0-price product: anyone switched in may set it for the line; saving it as today's rate is owner-only (`manage_products`, owner PIN). This settles the Step 7 question.
+- "By amount" is kg / litre only; the typed amount **is** the line total; `unit_price_paisa` stays the product rate and the line is marked `by_amount` (qty × rate may differ from the total by a few paisa).
+- One cart line per product (tapping again edits it); custom items are always separate lines; lines keep snapshots, so a pulled rate change does not alter a cart in progress.
+- Quantities over 9,999 units per line are refused (catches "15000" typed for 1.5).
+
+**Notes and follow-ups**
+- **Bill totals can still have paisa** (e.g. 1.3 kg × Rs 165 = Rs 214.50). Rounding the bill to whole rupees is decided with the payment story.
+- The payment story must store `by_amount` on `sale_lines` (not in architecture §3 yet: ask before the migration), and decide whether `sale_lines` keeps the Urdu name snapshot (§8 open question).
+- Discounts and FOC (US032, US033) add fields to the line and to `cartTotals()`.
+- The floating nav bar and the Home hero card are still to come.

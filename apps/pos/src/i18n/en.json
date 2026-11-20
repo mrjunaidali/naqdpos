@@ -17,7 +17,8 @@
   },
   "home": {
     "welcome": "Welcome",
-    "deviceCode": "This device: {{code}}"
+    "deviceCode": "This device: {{code}}",
+    "newSale": "New sale"
   },
   "signIn": {
     "title": "Sign in",
@@ -218,7 +219,8 @@
     "dozen": "dozen",
     "piece": "piece",
     "bundle": "bundle",
-    "litre": "litre"
+    "litre": "litre",
+    "ml": "ml"
   },
   "products": {
     "title": "Products",
@@ -329,5 +331,62 @@
     "tooManyAttempts": "Too many wrong codes. Ask for a new code.",
     "cooldown": "A code was just sent. Wait a minute before asking for another.",
     "dailyCap": "Too many codes today. Try again tomorrow."
+  },
+  "sale": {
+    "title": "New sale",
+    "back": "Back to home",
+    "customer": "Customer",
+    "customerLater": "Customers come with khata",
+    "search": "Search products",
+    "noMatch": "Nothing matches. Add it as a custom item.",
+    "noProducts": "No products yet. The owner adds them under Settings → Products.",
+    "customItem": "Custom item",
+    "rs": "Rs {{amount}}",
+    "qty": "{{amount}} {{unit}}",
+    "decimalPoint": "Decimal point",
+    "rateForSale": "Rate for this sale (Rs per {{unit}})",
+    "saveAsTodaysRate": "Also save as today’s rate",
+    "ownerPinForRate": "Saving today’s rate changes the product. The owner confirms with their PIN.",
+    "continue": "Continue",
+    "entryMode": "How to enter",
+    "byQty": "By quantity",
+    "byAmount": "By amount",
+    "qtyLabel": "Quantity in {{unit}}",
+    "amountLabel": "Amount in rupees",
+    "approxFor": "≈ {{qty}} for {{amount}}",
+    "lineTotal": "{{qty}} × {{rate}} = {{total}}",
+    "add": "Add to cart",
+    "update": "Update",
+    "remove": "Remove from cart",
+    "cartTitle": "Cart",
+    "cartEmpty": "The cart is empty.",
+    "editLine": "Change {{name}}",
+    "removeLine": "Remove {{name}}",
+    "custom": "Custom",
+    "lineQty": "{{qty}} × {{rate}}",
+    "lineByAmount": "≈ {{qty}} (by amount)",
+    "total": "Total",
+    "clearCart": "Clear cart",
+    "clearConfirm": "Remove every item from the cart?",
+    "clearYes": "Yes, clear",
+    "items_one": "{{count}} item",
+    "items_other": "{{count}} items",
+    "openCart_one": "Open cart, {{count}} item",
+    "openCart_other": "Open cart, {{count}} items",
+    "charge": "Charge",
+    "paymentNext": "Payment comes next",
+    "customTitle": "Custom item",
+    "customName": "Item name",
+    "customPrice": "Price per unit (Rs)",
+    "customQty": "Quantity",
+    "errors": {
+      "qty": "Enter a quantity above 0.",
+      "decimals": "Too many decimals for this unit.",
+      "tooLarge": "That is more than 9,999 per line.",
+      "rateNeeded": "Set a rate first.",
+      "amountTooSmall": "The amount is too small for this rate.",
+      "rate": "Enter a rate above 0.",
+      "price": "Enter a price above 0."
+    }
   }
 }

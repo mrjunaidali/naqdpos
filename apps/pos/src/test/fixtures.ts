@@ -9,6 +9,7 @@ import {
 } from '@naqdpos/core';
 import { db } from '../db/schema.ts';
 import { META_KEYS, type StoredDevice, type StoredSession } from '../db/session.ts';
+import { useCartStore } from '../features/sale/cartStore.ts';
 import { useCurrentStaffStore } from '../staff/currentStaff.ts';
 
 export const USER_ID = '019a9b8e-0000-7000-8000-00000000000a';
@@ -84,6 +85,7 @@ export async function resetDb(): Promise<void> {
   await Promise.all(db.tables.map((table) => table.clear()));
   // The current-staff store is a module singleton: start each test as after a fresh load.
   useCurrentStaffStore.setState({ staffId: null, ready: false });
+  useCartStore.setState({ lines: [], ready: false });
 }
 
 /** A PIN row for a staff member (cheap hash for tests). */

@@ -1,3 +1,4 @@
+import type { CartLine } from '@naqdpos/core';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { NewVersionBanner } from '../../app/NewVersionBanner.tsx';
@@ -16,7 +17,7 @@ beforeEach(async () => {
   resetApiMock();
   await resetDb();
   await seedReady();
-  useCartStore.setState({ itemCount: 0 });
+  useCartStore.setState({ lines: [] });
   syncNow.mockClear();
 });
 
@@ -34,6 +35,21 @@ function entry(n: number, overrides: Partial<OutboxEntry> = {}): OutboxEntry {
     ...overrides,
   };
 }
+
+let lineNo = 0;
+const fakeLine = (): CartLine => ({
+  id: `line-${++lineNo}`,
+  product_id: null,
+  is_custom: true,
+  by_amount: false,
+  name: 'Item',
+  name_ur: null,
+  unit: 'piece',
+  icon: null,
+  qty_milli: 1000,
+  unit_price_paisa: 100,
+  line_total_paisa: 100,
+});
 
 const chip = () => screen.findByRole('link', { name: /Sync status/ });
 
@@ -118,7 +134,7 @@ describe('update banners never offer a reload while the cart has items', () => {
     expect(await screen.findByRole('alert')).toHaveTextContent('Update required to sync');
     expect(screen.getByRole('button', { name: 'Reload' })).toBeInTheDocument();
 
-    useCartStore.setState({ itemCount: 2 });
+    useCartStore.setState({ lines: [fakeLine(), fakeLine()] });
     await waitFor(() => expect(screen.queryByRole('button', { name: 'Reload' })).toBeNull());
     expect(screen.getByText('Finish the sale, then reload.')).toBeInTheDocument();
     expect(screen.getByRole('alert')).toBeInTheDocument(); // still persistent
@@ -129,11 +145,11 @@ describe('update banners never offer a reload while the cart has items', () => {
     const { rerender } = render(<NewVersionBanner {...props} />);
     expect(await screen.findByText('New version available')).toBeInTheDocument();
 
-    useCartStore.setState({ itemCount: 1 });
+    useCartStore.setState({ lines: [fakeLine()] });
     rerender(<NewVersionBanner {...props} />);
     expect(screen.queryByText('New version available')).toBeNull();
 
-    useCartStore.setState({ itemCount: 0 });
+    useCartStore.setState({ lines: [] });
     await patchSyncState(db, { updateRequired: { minVersion: null, appVersion: '1.0.0' } });
     rerender(<NewVersionBanner {...props} />);
     await waitFor(() => expect(screen.queryByText('New version available')).toBeNull());

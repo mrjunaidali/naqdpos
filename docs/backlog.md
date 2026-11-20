@@ -24,7 +24,7 @@ Build in this order, not in ID order. "Sheet step" is the step number in the ori
 | 5 | Staff, PIN switch, permissions | US017, US016, US018 | 8, 9, 10 | Done (Step 6; own-shift sales part of US018 comes with selling) |
 | 6 | Products, categories, produce presets, today's rates | US019, US021, US072, US020 | 11, 12, —, 13 | Done (Step 7); change device mode added (Step 8) |
 | 6b | Product pictures (emoji icons) | US078 | — | Done (Step 10) |
-| 7 | Selling: cart, custom item, cash, wallets/split | US029, US030, US034, US035 | 14, 15, 16, 20 | To do |
+| 7 | Selling: cart, custom item, cash, wallets/split | US029, US030, US034, US035 | 14, 15, 16, 20 | Partly done (US029, US030 in Step 11; payment next) |
 | 8 | Stock, wastage, discounts, FOC | US024, US025, US032, US033 | 21–24 | To do |
 | 9 | Customers and khata | US038, US039, US040, US041 | 25–28 | To do |
 | 10 | Shop profile and receipts | US014, US036 | 29, 30 | To do |
@@ -252,13 +252,13 @@ Build in this order, not in ID order. "Sheet step" is the step number in the ori
 
 ### F16 · Quick sale
 
-**US029** · Must · 8 · R1 · To do — As a cashier, I want to tap or search products and enter quantity or weight, so that I serve customers fast.
+**US029** · Must · 8 · R1 · Done (cart until payment; completing the sale is the next story) — As a cashier, I want to tap or search products and enter quantity or weight, so that I serve customers fast.
 - Product grid with category tabs and search (English, Urdu, Roman Urdu)
 - Keypad with decimals for kg/litre; "by amount" mode turns rupees into `qty_milli` (nearest 5 g for kg, whole units otherwise)
 - Edit or remove lines; totals from a pure `cartTotals()` in core; cart in Zustand until payment
 - Product with rate 0 asks for today's rate on first sale (US072)
 
-**US030** · Should · 2 · R1 · To do — As a cashier, I want to add an item that isn't in the list, so that I never block a sale.
+**US030** · Should · 2 · R1 · Done (the "flagged in reports" part comes with reports) — As a cashier, I want to add an item that isn't in the list, so that I never block a sale.
 - "Custom item" with name, price, qty → line with `product_id` null and name snapshot; flagged in reports
 
 **US031** · Could · 3 · R2 · To do — As a cashier, I want to park a cart and serve the next customer.
