@@ -30,6 +30,7 @@ function entry(n: number, overrides: Partial<OutboxEntry> = {}): OutboxEntry {
     row_key: `staff:${id}`,
     created_at: new Date().toISOString(),
     attempts: 0,
+    actor_staff_id: null,
     ...overrides,
   };
 }

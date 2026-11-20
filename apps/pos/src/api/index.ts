@@ -13,3 +13,17 @@ export const api = createApiClient({
   getDeviceId: async () => (await getStoredDevice())?.id ?? null,
   appVersion: APP_VERSION,
 });
+
+/**
+ * A client that uses the given token instead of the stored session: checks a fresh sign-in (e.g. its
+ * shops) before the session is replaced.
+ */
+export function apiWithToken(token: string) {
+  return createApiClient({
+    baseUrl: import.meta.env.VITE_API_URL,
+    fetch: (url, init) => fetch(url, init),
+    getToken: () => token,
+    getDeviceId: async () => (await getStoredDevice())?.id ?? null,
+    appVersion: APP_VERSION,
+  });
+}

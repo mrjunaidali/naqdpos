@@ -15,8 +15,8 @@ export function HomePage() {
     <section className="space-y-2">
       <h1 className="text-2xl font-bold">{t('home.welcome')}</h1>
       {info?.shopName && <p className="text-lg">{info.shopName}</p>}
-      {info?.code && <p className="text-gray-600">{t('home.deviceCode', { code: info.code })}</p>}
-      <p className="text-gray-600">{t('app.tagline')}</p>
+      {info?.code && <p className="text-muted">{t('home.deviceCode', { code: info.code })}</p>}
+      <p className="text-muted">{t('app.tagline')}</p>
     </section>
   );
 }

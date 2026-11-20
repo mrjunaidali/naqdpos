@@ -20,6 +20,11 @@ export const SyncEntry = z.object({
   table: z.string().min(1).max(63),
   op: z.enum(OUTBOX_OPS),
   row: z.record(z.string(), z.unknown()),
+  /**
+   * The staff member acting on the device (PIN-switched). Tables with write_roles accept the
+   * entry only from an active staff member with one of those roles (architecture §4).
+   */
+  actor_staff_id: z.uuid().nullable().optional(),
 });
 export type SyncEntry = z.infer<typeof SyncEntry>;
 

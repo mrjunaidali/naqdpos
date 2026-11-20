@@ -10,6 +10,7 @@ import {
   type DeviceRow,
   type ShopRow,
   type StaffRow,
+  type StaffPinRow,
   type StaffSalaryRow,
 } from '../tenancy.ts';
 
@@ -86,6 +87,17 @@ export const DeviceRowSchema = z.object({
   deleted_at: iso.nullable(),
   server_seq: z.number().int().nullable(),
 }) satisfies z.ZodType<DeviceRow, unknown>;
+
+export const StaffPinRowSchema = z.object({
+  staff_id: z.uuid(),
+  shop_id: z.uuid(),
+  pin_hash: pinHash,
+  device_id: z.uuid().nullable(),
+  created_at: iso,
+  updated_at: iso,
+  deleted_at: iso.nullable(),
+  server_seq: z.number().int().nullable(),
+}) satisfies z.ZodType<StaffPinRow>;
 
 export const StaffSalaryRowSchema = z.object({
   staff_id: z.uuid(),

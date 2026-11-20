@@ -133,7 +133,13 @@ export function createSyncEngine(deps: SyncEngineDeps) {
       if (batch.length === 0) return total;
       const result = await api.syncPush({
         device_id: deviceId,
-        entries: batch.map(({ id, table, op, row }) => ({ id, table, op, row })),
+        entries: batch.map(({ id, table, op, row, actor_staff_id }) => ({
+          id,
+          table,
+          op,
+          row,
+          actor_staff_id: actor_staff_id ?? null,
+        })),
       });
       const settled = await settle(batch, result);
       total += settled;
@@ -256,8 +262,17 @@ export function createSyncEngine(deps: SyncEngineDeps) {
     await db.transaction('rw', [db.outbox, db.sync_errors, ...dataTables()], async () => {
       const errors = await db.sync_errors.filter((e) => e.code === 'clock_ahead').toArray();
       for (const error of errors) {
-        const { id, table, op, row_key, created_at, attempts } = error;
-        const entry: OutboxEntry = { id, table, op, row: error.row, row_key, created_at, attempts };
+        const { id, table, op, row_key, created_at, attempts, actor_staff_id } = error;
+        const entry: OutboxEntry = {
+          id,
+          table,
+          op,
+          row: error.row,
+          row_key,
+          created_at,
+          attempts,
+          actor_staff_id,
+        };
         const spec: SyncTableSpec = SYNC_TABLES[entry.table];
         const field = spec.kind === 'append' ? 'created_at' : 'updated_at';
         const stamp = entry.row[field];

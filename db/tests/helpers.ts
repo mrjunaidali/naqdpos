@@ -136,5 +136,6 @@ export const TENANT_TABLES = [
   'memberships',
   'staff',
   'staff_salaries',
+  'staff_pins',
   'devices',
 ] as const;

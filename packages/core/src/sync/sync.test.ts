@@ -59,9 +59,11 @@ describe('sync schemas', () => {
       'devices',
       'shops',
       'staff',
+      'staff_pins',
       'staff_salaries',
     ]);
     expect(OWNER_DEVICE_TABLES).toEqual(['staff_salaries']);
+    expect(SYNC_TABLES.staff_pins.scope).toBe('counter_device');
     expect(SYNC_TABLES.devices.pushable).toBe(false);
     expect(isSyncTable('staff')).toBe(true);
     expect(isSyncTable('toString')).toBe(false);

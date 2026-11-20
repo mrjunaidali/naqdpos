@@ -1,8 +1,9 @@
 import { createRoute, OpenAPIHono } from '@hono/zod-openapi';
-import { DeviceRowSchema, ErrorResponse, RegisterDeviceRequest } from '@naqdpos/core';
+import { can, DeviceRowSchema, ErrorResponse, RegisterDeviceRequest } from '@naqdpos/core';
 import { sql } from 'kysely';
 import type { AppDeps, AppEnv } from '../app.ts';
 import { withUserTx } from '../db/index.ts';
+import { shopRole } from '../db/roles.ts';
 import { toDeviceRow } from '../db/rows.ts';
 import type { DevicesTable } from '../db/types.ts';
 import { errorBody, pgCode } from '../errors.ts';
@@ -36,14 +37,17 @@ export function deviceRoutes(deps: Pick<AppDeps, 'db' | 'auth'>) {
   return app.openapi(route, async (c) => {
     const body = c.req.valid('json');
     try {
-      // register_device checks the owner role, locks the shop and picks the next code (SQL).
+      // Both layers (CLAUDE.md rule 7): the route checks can(), and register_device checks the
+      // owner role again, locks the shop and picks the next code (SQL).
       const row = await withUserTx(deps.db, c.get('tx'), async (tx) => {
+        if (!can(await shopRole(tx, body.shop_id), 'manage_devices')) return null;
         const { rows } = await sql<Selectable<DevicesTable>>`
           select * from register_device(${body.id}, ${body.shop_id}, ${body.name}, ${body.mode})`.execute(
           tx,
         );
         return rows[0]!;
       });
+      if (!row) return c.json(errorBody('forbidden'), 403);
       return c.json(toDeviceRow(row), 201);
     } catch (error) {
       const code = pgCode(error);

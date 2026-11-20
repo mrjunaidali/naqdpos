@@ -34,14 +34,17 @@ describe('create_shop', () => {
       ]);
       const membership = await q('select user_id, role from memberships');
       expect(membership.rows).toEqual([{ user_id: f.outsider, role: 'owner' }]);
-      const staff = await q('select id, role, membership_user_id, phone, pin_hash from staff');
+      const staff = await q(
+        'select s.id, s.role, s.membership_user_id, s.phone, s.pin_hash, p.pin_hash as pin from staff s left join staff_pins p on p.staff_id = s.id',
+      );
       expect(staff.rows).toEqual([
         {
           id: staffId,
           role: 'owner',
           membership_user_id: f.outsider,
           phone: '+923001234567',
-          pin_hash: PIN_HASH,
+          pin_hash: null, // PINs live in staff_pins (migration 20261120170000)
+          pin: PIN_HASH,
         },
       ]);
       // The new owner can edit right away.

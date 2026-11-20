@@ -6,7 +6,8 @@
   "common": {
     "wait": "Please wait…",
     "loading": "Loading…",
-    "retry": "Try again"
+    "retry": "Try again",
+    "close": "Close"
   },
   "errors": {
     "offline": "No internet connection. Connect and try again.",
@@ -35,7 +36,10 @@
     "google": "Sign in with Google",
     "googleFailed": "Google sign-in did not finish. Try again, or use your email.",
     "finishing": "Finishing sign-in…",
-    "backToSignIn": "Back to sign-in"
+    "backToSignIn": "Back to sign-in",
+    "unsyncedOther": "This device has changes not yet synced. Sign in as {{email}} to sync them first.",
+    "unsyncedOtherUnknown": "This device has changes not yet synced. Sign in with the previous account to sync them first.",
+    "otherShop": "This device belongs to {{shop}}. Sign in with an account of that shop."
   },
   "onboarding": {
     "title": "Set up your shop",
@@ -144,6 +148,62 @@
       "auth_required": "Sign in again to sync",
       "device_unlinked": "This device is no longer linked to the shop",
       "rejected_entries": "Some changes were not accepted. See below."
+    },
+    "signInAgain": "Sign in again"
+  },
+  "role": {
+    "owner": "Owner",
+    "cashier": "Cashier",
+    "rider": "Rider"
+  },
+  "staff": {
+    "title": "Staff",
+    "add": "Add staff",
+    "addTitle": "Add staff",
+    "editTitle": "Edit staff",
+    "name": "Name",
+    "phone": "Mobile number (optional)",
+    "phoneHint": "Pakistani mobile, e.g. 0300 1234567",
+    "role": "Role",
+    "pin": "4-digit PIN",
+    "pinHint": "They use this PIN to switch in on the shop device.",
+    "pinKeepHint": "Leave blank to keep the current PIN.",
+    "pinConfirm": "Enter the PIN again",
+    "save": "Save",
+    "deactivate": "Deactivate",
+    "reactivate": "Reactivate",
+    "inactive": "Inactive",
+    "inactiveNotice": "This person is deactivated and cannot switch in.",
+    "errors": {
+      "required": "This is required.",
+      "tooLong": "Use at most 100 characters.",
+      "role": "Choose a role.",
+      "lastOwner": "The shop needs at least one active owner."
     }
+  },
+  "pin": {
+    "switchTitle": "Switch staff",
+    "whoIsWorking": "Who is working?",
+    "switchLabel": "Working now: {{name}}. Switch staff",
+    "enterFor": "PIN for {{name}}",
+    "entered_one": "{{count}} digit entered",
+    "entered_other": "{{count}} digits entered",
+    "wrong_one": "Wrong PIN. {{count}} try left.",
+    "wrong_other": "Wrong PIN. {{count}} tries left.",
+    "locked": "Too many wrong PINs. Try again in {{seconds}} s.",
+    "notAllowed": "This person cannot switch in.",
+    "backspace": "Delete last digit",
+    "someoneElse": "Someone else",
+    "nobody": "Nobody can switch in yet. The owner adds staff and PINs under Settings → Staff.",
+    "ownerTitle": "Owner PIN needed",
+    "ownerIntro": "Only the owner can open this screen."
+  },
+  "settings": {
+    "title": "Settings",
+    "signOutTitle": "Sign out",
+    "signOutIntro": "Shop data stays on this device. Signing in again needs an account of this shop.",
+    "signOut": "Sign out",
+    "signOutBlocked_one": "{{count}} change is not synced yet. Sync before signing out.",
+    "signOutBlocked_other": "{{count}} changes are not synced yet. Sync before signing out."
   }
 }

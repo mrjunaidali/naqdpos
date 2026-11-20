@@ -2,8 +2,9 @@ import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useNavigate } from 'react-router';
 import { api, ApiError } from '../../api/index.ts';
-import { saveSession } from '../../db/session.ts';
 import { Alert } from '../../ui/Button.tsx';
+import { SignInBlocked } from './SignInBlocked.tsx';
+import { completeSignIn, type SignInOutcome } from './completeSignIn.ts';
 import { takeOneTimeToken } from './oneTimeToken.ts';
 
 /**
@@ -15,6 +16,7 @@ export function GoogleCallbackPage() {
   const navigate = useNavigate();
   const started = useRef(false);
   const [error, setError] = useState<string>();
+  const [blocked, setBlocked] = useState<Exclude<SignInOutcome, { status: 'ok' }>>();
 
   useEffect(() => {
     // StrictMode runs effects twice in development; the token must be redeemed only once.
@@ -26,12 +28,9 @@ export function GoogleCallbackPage() {
       : Promise.reject(new Error('No one-time token in the callback URL'));
     exchange.then(
       async (result) => {
-        await saveSession({
-          token: result.token,
-          user_id: result.user.id,
-          email: result.user.email,
-        });
-        void navigate('/', { replace: true });
+        const outcome = await completeSignIn(result);
+        if (outcome.status === 'ok') void navigate('/', { replace: true });
+        else setBlocked(outcome);
       },
       (e: unknown) =>
         setError(
@@ -42,13 +41,15 @@ export function GoogleCallbackPage() {
 
   return (
     <section className="mx-auto max-w-sm space-y-4">
-      {error ? (
+      {blocked ? (
+        <SignInBlocked outcome={blocked} />
+      ) : error ? (
         <>
           <Alert>{error}</Alert>
           <Link
             to="/sign-in"
             replace
-            className="inline-flex min-h-12 items-center rounded-md bg-green-700 px-4 text-white"
+            className="inline-flex min-h-12 items-center rounded-md bg-primary px-4 text-primary-fg"
           >
             {t('signIn.backToSignIn')}
           </Link>

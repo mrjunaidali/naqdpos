@@ -4,6 +4,7 @@ import { SYNC_ERROR_CODES, isSyncTable } from '@naqdpos/core';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { Link } from 'react-router';
 import { db } from '../../db/schema.ts';
 import { syncEngine } from '../../sync/index.ts';
 import { chipTone } from '../../sync/tone.ts';
@@ -68,6 +69,16 @@ export function SyncPage() {
             <p key={reason}>{t(`sync.reason.${reason}`)}</p>
           ))}
       </div>
+
+      {state.authProblem === 'auth_required' && (
+        // Re-sign-in keeps the device and its data (completeSignIn); never an automatic sign-out.
+        <Link
+          to="/sign-in"
+          className="flex min-h-12 w-full items-center justify-center rounded-md bg-primary px-4 font-semibold text-primary-fg"
+        >
+          {t('sync.signInAgain')}
+        </Link>
+      )}
 
       <div className="space-y-2 rounded-2xl border border-border bg-surface p-4">
         <p className="text-muted">{lastSync}</p>

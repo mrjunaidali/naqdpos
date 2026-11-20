@@ -22,6 +22,9 @@ export const api = {
   syncPull: vi.fn(),
 } satisfies Record<keyof ApiClient, Mock>;
 
+/** apiWithToken(token) returns the same mocks; check which token was used via its calls. */
+export const apiWithToken = vi.fn<(token: string) => typeof api>(() => api);
+
 /** Clears calls and sets safe defaults: Google off, every other call unanswered. */
 export function resetApiMock(): void {
   for (const fn of Object.values(api)) fn.mockReset();

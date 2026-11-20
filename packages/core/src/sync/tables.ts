@@ -6,6 +6,7 @@ import {
   DeviceRowSchema,
   ShopRowSchema,
   StaffRowSchema,
+  StaffPinRowSchema,
   StaffSalaryRowSchema,
 } from '../api/schemas.ts';
 
@@ -16,8 +17,11 @@ export interface SyncTableSpec {
   key: string;
   /** Devices may push rows (matches sync_tables.pushable). */
   pushable: boolean;
-  /** owner_device = only devices in 'owner' mode pull or push it (matches sync_tables.pull_scope). */
-  scope: 'all' | 'owner_device';
+  /**
+   * Which device modes pull and push it (matches sync_tables.pull_scope): owner_device = owner
+   * only; counter_device = owner and shop devices (never riders).
+   */
+  scope: 'all' | 'owner_device' | 'counter_device';
   schema: z.ZodType<Record<string, unknown>, unknown>;
 }
 
@@ -30,6 +34,13 @@ export const SYNC_TABLES = {
     pushable: true,
     scope: 'owner_device',
     schema: StaffSalaryRowSchema,
+  },
+  staff_pins: {
+    kind: 'mutable',
+    key: 'staff_id',
+    pushable: true,
+    scope: 'counter_device',
+    schema: StaffPinRowSchema,
   },
   devices: { kind: 'mutable', key: 'id', pushable: false, scope: 'all', schema: DeviceRowSchema },
 } as const satisfies Record<string, SyncTableSpec>;

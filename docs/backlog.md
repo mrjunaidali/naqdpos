@@ -21,7 +21,7 @@ Build in this order, not in ID order. "Sheet step" is the step number in the ori
 | 2 | Installable PWA, layout, i18n base | US001, US002 | 3, 4 | Partly done (shell done; install step, storage persistence, nav layout open) |
 | 3 | Owner sign-in, onboarding, device registration | US015, (US012 self-service part) | 6 | Done (Step 4) |
 | 4 | **Sync engine** (outbox, push/pull, health, app version, update checks) | US003, US005, US006, US004 | 5, 17, 18, 19 | **Next** |
-| 5 | Staff, PIN switch, permissions | US017, US016, US018 | 8, 9, 10 | To do |
+| 5 | Staff, PIN switch, permissions | US017, US016, US018 | 8, 9, 10 | Done (Step 6) |
 | 6 | Products, categories, produce presets, today's rates | US019, US021, US072, US020 | 11, 12, —, 13 | To do |
 | 7 | Selling: cart, custom item, cash, wallets/split | US029, US030, US034, US035 | 14, 15, 16, 20 | To do |
 | 8 | Stock, wastage, discounts, FOC | US024, US025, US032, US033 | 21–24 | To do |
@@ -157,18 +157,18 @@ Build in this order, not in ID order. "Sheet step" is the step number in the ori
 - Session 90 days, works offline, sign-in only on a new device or after logout
 - Still open: sign-out UI in settings (guarded by sync, §7); test Google sign-in in the installed PWA on iOS; phone OTP deferred (§5)
 
-**US016** · Must · 3 · To do — As a cashier, I want to switch to my profile with a 4-digit PIN on the shared shop device, so that sales are recorded under my name.
+**US016** · Must · 3 · Done — As a cashier, I want to switch to my profile with a 4-digit PIN on the shared shop device, so that sales are recorded under my name.
 - Quick switch from the header; PIN verified offline against the synced `pin_hash`
 - Lock for 1 minute after 5 wrong tries
 - Current staff in Zustand; repository helpers stamp `staff_id` on every ledger write
 
 ### F10 · Roles & permissions
 
-**US017** · Must · 3 · To do — As a shop owner, I want to add staff and give each a role, so that each person only sees what they need.
+**US017** · Must · 3 · Done — As a shop owner, I want to add staff and give each a role, so that each person only sees what they need.
 - Add, edit, deactivate staff; roles Owner, Cashier, Rider; 4-digit PIN hashed (PBKDF2, `packages/core/pin.ts`)
 - Saved via Dexie + outbox; deactivated staff cannot switch in with their PIN
 
-**US018** · Must · 3 · To do — As a shop owner, I want cashiers not to see total sales, profit or cost prices, so that my figures stay private.
+**US018** · Must · 3 · Done (own-shift sales and the `product_costs` check arrive with sales and products) — As a shop owner, I want cashiers not to see total sales, profit or cost prices, so that my figures stay private.
 - `permissions.ts` `can(role, action)` with tests; cost price and reports hidden for cashiers
 - Cashier sees only their own current-shift sales
 - Enforced in API routes and RLS / `sync_pull`, not only the UI (test: a shop device never receives `product_costs`)

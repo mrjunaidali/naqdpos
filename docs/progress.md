@@ -226,3 +226,50 @@ Local writes are queued in an outbox and synced in the background; the header sh
 - Rider devices: pull scope for riders (deliveries only) and the PIN-hash exposure from Step 1.
 - Older screens (sign-in, onboarding fields, buttons) still use palette classes; move them to theme tokens. The header has no bell yet (no notifications).
 - Live check of push/pull against the dev API from a browser (covered by HTTP tests against `naqdpos_test`, not tried by hand).
+
+## Step 6 — US017 staff, US016 PIN switch, US018 permissions (2026-11-20)
+
+Owners manage staff offline; staff switch in from the header with a PIN checked offline; role checks go through `can()` on the client and are enforced by RLS, `sync_push` and API routes. PIN hashes no longer reach rider devices. The session is never cleared automatically, and sign-out is guarded.
+
+**Built**
+- Migration `20261120170000_staff_pins.sql` (decisions 1 and 2, approved 20 Nov 2026):
+  - `staff_pins` (staff_id pk, shop_id, pin_hash, timestamps, composite FK to staff): RLS: owners read and write, cashiers read, riders only their own row; existing hashes copied, `staff.pin_hash` emptied and removed from staff's `push_columns`
+  - `sync_tables.pull_scope` gains `counter_device` (owner and shop devices); `sync_scope_allows(scope, mode)` is used by both `sync_pull` and `sync_push`
+  - `sync_tables.write_roles` (`{owner}` for shops, staff, staff_salaries, staff_pins); `sync_push` refuses with `forbidden` unless the entry's `actor_staff_id` is an active staff member of the device's shop with one of those roles
+  - `create_shop` writes the owner's PIN to `staff_pins`
+  - down migration restores everything, including the hashes in `staff`
+- `packages/core`:
+  - `permissions.ts`: `can(role, action)` with `ACTIONS` (`manage_staff`, `manage_devices`, `see_salaries`, `see_cost_prices`, `see_reports`, `manage_shop_settings`); replaces the four separate helpers
+  - `pinLock.ts`: 5 failures → 60 s lock, ignores attempts while locked, fresh count after a lock, success resets
+  - `staff.ts`: `validateStaffForm` (optional Pakistani mobile; PIN required on add, blank keeps it on edit), `keepsAnActiveOwner`, `canSwitchIn`
+  - `StaffPinRow` + schema, `staff_pins` in `SYNC_TABLES` (`counter_device`), `actor_staff_id` on push entries
+- `apps/api`: `POST /devices` checks `can(role, 'manage_devices')` from the caller's membership before `register_device` (which checks again); `db/roles.ts` `shopRole()`
+- `apps/pos`:
+  - Dexie **version 4**: `staff_pins (staff_id, shop_id, server_seq)`; outbox entries carry `actor_staff_id`
+  - `staff/currentStaff.ts`: Zustand store persisted to `meta.current_staff` (falls back to the setup owner); `useCurrentStaff()` marks deactivated staff invalid
+  - `db/outbox.ts`: actor from the current staff member, or an explicit acting owner; `db/actor.ts`: `stampActor(row)` adds `staff_id` + `device_id` (hook for ledger rows)
+  - `features/pin/`: `attemptPin` (offline PBKDF2 check, lock in `meta.pin_lock`, deactivated → `not_allowed` without counting), `PinPad` (44 px+ keys, live countdown), `StaffPinPicker`, `SwitchStaffDialog`, header `StaffChip` ("Ali · A1"; forced "Who is working?" when the current staff member is no longer valid), `OwnerPinGate` + `ActingOwnerContext`
+  - `features/staff/`: list, add/edit form, deactivate/reactivate, `staffRepo` (staff + staff_pins rows in one `localWriteMany`, last-owner guard); `/staff` routes share one owner check per visit
+  - `features/settings/`: Staff link (owners only, `can`), Sync, language, sign-out blocked while the outbox has entries (Sync now), otherwise server sign-out (best effort) + local session cleared; device and data stay
+  - session check never clears the session: 401 or a null session sets `auth_required`; Sync screen "Sign in again"; `SignInGate` opens `/sign-in` on a ready device only in that state; `completeSignIn` applies the re-sign-in rules (same user / other user with outbox / other user of this shop / other shop); `SignInBlocked` with Sync now; `apiWithToken()` checks the new user's shops before the session is replaced
+  - setup stores the owner's PIN locally, sets the current staff member and runs `syncNow()`
+  - header: brand mark, shop name, staff chip, sync chip, settings (language moves to Settings once ready)
+  - theme tokens in `Button`, `Field`, `Alert`, sign-in, Google callback, onboarding, home and 404; no palette classes left in `apps/pos/src`
+  - en + ur strings (`role.*`, `staff.*`, `pin.*`, `settings.*`, re-sign-in messages), plurals for counts
+
+**Tests**: DB 75 (+9: `staff_pins` RLS by role and shop, owner-only writes, composite FK, staff no longer pushes `pin_hash`, owner/shop devices pull PINs and rider devices don't, staff rows carry no hash, actor owner accepted, actor cashier / missing / inactive / other shop refused, cashier actor on staff refused, rider device can't push PINs; existing sync tests send an actor; `create_shop` stores the PIN in `staff_pins`). API DB 26 (updated: PIN in `staff_pins`, `/me` staff without hash, push with actor, shop device pulls `staff_pins`). API unit 35. Core 168 (+23: `can()` for every role × action, PIN lock, staff validation, last owner, switch-in rule). Pos 115 (+31: staff add through the outbox with actor and hashed PIN, form validation, edit with blank PIN, deactivate and last-owner refusal, Staff hidden for cashiers, owner PIN gate on shop device and with a cashier switched in, owners-only on the gate; PIN switch success and reload, wrong PIN, lockout and reload during lockout, unlock after a minute, deactivated refused without counting, forced switch when the current staff member is deactivated; `stampActor`; outbox actor; engine sends the actor; session kept on 401 and null session; re-sign-in rules; sign-out blocked with outbox and allowed when empty, offline sign-out; "Sign in again" route). `pos` production build checked.
+
+**Decisions**
+- PIN hashes in `staff_pins` (option b), `counter_device` scope, `write_roles` with the acting staff check, lock per device, re-sign-in rules, owner PIN on shop devices, staff rules: as approved (plan of 20 Nov 2026).
+- Validity of the current staff member is active and not deleted; a missing PIN row does not force a switch (a second device may not have pulled PINs yet).
+- Language switching moves to Settings once a device is ready, to keep the header to brand, shop, staff, sync and settings.
+- Callers that wrap `localWrite` in their own Dexie transaction must include `meta` or pass `actorStaffId`.
+- Old app builds that push owner-only tables without `actor_staff_id` now get `forbidden` (pre-pilot, no devices in the field).
+
+**Follow-ups**
+- Drop `staff.pin_hash` once no old app versions remain.
+- Rider devices: which staff row a rider device belongs to, and unlocking with the rider's own PIN (rider stories); rider pull scope (deliveries only).
+- US018 remainder: cashier sees only own-shift sales (with sales), "shop device never receives `product_costs`" test (with products; same `owner_device` scope as `staff_salaries`).
+- Switching a device from owner to shop mode must clear owner-only stores (Step 5 follow-up, still open; no UI to change mode yet).
+- Offline sign-out with owner PIN after a backup export (§7) — needs the backup export.
+- Header bell and the Home screen design (hero card, nav bar) are not built yet.

@@ -3,10 +3,11 @@ import { useTranslation } from 'react-i18next';
 import { useNavigate, useSearchParams } from 'react-router';
 import { api } from '../../api/index.ts';
 import { useOnline } from '../../app/useOnline.ts';
-import { saveSession } from '../../db/session.ts';
 import { Alert, Button } from '../../ui/Button.tsx';
 import { errorMessageKey } from '../../ui/errors.ts';
 import { Field } from '../../ui/Field.tsx';
+import { SignInBlocked } from './SignInBlocked.tsx';
+import { completeSignIn, type SignInOutcome } from './completeSignIn.ts';
 
 type Step = 'email' | 'code';
 
@@ -27,6 +28,7 @@ export function SignInPage() {
   );
   const [fieldError, setFieldError] = useState<string>();
   const [google, setGoogle] = useState(false);
+  const [blocked, setBlocked] = useState<Exclude<SignInOutcome, { status: 'ok' }>>();
 
   useEffect(() => {
     // Only show Google when the API has it configured; any failure just hides the button.
@@ -72,9 +74,9 @@ export function SignInPage() {
     }
     setFieldError(undefined);
     void run(async () => {
-      const result = await api.signInWithCode(email, code);
-      await saveSession({ token: result.token, user_id: result.user.id, email: result.user.email });
-      void navigate('/', { replace: true });
+      const outcome = await completeSignIn(await api.signInWithCode(email, code));
+      if (outcome.status === 'ok') void navigate('/', { replace: true });
+      else setBlocked(outcome);
     });
   }
 
@@ -91,6 +93,7 @@ export function SignInPage() {
       <h1 className="text-2xl font-bold">{t('signIn.title')}</h1>
       {!online && <Alert tone="info">{t('signIn.offline')}</Alert>}
       {error && <Alert>{error}</Alert>}
+      {blocked && <SignInBlocked outcome={blocked} />}
 
       {step === 'email' ? (
         <form className="space-y-4" onSubmit={sendCode} noValidate>
@@ -147,7 +150,7 @@ export function SignInPage() {
 
       {google && step === 'email' && (
         <>
-          <p className="text-center text-gray-600">{t('signIn.or')}</p>
+          <p className="text-center text-muted">{t('signIn.or')}</p>
           <Button variant="secondary" onClick={signInWithGoogle} disabled={busy || !online}>
             {t('signIn.google')}
           </Button>

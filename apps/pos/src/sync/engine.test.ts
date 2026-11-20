@@ -423,3 +423,17 @@ describe('sync engine: clock_ahead', () => {
     expect(SHOP_ID).toBeTruthy();
   });
 });
+
+describe('sync engine: acting staff', () => {
+  it('sends each entry with the staff member who made it (write_roles check)', async () => {
+    const { db, server, engine } = setup();
+    const owner = '019a9b8e-0000-7000-8000-0000000000a1';
+    await localWrite({ table: 'staff', op: 'upsert', row: { ...staff(1) } }, db, {
+      actorStaffId: owner,
+    });
+    await engine.syncNow();
+    expect(server.api.syncPush.mock.calls[0]![0].entries[0]).toMatchObject({
+      actor_staff_id: owner,
+    });
+  });
+});

@@ -72,16 +72,17 @@ describe('NaqdDb schema', () => {
     }
   });
 
-  it('is version 3 with the tenancy tables, staff_salaries, outbox and sync_errors', async () => {
+  it('is version 4 with the tenancy tables, staff_salaries, staff_pins, outbox and sync_errors', async () => {
     const db = track(new NaqdDb('naqdpos-test-schema'));
     await db.open();
-    expect(db.verno).toBe(3);
+    expect(db.verno).toBe(4);
     expect(db.tables.map((table) => table.name).sort()).toEqual([
       'devices',
       'meta',
       'outbox',
       'shops',
       'staff',
+      'staff_pins',
       'staff_salaries',
       'sync_errors',
     ]);
@@ -103,7 +104,7 @@ describe('NaqdDb schema', () => {
     }
   });
 
-  it('upgrades a version 2 database to 3 without losing rows', async () => {
+  it('upgrades a version 2 database to the current version without losing rows', async () => {
     const name = 'naqdpos-test-upgrade-v3';
     const v2 = track(new Dexie(name));
     v2.version(1).stores({ meta: 'key' });
@@ -118,7 +119,7 @@ describe('NaqdDb schema', () => {
 
     const db = track(new NaqdDb(name));
     await db.open();
-    expect(db.verno).toBe(3);
+    expect(db.verno).toBe(4);
     expect(await db.shops.get(SHOP_ID)).toEqual(shop);
     expect(await db.meta.get('device')).toEqual({ key: 'device', value: { id: device.id } });
     expect(await db.outbox.count()).toBe(0);
@@ -184,7 +185,7 @@ describe('NaqdDb schema', () => {
 
     const db = track(new NaqdDb(name));
     await db.open();
-    expect(db.verno).toBe(3);
+    expect(db.verno).toBe(4);
     expect(await db.meta.get('storage_persisted')).toEqual({
       key: 'storage_persisted',
       value: false,

@@ -2,6 +2,8 @@ import { act, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { api } from './api/index.ts';
 import { checkSession } from './app/sessionCheck.ts';
+import { db } from './db/schema.ts';
+import { readSyncState } from './sync/state.ts';
 import { getStoredDevice, getStoredSession } from './db/session.ts';
 import { i18n } from './i18n/index.ts';
 import { resetApiMock } from './test/apiMock.ts';
@@ -94,14 +96,21 @@ describe('daily session check', () => {
     expect(Date.now() - Date.parse(session!.checked_at)).toBeLessThan(60_000);
   });
 
-  it('signs out when the server no longer knows the session, keeping the shop data', async () => {
-    await seedReady();
-    await seedSession({ checked_at: dayAgo() });
-    mocked.getSession.mockResolvedValue(null);
-    await checkSession();
-    expect(await getStoredSession()).toBeUndefined();
-    expect(await getStoredDevice()).toBeDefined();
-  });
+  it.each([
+    ['no longer knows the session', () => mocked.getSession.mockResolvedValue(null)],
+    ['answers 401', () => mocked.getSession.mockRejectedValue(new ApiError(401, 'unauthorized'))],
+  ])(
+    'never signs out when the server %s: keeps session and data, asks to sign in again',
+    async (_, arrange) => {
+      await seedReady();
+      await seedSession({ checked_at: dayAgo() });
+      arrange();
+      await checkSession();
+      expect(await getStoredSession()).toBeDefined();
+      expect(await getStoredDevice()).toBeDefined();
+      expect((await readSyncState(db)).authProblem).toBe('auth_required');
+    },
+  );
 
   it('keeps the session when offline', async () => {
     await seedSession({ checked_at: dayAgo() });

@@ -68,7 +68,10 @@ describe('local writes (row + outbox entry in one transaction)', () => {
     const row = newStaff('019a9b8e-0000-7000-8000-0000000000e3');
     await expect(
       db.transaction('rw', [db.staff, db.outbox], async () => {
-        await localWrite({ table: 'staff', op: 'upsert', row: { ...row } }, db);
+        // Callers with their own transaction pass the actor (meta is not in their scope).
+        await localWrite({ table: 'staff', op: 'upsert', row: { ...row } }, db, {
+          actorStaffId: null,
+        });
         throw new Error('later step failed');
       }),
     ).rejects.toThrow('later step failed');

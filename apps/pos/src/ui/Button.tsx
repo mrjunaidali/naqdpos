@@ -3,9 +3,10 @@ import type { ButtonHTMLAttributes } from 'react';
 type Variant = 'primary' | 'secondary' | 'link';
 
 const STYLES: Record<Variant, string> = {
-  primary: 'w-full bg-green-700 text-white font-semibold hover:bg-green-800 disabled:bg-gray-400',
-  secondary: 'w-full border border-gray-300 bg-white font-semibold hover:bg-gray-50',
-  link: 'px-2 text-green-800 underline',
+  primary: 'w-full bg-primary text-primary-fg font-semibold hover:opacity-90 disabled:opacity-50',
+  secondary:
+    'w-full border border-border bg-surface text-text font-semibold hover:bg-bg disabled:opacity-50',
+  link: 'px-2 text-text underline',
 };
 
 /** Touch target at least 44px (CLAUDE.md UI rule). */
@@ -30,7 +31,7 @@ export function Alert({ children, tone = 'error' }: { children: string; tone?: '
     <p
       role={tone === 'error' ? 'alert' : 'status'}
       className={`rounded-md px-3 py-2 ${
-        tone === 'error' ? 'bg-red-50 text-red-800' : 'bg-amber-50 text-amber-900'
+        tone === 'error' ? 'bg-danger-soft text-danger-fg' : 'bg-warning-soft text-warning-fg'
       }`}
     >
       {children}

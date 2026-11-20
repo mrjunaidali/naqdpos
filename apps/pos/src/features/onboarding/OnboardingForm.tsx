@@ -62,6 +62,7 @@ export function OnboardingForm({ onDone }: { onDone: () => void }) {
     setBusy(true);
     setError(undefined);
     try {
+      const ownerPinHash = await hashPin(values.pin);
       await api.createShop({
         shop_id: ids.current.shop,
         name: values.shopName.trim(),
@@ -71,7 +72,7 @@ export function OnboardingForm({ onDone }: { onDone: () => void }) {
         owner_staff_id: ids.current.staff,
         owner_name: values.ownerName.trim(),
         owner_phone: mobile,
-        owner_pin_hash: await hashPin(values.pin),
+        owner_pin_hash: ownerPinHash,
         device_id: ids.current.device,
       });
       await registerThisDevice({
@@ -79,6 +80,7 @@ export function OnboardingForm({ onDone }: { onDone: () => void }) {
         shopId: ids.current.shop,
         name: values.deviceName.trim(),
         mode: values.deviceMode,
+        ownerPinHash,
       });
       onDone();
     } catch (e) {
@@ -91,7 +93,7 @@ export function OnboardingForm({ onDone }: { onDone: () => void }) {
   return (
     <form className="space-y-4" onSubmit={(e) => void submit(e)} noValidate>
       <h1 className="text-2xl font-bold">{t('onboarding.title')}</h1>
-      <p className="text-gray-600">{t('onboarding.intro')}</p>
+      <p className="text-muted">{t('onboarding.intro')}</p>
       {error && <Alert>{error}</Alert>}
 
       <Field
@@ -110,7 +112,7 @@ export function OnboardingForm({ onDone }: { onDone: () => void }) {
           id={typeId}
           value={values.shopType}
           onChange={set('shopType')}
-          className="min-h-12 w-full rounded-md border border-gray-300 bg-white px-3 text-lg"
+          className="min-h-12 w-full rounded-md border border-border bg-surface px-3 text-lg"
         >
           {SHOP_TYPES.map((type) => (
             <option key={type} value={type}>

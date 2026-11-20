@@ -6,7 +6,8 @@
   "common": {
     "wait": "براہ کرم انتظار کریں…",
     "loading": "لوڈ ہو رہا ہے…",
-    "retry": "دوبارہ کوشش کریں"
+    "retry": "دوبارہ کوشش کریں",
+    "close": "بند کریں"
   },
   "errors": {
     "offline": "انٹرنیٹ کنکشن نہیں ہے۔ کنیکٹ کر کے دوبارہ کوشش کریں۔",
@@ -35,7 +36,10 @@
     "google": "Google سے سائن ان کریں",
     "googleFailed": "TODO-ur Google سائن ان مکمل نہیں ہوا۔ دوبارہ کوشش کریں یا ای میل استعمال کریں۔",
     "finishing": "سائن ان مکمل ہو رہا ہے…",
-    "backToSignIn": "سائن ان پر واپس جائیں"
+    "backToSignIn": "سائن ان پر واپس جائیں",
+    "unsyncedOther": "TODO-ur اس ڈیوائس پر غیر سنک تبدیلیاں ہیں۔ پہلے {{email}} سے سائن ان کر کے سنک کریں۔",
+    "unsyncedOtherUnknown": "TODO-ur اس ڈیوائس پر غیر سنک تبدیلیاں ہیں۔ پہلے پچھلے اکاؤنٹ سے سائن ان کر کے سنک کریں۔",
+    "otherShop": "TODO-ur یہ ڈیوائس {{shop}} کی ہے۔ اسی دکان کے اکاؤنٹ سے سائن ان کریں۔"
   },
   "onboarding": {
     "title": "اپنی دکان سیٹ اپ کریں",
@@ -144,6 +148,62 @@
       "auth_required": "TODO-ur سنک کے لیے دوبارہ سائن ان کریں",
       "device_unlinked": "TODO-ur یہ ڈیوائس اب دکان سے منسلک نہیں",
       "rejected_entries": "TODO-ur کچھ تبدیلیاں قبول نہیں ہوئیں۔ نیچے دیکھیں۔"
+    },
+    "signInAgain": "TODO-ur دوبارہ سائن ان کریں"
+  },
+  "role": {
+    "owner": "مالک",
+    "cashier": "کیشیئر",
+    "rider": "رائیڈر"
+  },
+  "staff": {
+    "title": "عملہ",
+    "add": "TODO-ur عملہ شامل کریں",
+    "addTitle": "TODO-ur عملہ شامل کریں",
+    "editTitle": "TODO-ur عملے میں ترمیم",
+    "name": "نام",
+    "phone": "TODO-ur موبائل نمبر (اختیاری)",
+    "phoneHint": "پاکستانی موبائل، مثلاً 0300 1234567",
+    "role": "TODO-ur کردار",
+    "pin": "4 ہندسوں کا PIN",
+    "pinHint": "TODO-ur دکان کی ڈیوائس پر آنے کے لیے یہ PIN استعمال ہوگا۔",
+    "pinKeepHint": "TODO-ur موجودہ PIN رکھنے کے لیے خالی چھوڑ دیں۔",
+    "pinConfirm": "PIN دوبارہ لکھیں",
+    "save": "محفوظ کریں",
+    "deactivate": "TODO-ur غیر فعال کریں",
+    "reactivate": "TODO-ur دوبارہ فعال کریں",
+    "inactive": "TODO-ur غیر فعال",
+    "inactiveNotice": "TODO-ur یہ شخص غیر فعال ہے اور ڈیوائس پر نہیں آ سکتا۔",
+    "errors": {
+      "required": "یہ ضروری ہے۔",
+      "tooLong": "TODO-ur زیادہ سے زیادہ 100 حروف۔",
+      "role": "TODO-ur کردار منتخب کریں۔",
+      "lastOwner": "TODO-ur دکان کے لیے کم از کم ایک فعال مالک ضروری ہے۔"
     }
+  },
+  "pin": {
+    "switchTitle": "TODO-ur عملہ تبدیل کریں",
+    "whoIsWorking": "TODO-ur کون کام کر رہا ہے؟",
+    "switchLabel": "TODO-ur ابھی کام پر: {{name}}۔ عملہ تبدیل کریں",
+    "enterFor": "TODO-ur {{name}} کا PIN",
+    "entered_one": "TODO-ur {{count}} ہندسہ لکھا گیا",
+    "entered_other": "TODO-ur {{count}} ہندسے لکھے گئے",
+    "wrong_one": "TODO-ur غلط PIN۔ {{count}} کوشش باقی۔",
+    "wrong_other": "TODO-ur غلط PIN۔ {{count}} کوششیں باقی۔",
+    "locked": "TODO-ur بہت زیادہ غلط PIN۔ {{seconds}} سیکنڈ بعد کوشش کریں۔",
+    "notAllowed": "TODO-ur یہ شخص ڈیوائس پر نہیں آ سکتا۔",
+    "backspace": "TODO-ur آخری ہندسہ مٹائیں",
+    "someoneElse": "TODO-ur کوئی اور",
+    "nobody": "TODO-ur ابھی کوئی نہیں آ سکتا۔ مالک سیٹنگز ← عملہ میں عملہ اور PIN شامل کرے۔",
+    "ownerTitle": "TODO-ur مالک کا PIN درکار ہے",
+    "ownerIntro": "TODO-ur یہ اسکرین صرف مالک کھول سکتا ہے۔"
+  },
+  "settings": {
+    "title": "TODO-ur سیٹنگز",
+    "signOutTitle": "TODO-ur سائن آؤٹ",
+    "signOutIntro": "TODO-ur دکان کا ڈیٹا اس ڈیوائس پر رہتا ہے۔ دوبارہ سائن ان کے لیے اسی دکان کا اکاؤنٹ چاہیے۔",
+    "signOut": "TODO-ur سائن آؤٹ",
+    "signOutBlocked_one": "TODO-ur {{count}} تبدیلی ابھی سنک نہیں ہوئی۔ سائن آؤٹ سے پہلے سنک کریں۔",
+    "signOutBlocked_other": "TODO-ur {{count}} تبدیلیاں ابھی سنک نہیں ہوئیں۔ سائن آؤٹ سے پہلے سنک کریں۔"
   }
 }

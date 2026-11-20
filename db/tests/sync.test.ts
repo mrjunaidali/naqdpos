@@ -55,12 +55,18 @@ interface Entry {
   table: string;
   op: 'insert' | 'upsert';
   row: Record<string, unknown>;
+  /** Acting staff member; defaults to shop A's owner (see push). */
+  actor_staff_id?: string | null;
 }
 
 async function push(q: Query, deviceId: string, entries: Entry[]): Promise<PushResult> {
   const { rows } = await q<{ r: PushResult }>('select sync_push($1, $2::jsonb) as r', [
     deviceId,
-    JSON.stringify(entries),
+    JSON.stringify(
+      entries.map((e) =>
+        e.actor_staff_id === undefined ? { ...e, actor_staff_id: f.ownerStaffA } : e,
+      ),
+    ),
   ]);
   return rows[0]!.r;
 }
@@ -88,7 +94,6 @@ function staffEntry(row: Partial<Record<string, unknown>> = {}): Entry {
       name: 'New cashier',
       phone: null,
       role: 'cashier',
-      pin_hash: null,
       active: true,
       created_at: now,
       updated_at: now,
@@ -213,7 +218,7 @@ describe('sync_push: mutable tables', () => {
       });
       const fromShop = salary();
       expect((await push(q, f.deviceA, [fromShop])).errors).toEqual([
-        { id: fromShop.id, code: 'forbidden' },
+        expect.objectContaining({ id: fromShop.id, code: 'forbidden' }),
       ]);
       const fromOwner = salary();
       expect((await push(q, ownerDeviceA, [fromOwner])).accepted).toEqual([fromOwner.id]);

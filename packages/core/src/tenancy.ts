@@ -53,6 +53,7 @@ export interface StaffRow extends SyncedMutable {
   name: string;
   phone: string | null;
   role: Role;
+  /** Always null since migration 20261120170000: PIN hashes live in staff_pins. Kept for old rows. */
   pin_hash: string | null;
   membership_user_id: string | null;
   active: boolean;
@@ -75,6 +76,19 @@ export interface StaffSalaryRow {
   staff_id: string;
   shop_id: string;
   monthly_salary_paisa: Paisa;
+  created_at: string;
+  updated_at: string;
+  deleted_at: string | null;
+  device_id: string | null;
+  server_seq: number | null;
+}
+
+/** A staff member's PIN hash (architecture §3). Only owner and shop devices hold these. */
+export interface StaffPinRow {
+  staff_id: string;
+  shop_id: string;
+  /** hashPin() output; the PIN itself never leaves the device that typed it. */
+  pin_hash: string;
   created_at: string;
   updated_at: string;
   deleted_at: string | null;

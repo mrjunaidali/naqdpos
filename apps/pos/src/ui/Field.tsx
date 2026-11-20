@@ -20,17 +20,17 @@ export function Field({ label, error, hint, className, ...input }: FieldProps) {
         id={id}
         aria-invalid={error ? true : undefined}
         aria-describedby={error || hint ? messageId : undefined}
-        className={`min-h-12 w-full rounded-md border px-3 text-lg ${
-          error ? 'border-red-600' : 'border-gray-300'
+        className={`min-h-12 w-full rounded-md border bg-surface px-3 text-lg ${
+          error ? 'border-danger' : 'border-border'
         } ${className ?? ''}`}
         {...input}
       />
       {error ? (
-        <p id={messageId} className="text-sm text-red-700">
+        <p id={messageId} className="text-sm text-danger-fg">
           {error}
         </p>
       ) : hint ? (
-        <p id={messageId} className="text-sm text-gray-600">
+        <p id={messageId} className="text-sm text-muted">
           {hint}
         </p>
       ) : null}

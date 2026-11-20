@@ -5,6 +5,8 @@ import type { DeviceMode, MeResponse } from '@naqdpos/core';
 import { api } from '../../api/index.ts';
 import { db } from '../../db/schema.ts';
 import { META_KEYS, type StoredDevice } from '../../db/session.ts';
+import { useCurrentStaffStore, writeCurrentStaffId } from '../../staff/currentStaff.ts';
+import { syncEngine } from '../../sync/index.ts';
 
 type ShopEntry = MeResponse['shops'][number];
 
@@ -26,6 +28,9 @@ export async function registerThisDevice(input: {
   shopId: string;
   name: string;
   mode: SetupMode;
+  /** The owner's PIN hash when it was just set here (onboarding), so PIN switching works offline
+   * before the first pull. */
+  ownerPinHash?: string;
 }): Promise<void> {
   // Idempotent on the server: a retry with the same id returns the same code.
   const device = await api.registerDevice({
@@ -45,10 +50,28 @@ export async function registerThisDevice(input: {
     staff_id: entry.staff?.id ?? null,
   };
   // One transaction; the `device` key goes in with the rows, so the app is never half set up.
-  await db.transaction('rw', [db.shops, db.staff, db.devices, db.meta], async () => {
+  const now = new Date().toISOString();
+  await db.transaction('rw', [db.shops, db.staff, db.staff_pins, db.devices, db.meta], async () => {
     await db.shops.put(entry.shop);
     if (entry.staff) await db.staff.put(entry.staff);
+    if (entry.staff && input.ownerPinHash) {
+      await db.staff_pins.put({
+        staff_id: entry.staff.id,
+        shop_id: input.shopId,
+        pin_hash: input.ownerPinHash,
+        device_id: device.id,
+        created_at: now,
+        updated_at: now,
+        deleted_at: null,
+        server_seq: null, // the server's copy arrives with the first pull
+      });
+    }
     await db.devices.put(device);
     await db.meta.put({ key: META_KEYS.DEVICE, value: stored });
+    // The owner who set the device up is the first one working on it (US016).
+    if (entry.staff) await writeCurrentStaffId(entry.staff.id);
   });
+  useCurrentStaffStore.setState({ staffId: entry.staff?.id ?? null, ready: true });
+  // Fetch staff and PINs right away, so other staff can switch in.
+  void syncEngine.syncNow();
 }

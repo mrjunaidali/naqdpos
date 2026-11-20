@@ -1,7 +1,15 @@
 // Test data and Dexie helpers for component tests.
-import type { DeviceRow, MeResponse, ShopRow, StaffRow } from '@naqdpos/core';
+import {
+  hashPin,
+  type DeviceMode,
+  type DeviceRow,
+  type MeResponse,
+  type ShopRow,
+  type StaffRow,
+} from '@naqdpos/core';
 import { db } from '../db/schema.ts';
 import { META_KEYS, type StoredDevice, type StoredSession } from '../db/session.ts';
+import { useCurrentStaffStore } from '../staff/currentStaff.ts';
 
 export const USER_ID = '019a9b8e-0000-7000-8000-00000000000a';
 export const SHOP_ID = '019a9b8e-0000-7000-8000-00000000000b';
@@ -74,6 +82,22 @@ export function me(shops: MeResponse['shops'] = []): MeResponse {
 
 export async function resetDb(): Promise<void> {
   await Promise.all(db.tables.map((table) => table.clear()));
+  // The current-staff store is a module singleton: start each test as after a fresh load.
+  useCurrentStaffStore.setState({ staffId: null, ready: false });
+}
+
+/** A PIN row for a staff member (cheap hash for tests). */
+export async function seedPin(staffId: string, pin: string): Promise<void> {
+  await db.staff_pins.put({
+    staff_id: staffId,
+    shop_id: SHOP_ID,
+    pin_hash: await hashPin(pin, { iterations: 1000 }),
+    device_id: null,
+    created_at: NOW,
+    updated_at: NOW,
+    deleted_at: null,
+    server_seq: 20,
+  });
 }
 
 export async function seedSession(overrides: Partial<StoredSession> = {}): Promise<void> {
@@ -88,7 +112,7 @@ export async function seedSession(overrides: Partial<StoredSession> = {}): Promi
 }
 
 /** Signed in, shop and device on this device: the app opens straight to home. */
-export async function seedReady(): Promise<void> {
+export async function seedReady(mode: DeviceMode = 'owner'): Promise<void> {
   await seedSession();
   await db.shops.put(shopRow());
   await db.staff.put(staffRow());
@@ -97,7 +121,7 @@ export async function seedReady(): Promise<void> {
     id: DEVICE_ID,
     code: 'A1',
     shop_id: SHOP_ID,
-    mode: 'owner',
+    mode,
     staff_id: STAFF_ID,
   };
   await db.meta.put({ key: META_KEYS.DEVICE, value: device });

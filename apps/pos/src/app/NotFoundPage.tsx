@@ -9,7 +9,7 @@ export function NotFoundPage() {
       <h1 className="text-2xl font-bold">{t('notFound.title')}</h1>
       <Link
         to="/"
-        className="inline-flex min-h-11 items-center rounded-md bg-green-700 px-4 text-white"
+        className="inline-flex min-h-11 items-center rounded-md bg-primary px-4 text-primary-fg"
       >
         {t('notFound.goHome')}
       </Link>

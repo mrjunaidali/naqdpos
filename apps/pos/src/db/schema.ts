@@ -2,6 +2,7 @@ import type {
   DeviceRow,
   OutboxOp,
   ShopRow,
+  StaffPinRow,
   StaffRow,
   StaffSalaryRow,
   SyncTableName,
@@ -25,6 +26,11 @@ export interface OutboxEntry {
   row_key: string;
   created_at: string;
   attempts: number;
+  /**
+   * The staff member acting when the write was made (PIN-switched, or the owner who entered
+   * their PIN on an owner screen). sync_push checks it against the table's write_roles.
+   */
+  actor_staff_id: string | null;
 }
 
 /** An outbox entry the server rejected (`sync_push` error), kept for review (architecture §7). */
@@ -43,6 +49,7 @@ export class NaqdDb extends Dexie {
   declare staff: EntityTable<StaffRow, 'id'>;
   declare devices: EntityTable<DeviceRow, 'id'>;
   declare staff_salaries: EntityTable<StaffSalaryRow, 'staff_id'>;
+  declare staff_pins: EntityTable<StaffPinRow, 'staff_id'>;
   declare outbox: EntityTable<OutboxEntry, 'id'>;
   declare sync_errors: EntityTable<SyncErrorRow, 'id'>;
 
@@ -68,6 +75,11 @@ export class NaqdDb extends Dexie {
       staff_salaries: 'staff_id, shop_id, server_seq',
       outbox: 'id, table, row_key',
       sync_errors: 'id, table',
+    });
+    // PIN hashes moved out of staff (migration 20261120170000_staff_pins). Owner and shop devices
+    // pull them; rider devices never do.
+    this.version(4).stores({
+      staff_pins: 'staff_id, shop_id, server_seq',
     });
   }
 }

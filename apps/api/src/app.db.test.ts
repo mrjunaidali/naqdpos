@@ -207,11 +207,19 @@ describe('POST /shops', () => {
     const rows = await withUserTx(db, { userId }, async (tx) => ({
       shops: await tx.selectFrom('shops').select(['id', 'phone']).execute(),
       staff: await tx.selectFrom('staff').select(['id', 'role', 'phone', 'pin_hash']).execute(),
+      pins: (
+        await sql<{
+          staff_id: string;
+          pin_hash: string;
+        }>`select staff_id, pin_hash from staff_pins`.execute(tx)
+      ).rows,
     }));
     expect(rows.shops).toEqual([{ id: shop.shop_id, phone: '+923001234567' }]);
     expect(rows.staff).toEqual([
-      { id: shop.owner_staff_id, role: 'owner', phone: '+923001234567', pin_hash: pinHash },
+      // PIN hashes live in staff_pins (migration 20261120170000)
+      { id: shop.owner_staff_id, role: 'owner', phone: '+923001234567', pin_hash: null },
     ]);
+    expect(rows.pins).toEqual([{ staff_id: shop.owner_staff_id, pin_hash: pinHash }]);
   });
 
   it('a retry returns 201 with the same id', async () => {
@@ -276,7 +284,7 @@ describe('GET /me', () => {
     expect(entry?.staff).toMatchObject({
       id: shop.owner_staff_id,
       membership_user_id: userId,
-      pin_hash: pinHash,
+      pin_hash: null,
     });
   });
 
@@ -403,6 +411,7 @@ describe('/sync/push and /sync/pull', () => {
       id: randomUUID(),
       table: 'staff',
       op: 'upsert',
+      actor_staff_id: d.shop.owner_staff_id,
       row: {
         id: staffId,
         shop_id: d.shop.shop_id,
@@ -436,7 +445,9 @@ describe('/sync/push and /sync/pull', () => {
     const pulled = page.rows.find((r) => r.table === 'staff' && r.row.id === staffId);
     expect(pulled?.row.name).toBe('Bilal');
     expect(typeof pulled?.row.server_seq).toBe('number');
-    expect(new Set(page.rows.map((r) => r.table))).toEqual(new Set(['shops', 'staff', 'devices']));
+    expect(new Set(page.rows.map((r) => r.table))).toEqual(
+      new Set(['shops', 'staff', 'staff_pins', 'devices']),
+    );
     expect((await pullPage(d, page.next_seq)).rows).toEqual([]);
   });
 

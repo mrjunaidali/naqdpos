@@ -44,7 +44,7 @@ export function RegisterDeviceForm({ shop, onDone }: { shop: ShopRow; onDone: ()
   return (
     <form className="space-y-4" onSubmit={(e) => void submit(e)} noValidate>
       <h1 className="text-2xl font-bold">{t('device.registerTitle')}</h1>
-      <p className="text-gray-600">{t('device.registerIntro', { shop: shop.name })}</p>
+      <p className="text-muted">{t('device.registerIntro', { shop: shop.name })}</p>
       {error && <Alert>{error}</Alert>}
       <DeviceModeField
         value={mode}
