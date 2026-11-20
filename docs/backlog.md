@@ -2,7 +2,7 @@
 
 Epics → features → user stories (US###) with acceptance criteria. Claude Code implements one story at a time ("Implement US0xx", see CLAUDE.md).
 
-- **Source:** the "ePOS Product Backlog" sheet (16 Nov 2026), updated 20 Nov 2026 for the own backend (Node + Hono, Postgres + RLS, Better Auth, S3/R2), Google/email sign-in, the NaqdPOS name, the produce presets and self-registration.
+- **Source:** the "ePOS Product Backlog" sheet (16 Nov 2026), updated 20 Nov 2026 for the own backend (Node + Hono, Postgres + RLS, Better Auth, S3/R2), Google/email sign-in, the NaqdPOS name, the produce presets and self-registration. Last change: 20 Nov evening — statuses after Steps 5–8, US078–US079 product pictures.
 - **Rules win:** if a story disagrees with `docs/architecture.md` or a feature doc, the architecture/feature doc wins. Schema changes not in the architecture → stop and ask.
 - **Releases:** R1 = MVP (fruit & veg pilot) · R2 = grocery & delivery · R3 = partners & billing.
 - **Priority:** Must / Should / Could. **Points** are rough effort (1–8).
@@ -20,9 +20,10 @@ Build in this order, not in ID order. "Sheet step" is the step number in the ori
 | 1 | Tenancy + shop isolation | US007 | 2 | Done (Steps 1–3) |
 | 2 | Installable PWA, layout, i18n base | US001, US002 | 3, 4 | Partly done (shell done; install step, storage persistence, nav layout open) |
 | 3 | Owner sign-in, onboarding, device registration | US015, (US012 self-service part) | 6 | Done (Step 4) |
-| 4 | **Sync engine** (outbox, push/pull, health, app version, update checks) | US003, US005, US006, US004 | 5, 17, 18, 19 | **Next** |
-| 5 | Staff, PIN switch, permissions | US017, US016, US018 | 8, 9, 10 | Done (Step 6) |
-| 6 | Products, categories, produce presets, today's rates | US019, US021, US072, US020 | 11, 12, —, 13 | Done (Step 7) |
+| 4 | Sync engine (outbox, push/pull, health, app version, update checks) | US003, US005, US006, US004 | 5, 17, 18, 19 | Done (Step 5) |
+| 5 | Staff, PIN switch, permissions | US017, US016, US018 | 8, 9, 10 | Done (Step 6; own-shift sales part of US018 comes with selling) |
+| 6 | Products, categories, produce presets, today's rates | US019, US021, US072, US020 | 11, 12, —, 13 | Done (Step 7); change device mode added (Step 8) |
+| 6b | Product pictures (emoji icons) | US078 | — | **Next** (after the sync re-pull fix and owner PIN reset) |
 | 7 | Selling: cart, custom item, cash, wallets/split | US029, US030, US034, US035 | 14, 15, 16, 20 | To do |
 | 8 | Stock, wastage, discounts, FOC | US024, US025, US032, US033 | 21–24 | To do |
 | 9 | Customers and khata | US038, US039, US040, US041 | 25–28 | To do |
@@ -36,7 +37,7 @@ Build in this order, not in ID order. "Sheet step" is the step number in the ori
 | — | **R1 pilot** | | | |
 | 17 | Suppliers, purchases, payables | US050, US051, US052 | 42–44 | To do (R2) |
 | 18 | Expense extras | US069, US070, US071 | 44a–44c | To do (R2) |
-| 19 | Low stock, barcode, shared catalogue, combos | US026, US022, US023, US027, US028 | 45–49 | To do (R2) |
+| 19 | Low stock, barcode, shared catalogue, combos, product photos | US026, US022, US023, US027, US028, US079 | 45–49 | To do (R2) |
 | 20 | Park cart, returns, credit limit, statement link | US031, US037, US042, US043 | 50–53 | To do (R2) |
 | 21 | Daily khata WhatsApp | US058, US059 | 54, 55 | To do (R2) |
 | 22 | Delivery and riders | US053–US057 | 56–60 | To do (R2) |
@@ -65,13 +66,13 @@ Build in this order, not in ID order. "Sheet step" is the step number in the ori
 
 ### F02 · Offline data store
 
-**US003** · Must · 8 · Next — As a cashier, I want to keep selling when the internet is down, so that no sale is lost.
+**US003** · Must · 8 · Done — As a cashier, I want to keep selling when the internet is down, so that no sale is lost.
 - Every local write is one Dexie transaction: the row **and** its outbox entry (architecture §4)
 - All sale screens work in airplane mode; data survives app close and phone restart
 - Offline banner (`navigator.onLine` plus failed-request detection)
 - Receipt screen shows "Saved offline — will sync when online" when offline
 
-**US004** · Must · 3 · Next — As a shop owner, I want to see how many records are waiting to sync, so that I know my data is safe.
+**US004** · Must · 3 · Done (toasts and sell-screen banners come with selling) — As a shop owner, I want to see how many records are waiting to sync, so that I know my data is safe.
 - `syncHealth()` in `packages/core` with the levels and thresholds of architecture §7 (incl. `updateRequired` → warning)
 - Header badge: ok tick / pending count / warning / critical; last synced time; tap opens the Sync screen with "Sync now" and rejected entries (owner sees "Needs review")
 - Reminder toast every 25 unsynced sales or after 2 h, only on the receipt screen, max once per 30 min
@@ -80,7 +81,7 @@ Build in this order, not in ID order. "Sheet step" is the step number in the ori
 
 ### F03 · Sync engine
 
-**US005** · Must · 8 · Next — As a shop owner, I want offline records to upload automatically when internet returns, so that reports and khata are up to date on every device.
+**US005** · Must · 8 · Done — As a shop owner, I want offline records to upload automatically when internet returns, so that reports and khata are up to date on every device.
 - `POST /sync/push` → SQL `sync_push`, batches of 200; append-only tables insert `ON CONFLICT DO NOTHING` (re-pushing never duplicates)
 - Per-entry errors: a rejected entry (other shop, closed day) does not block the batch
 - `GET /sync/pull` → SQL `sync_pull` by `server_seq` cursor until empty; device mode decides visibility (shop devices never get `product_costs` or `staff_salaries`)
@@ -90,7 +91,7 @@ Build in this order, not in ID order. "Sheet step" is the step number in the ori
 - **App version (§4):** every request sends `X-App-Version`; with `MIN_APP_VERSION` set, old apps get `426 { min_version }`; the app pauses sync only (selling and outbox keep working), shows "Update required to sync — Reload" and runs the update check
 - **Update checks (§6):** `registration.update()` every 60 min online and on visibility/focus; reload banner never while the cart has items
 
-**US006** · Must · 8 · Next — As a shop owner using two devices, I want changes from both merged correctly, so that balances are never wrong.
+**US006** · Must · 8 · Done — As a shop owner using two devices, I want changes from both merged correctly, so that balances are never wrong.
 - Stock and balances are sums of append-only movements, recomputed from ledgers
 - Mutable rows (products, customers…): last write wins by `updated_at`; losers recorded in `sync_conflicts`, server keeps its version
 - Integration test: two simulated devices sell and edit offline, then sync, and end with identical sums and the last-written product
@@ -159,7 +160,7 @@ Build in this order, not in ID order. "Sheet step" is the step number in the ori
 
 **US016** · Must · 3 · Done — As a cashier, I want to switch to my profile with a 4-digit PIN on the shared shop device, so that sales are recorded under my name.
 - Quick switch from the header; PIN verified offline against the synced `pin_hash`
-- After 5 wrong tries lock for 1 minute, then 5 minutes, then 15 minutes for every further lockout; a correct PIN resets it
+- After 5 wrong tries the keypad locks: 1 minute, then 5, then 15 minutes per further lockout (architecture §5); pick your name, then the PIN
 - Current staff in Zustand; repository helpers stamp `staff_id` on every ledger write
 
 ### F10 · Roles & permissions
@@ -168,7 +169,7 @@ Build in this order, not in ID order. "Sheet step" is the step number in the ori
 - Add, edit, deactivate staff; roles Owner, Cashier, Rider; 4-digit PIN hashed (PBKDF2, `packages/core/pin.ts`)
 - Saved via Dexie + outbox; deactivated staff cannot switch in with their PIN
 
-**US018** · Must · 3 · Done (own-shift sales and the `product_costs` check arrive with sales and products) — As a shop owner, I want cashiers not to see total sales, profit or cost prices, so that my figures stay private.
+**US018** · Must · 3 · Partly done (own-shift sales with US029) — As a shop owner, I want cashiers not to see total sales, profit or cost prices, so that my figures stay private.
 - `permissions.ts` `can(role, action)` with tests; cost price and reports hidden for cashiers
 - Cashier sees only their own current-shift sales
 - Enforced in API routes and RLS / `sync_pull`, not only the UI (test: a shop device never receives `product_costs`)
@@ -189,12 +190,24 @@ Build in this order, not in ID order. "Sheet step" is the step number in the ori
 **US020** · Must · 3 · Done — As a shop owner, I want to update today's prices on one screen, so that I keep up with daily mandi rates.
 - Bulk list with editable sale price (and cost for owners); "Save all" in one Dexie transaction with `price_history` rows; works offline
 
-**US072** · Must · 3 · Done (Roman Urdu spellings to be verified; rate prompt on first sale comes with US029) — As a fruit & veg owner, I want to pick my products from a ready-made list, so that I don't type potato, onion, tomato on every new shop. (Spec: `docs/features/produce-presets.md`.)
+**US072** · Must · 3 · Done (Roman Urdu spellings to be verified by Junaid) — As a fruit & veg owner, I want to pick my products from a ready-made list, so that I don't type potato, onion, tomato on every new shop. (Spec: `docs/features/produce-presets.md`.)
 - Checklist of the 83 presets grouped by category (varieties together), in onboarding for `fruit_veg` shops and under Products → "Add from list"
 - Ticking items and Save creates one `products` row each (`name` + `name_ur`) plus the needed categories, in one Dexie transaction with outbox entries, offline
 - Optional today's rate per item → `sale_price_paisa` + `price_history`; blank → 0 and a rate prompt on first sale
 - Items whose English name already exists show "Added" and are not created twice
 - Search matches English, Urdu and Roman Urdu ("aalu", "آلو", "potato" → Potato; "chaunsa" → Mango (Chaunsa))
+
+**US078** · Should · 3 · To do — As a cashier, I want a picture on each product tile, so that I find items at a glance without reading (like the 16 Nov prototype).
+- `products.icon` (one emoji, nullable, max 16 chars), pushable and pulled by every device (approved schema change; architecture §3)
+- Every fresh produce preset has an icon (closest emoji, null where nothing fits; verified by Junaid); products created or restored from presets get it
+- Product form has a "Picture" picker (food emoji grid + None), owner only
+- Icon shown large at the top of product tiles (product grid, preset picker, Today's rates, later the sale screen); tiles without an icon show the name only, same height
+- Works offline; no uploads or storage
+
+**US079** · Could · 5 · R2 · To do — As a shop owner, I want to add a real photo of a product, so that packaged or unusual items are easy to recognise.
+- Take or pick a photo, compressed on the device (small, e.g. ~50 KB thumbnail), kept locally and uploaded via a pre-signed URL to `product-photos/<shop_id>/<product_id>.jpg` when online (key stored, never a URL)
+- Shown instead of the emoji when present; cached for offline use on every device
+- Schema (photo key column or a separate photos table) to be approved when the story is written
 
 ### F13 · Categories (R1)
 
