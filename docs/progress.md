@@ -670,3 +670,21 @@ The owner closes the day against a cash count; later rows are accepted and flagg
 - Close corrections (a later feature).
 - Refunds, rider handovers and supplier payments enter expected cash when those features exist (already in the formula).
 - Reports (US068 and the owner dashboard) can use `shop_expected_cash()` and the not-seen rule.
+
+## Step 19 — US080 khata fixes found in testing (2026-11-23)
+
+"Khata / Udhaar" is always on the pay screen, customers can be added from the Khata screen, and the owner can carry an opening balance over from the paper khata book.
+
+**Built** (no schema change)
+- Pay screen: the "Khata / Udhaar" chip is always shown; without a customer it opens the customer picker (search or add), then attaches the customer and applies the khata part. The attached customer shows on the pay screen with a remove button; with no customer there is no khata part (derived, also when the customer is removed on the sale screen).
+- `CustomerPicker`: address field; optional "Opening balance (from your paper khata)" (owner here, or the owner PIN); `startAdding` to open on the add form. An existing mobile picks that customer.
+- Khata list: "Add customer" (opens the customer's page; an existing mobile opens that customer).
+- Customer page: "Opening balance" while the customer has no entries (owner PIN rules); `OpeningBalanceSheet`.
+- `khataRepo`: `findOrAddCustomer` takes an address; `recordOpeningBalance` (owner, only without entries, an `adjustment` with the note "Opening balance", positive = the customer owes; business date rolls forward like every row).
+- `pin/ownerHereNow.ts`: the owner-here rule read at tap time (the hook could still be loading, which asked for a PIN needlessly).
+- en + ur strings.
+
+**Tests**: Pos 282 (+5 net: the chip without a customer opens the picker, adding a customer attaches it and the bill goes on khata offline; removing the customer on the pay screen clears the khata part; Khata → Add customer opens the customer and an existing mobile opens the same one; owner adds with an opening balance (one adjustment with the note, balance and list updated); a cashier is asked for the owner PIN; the customer page's Opening balance only without entries). The old "Khata only with a customer" test was replaced.
+
+**Follow-ups**
+- Opening balances where the customer is owed money (advance) are not offered; use Adjust balance.

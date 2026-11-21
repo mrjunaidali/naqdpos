@@ -435,9 +435,10 @@
       "over_limit": "TODO-ur کیشیئر کی رعایت کی حد سے زیادہ: مالک کی منظوری ضروری ہے۔",
       "khata_needs_customer": "TODO-ur کھاتہ صرف گاہک کے ساتھ۔"
     },
-    "khata": "TODO-ur کھاتہ",
+    "khata": "TODO-ur کھاتہ / ادھار",
     "khataRow": "TODO-ur کھاتہ ({{name}})",
-    "removeKhata": "TODO-ur کھاتہ ہٹائیں"
+    "removeKhata": "TODO-ur کھاتہ ہٹائیں",
+    "customer": "TODO-ur گاہک: {{name}}"
   },
   "done": {
     "title": "TODO-ur سیل محفوظ ہو گئی",
@@ -587,7 +588,10 @@
     "mobileFixed": "TODO-ur موبائل نمبر نہیں بدل سکتا۔ نیا نمبر = نیا گاہک۔",
     "errors": {
       "mobile": "TODO-ur پاکستانی موبائل نمبر لکھیں، جیسے 0300 1234567۔"
-    }
+    },
+    "openingBalance": "TODO-ur پرانا بقایا (کاغذی کھاتے سے)",
+    "openingBalanceHint": "TODO-ur اس گاہک کا آپ کی کھاتہ کاپی میں پہلے سے بقایا۔ صرف مالک۔",
+    "ownerForOpening": "TODO-ur پرانا بقایا لکھنے کے لیے مالک ضروری ہے۔"
   },
   "khata": {
     "title": "TODO-ur کھاتہ",
@@ -634,8 +638,13 @@
       "forbidden": "TODO-ur صرف مالک بقایا درست کر سکتا ہے۔",
       "note_required": "TODO-ur نوٹ ضروری ہے۔",
       "note_too_long": "TODO-ur نوٹ بہت لمبا ہے (زیادہ سے زیادہ 200 حروف)۔",
-      "no_device": "TODO-ur یہ آلہ سیٹ اپ نہیں ہے۔"
-    }
+      "no_device": "TODO-ur یہ آلہ سیٹ اپ نہیں ہے۔",
+      "has_entries": "TODO-ur اس گاہک کے اندراج پہلے سے ہیں: بقایا درست کریں استعمال کریں۔"
+    },
+    "addCustomer": "TODO-ur گاہک شامل کریں",
+    "opening": "TODO-ur پرانا بقایا",
+    "openingTitle": "TODO-ur پرانا بقایا",
+    "saveOpening": "TODO-ur پرانا بقایا محفوظ کریں"
   },
   "receipt": {
     "rs": "{{amount}} روپے",

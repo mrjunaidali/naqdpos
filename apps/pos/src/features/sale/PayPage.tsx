@@ -17,6 +17,7 @@ import { Field } from '../../ui/Field.tsx';
 import { rupeesInput } from '../catalogue/catalogueData.ts';
 import { methodName, usePaymentMethods } from '../settings/paymentMethods.ts';
 import { useCartStore } from './cartStore.ts';
+import { CustomerPicker } from '../khata/CustomerPicker.tsx';
 import { useCustomer } from '../khata/khataRepo.ts';
 import { completeSale, SaleNotCompleted } from './completeSale.ts';
 import { currentSeller, ownerApprovalNeeded } from './discountLimit.ts';
@@ -64,9 +65,18 @@ export function PayPage() {
   const methods = usePaymentMethods();
   const [payments, setPayments] = useState<PaymentDraft[]>([]);
   /** The part on the customer's khata (US039): not a payments row. */
-  const [khata, setKhata] = useState(0);
+  const [khataTyped, setKhata] = useState(0);
   const customerId = useCartStore((s) => s.customerId);
   const customer = useCustomer(customerId);
+  const setCustomer = useCartStore((s) => s.setCustomer);
+  const [pickingCustomer, setPickingCustomer] = useState(false);
+  // No customer, no khata part (also when the customer is removed on the sale screen).
+  const khata = customerId ? khataTyped : 0;
+  function removeCustomer() {
+    setCustomer(null);
+    setKhata(0);
+    if (method === KHATA) setMethod('cash');
+  }
   const [method, setMethod] = useState('cash');
   const [amount, setAmount] = useState('');
   const [reference, setReference] = useState('');
@@ -295,21 +305,43 @@ export function PayPage() {
             {methodName(m, t)}
           </button>
         ))}
-        {customer && (
+        {/* Always offered (US080): without a customer it first opens the customer picker. */}
+        <button
+          type="button"
+          aria-pressed={isKhata}
+          onClick={() => (customerId ? chooseMethod(KHATA) : setPickingCustomer(true))}
+          className={`min-h-11 rounded-full border px-4 font-medium ${
+            isKhata
+              ? 'border-primary bg-primary text-primary-fg'
+              : 'border-border bg-surface text-text'
+          }`}
+        >
+          {t('pay.khata')}
+        </button>
+      </div>
+      {customer && (
+        <p className="flex items-center justify-between gap-2 rounded-xl border border-border bg-surface px-3">
+          <span>{t('pay.customer', { name: customerLabel })}</span>
           <button
             type="button"
-            aria-pressed={isKhata}
-            onClick={() => chooseMethod(KHATA)}
-            className={`min-h-11 rounded-full border px-4 font-medium ${
-              isKhata
-                ? 'border-primary bg-primary text-primary-fg'
-                : 'border-border bg-surface text-text'
-            }`}
+            className="min-h-11 min-w-11 rounded-md"
+            aria-label={t('customers.remove')}
+            onClick={removeCustomer}
           >
-            {t('pay.khata')}
+            ✕
           </button>
-        )}
-      </div>
+        </p>
+      )}
+      {pickingCustomer && (
+        <CustomerPicker
+          onClose={() => setPickingCustomer(false)}
+          onPick={(c) => {
+            setCustomer(c.id);
+            setPickingCustomer(false);
+            chooseMethod(KHATA);
+          }}
+        />
+      )}
 
       {error && <Alert>{error}</Alert>}
 

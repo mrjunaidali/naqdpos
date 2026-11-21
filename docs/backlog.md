@@ -26,7 +26,7 @@ Build in this order, not in ID order. "Sheet step" is the step number in the ori
 | 6b | Product pictures (emoji icons) | US078 | — | Done (Step 10) |
 | 7 | Selling: cart, custom item, cash, wallets/split | US029, US030, US034, US035 | 14, 15, 16, 20 | Done (Steps 11–12) |
 | 8 | Stock, wastage, discounts, FOC | US024, US025, US032, US033 | 21–24 | Done (Steps 13–14) |
-| 9 | Customers and khata | US038, US039, US040, US041 | 25–28 | Done (Step 15) |
+| 9 | Customers and khata | US038, US039, US040, US041, US080 | 25–28 | Done (Steps 15, 19) |
 | 10 | Shop profile and receipts | US014, US036 | 29, 30 | Done (Step 16; logo deferred) |
 | 11 | Expenses | US065, US046, US066 | 30a, 31, 31a | Done (Step 17) |
 | 12 | Daily closing | US044, US045, US067 | 32, 33, 33a | Done (Step 18) |
@@ -317,6 +317,12 @@ Build in this order, not in ID order. "Sheet step" is the step number in the ori
 
 **US041** · Must · 3 · R1 · Done (overdue = no payment for N days, decided 22 Nov 2026) — As a shop owner, I want khata customers sorted by highest balance, so that I know who to follow up.
 - Total receivable; overdue filter (oldest unpaid credit older than X days); call (`tel:`) and WhatsApp (`wa.me`) buttons; customer ledger page
+
+**US080** · Must · 3 · R1 · Done (found in testing, 21 Nov; Step 19) — As a cashier or owner, I want "Khata (Udhaar)" always on the pay screen and a way to add customers from the Khata screen, so that credit sales and new khata customers are easy to find.
+- Pay screen always shows a "Khata / Udhaar" method; tapping it without a customer opens the customer picker (search or add), then applies the khata part (as in the 16 Nov prototype)
+- Khata screen: "Add customer" button (mobile required, name and address optional; same customer id rule as US038)
+- Opening balance from the paper khata book: owner-only, when adding a customer or later from the customer page ("Opening balance"), written as an `adjustment` entry with the note "Opening balance"
+- Works offline; en + ur
 
 **US042** · Could · 2 · R2 · To do — As a shop owner, I want a credit limit per customer, so that I don't over-lend.
 - Warning on the pay screen when khata would exceed it; owner PIN to override

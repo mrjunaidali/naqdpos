@@ -80,6 +80,7 @@ export async function findOrAddCustomer(
   mobile: string,
   name: string | null,
   actorStaffId: string | null,
+  address: string | null = null,
 ): Promise<CustomerRow> {
   const device = await shopDevice();
   const e164 = normalizePkMobile(mobile);
@@ -99,7 +100,7 @@ export async function findOrAddCustomer(
     shop_id: device.shop_id,
     mobile: e164,
     name: cleanName,
-    address: null,
+    address: address?.trim() || null,
     credit_limit_paisa: null,
     whatsapp_opt_in: false,
     created_at: existing?.created_at ?? now,
@@ -166,6 +167,25 @@ export async function receiveKhataPayment(
     ),
   );
   return { ...built, balance_paisa: await customerBalance(customer.id) };
+}
+
+/** The note on the entry that carries a balance over from the paper khata book (US080). */
+export const OPENING_BALANCE_NOTE = 'Opening balance';
+
+/**
+ * Opening balance (owner only): what the customer already owed in the paper khata. Only for a
+ * customer with no entries yet; written as an adjustment (positive = the customer owes).
+ */
+export async function recordOpeningBalance(
+  customer: CustomerRow,
+  amountPaisa: number,
+  owner: StaffRow,
+): Promise<KhataEntryRow> {
+  if ((await db.khata_entries.where('customer_id').equals(customer.id).count()) > 0) {
+    throw new KhataNotSaved('has_entries');
+  }
+  if (!Number.isSafeInteger(amountPaisa) || amountPaisa <= 0) throw new KhataNotSaved('bad_amount');
+  return adjustKhata(customer, amountPaisa, OPENING_BALANCE_NOTE, owner);
 }
 
 /** "Adjust balance" (owner only, note required). */

@@ -151,15 +151,46 @@ describe('customers (US038)', () => {
 });
 
 describe('sale on khata (US039)', () => {
-  it('the Khata option appears only with a customer attached', async () => {
+  it('Khata / Udhaar is always shown; without a customer it opens the picker, then applies', async () => {
     await seedShop();
     await putTomatoes();
+    setOnline(false);
+    const { router } = renderAt('/sale/pay');
+    fireEvent.click(await screen.findByRole('button', { name: 'Khata / Udhaar' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Add new customer' }));
+    fireEvent.change(screen.getByLabelText('Mobile number'), { target: { value: '0300 1234567' } });
+    fireEvent.change(screen.getByLabelText('Name (optional)'), { target: { value: 'Ali' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Save customer' }));
+    expect(await screen.findByText('Customer: Ali')).toBeInTheDocument();
+    // The khata method is chosen with what is due; completing puts the bill on khata.
+    fireEvent.click(await screen.findByRole('button', { name: 'Complete sale' }));
+    await waitFor(() => expect(router.state.location.pathname).toMatch(/^\/sale\/done\//));
+    const [credit] = await db.khata_entries.toArray();
+    expect(credit).toMatchObject({ type: 'credit_sale', amount_paisa: 21500 });
+    expect(vi.mocked(api.syncPush)).not.toHaveBeenCalled();
+  });
+
+  it('removing the customer on the pay screen removes the khata part', async () => {
+    await seedShop();
+    const c = await findOrAddCustomer(ALI, 'Ali', STAFF_ID);
+    await putTomatoes();
+    useCartStore.getState().setCustomer(c.id);
     renderAt('/sale/pay');
     await screen.findByRole('button', { name: 'Exact' });
-    expect(screen.queryByRole('button', { name: 'Khata' })).toBeNull();
-    const c = await findOrAddCustomer(ALI, 'Ali', STAFF_ID);
-    useCartStore.getState().setCustomer(c.id);
-    expect(await screen.findByRole('button', { name: 'Khata' })).toBeInTheDocument();
+    pad('100');
+    fireEvent.click(screen.getByRole('button', { name: 'Add payment' }));
+    // Khata for Rs 50 of the Rs 115 left (the keypad starts with what is due).
+    fireEvent.click(await screen.findByRole('button', { name: 'Khata / Udhaar' }));
+    for (let i = 0; i < 3; i++) {
+      fireEvent.click(screen.getByRole('button', { name: 'Delete last digit' }));
+    }
+    pad('50');
+    fireEvent.click(screen.getByRole('button', { name: 'Add payment' }));
+    expect(await screen.findByText('Khata (Ali)')).toBeInTheDocument();
+    fireEvent.click(await screen.findByRole('button', { name: 'Remove customer' }));
+    expect(useCartStore.getState().customerId).toBeNull();
+    expect(screen.queryByText(/^Khata \(/)).toBeNull();
+    expect(await screen.findByText('Remaining Rs 115')).toBeInTheDocument();
   });
 
   it('the whole bill on khata: one credit_sale entry, no payment, new balance shown', async () => {
@@ -169,7 +200,7 @@ describe('sale on khata (US039)', () => {
     await putTomatoes();
     useCartStore.getState().setCustomer(c.id);
     const { router } = renderAt('/sale/pay');
-    fireEvent.click(await screen.findByRole('button', { name: 'Khata' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Khata / Udhaar' }));
     fireEvent.click(screen.getByRole('button', { name: 'Complete sale' }));
     await waitFor(() => expect(router.state.location.pathname).toMatch(/^\/sale\/done\//));
     expect(await screen.findByText('On khata: Rs 215')).toBeInTheDocument();
@@ -194,7 +225,7 @@ describe('sale on khata (US039)', () => {
     await screen.findByRole('button', { name: 'Exact' });
     pad('100');
     fireEvent.click(screen.getByRole('button', { name: 'Add payment' }));
-    fireEvent.click(await screen.findByRole('button', { name: 'Khata' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Khata / Udhaar' }));
     fireEvent.click(screen.getByRole('button', { name: 'Complete sale' }));
     await waitFor(() => expect(router.state.location.pathname).toMatch(/^\/sale\/done\//));
     const [payment] = await db.payments.toArray();
@@ -247,6 +278,97 @@ describe('receive payment (US040)', () => {
     const back = (await db.khata_entries.toArray()).find((e) => e.type === 'payment');
     expect(back).toMatchObject({ amount_paisa: -50000, payment_id: payment?.id });
     expect((await db.outbox.toArray()).map((e) => e.table)).toEqual(['payments', 'khata_entries']);
+  });
+});
+
+describe('add customer and opening balance (US080)', () => {
+  it('Khata → Add customer saves the customer and opens their page; an existing mobile opens it', async () => {
+    await seedShop();
+    const { router } = renderAt('/khata');
+    fireEvent.click(await screen.findByRole('button', { name: 'Add customer' }));
+    fireEvent.change(screen.getByLabelText('Mobile number'), { target: { value: '0300 1234567' } });
+    fireEvent.change(screen.getByLabelText('Address (optional)'), {
+      target: { value: 'Street 5' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Save customer' }));
+    const id = await customerId(SHOP_ID, ALI);
+    await waitFor(() => expect(router.state.location.pathname).toBe(`/khata/${id}`));
+    expect((await db.customers.get(id!))?.address).toBe('Street 5');
+
+    await router.navigate('/khata');
+    fireEvent.click(await screen.findByRole('button', { name: 'Add customer' }));
+    fireEvent.change(screen.getByLabelText('Mobile number'), {
+      target: { value: '+92 300 1234567' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Save customer' }));
+    await waitFor(() => expect(router.state.location.pathname).toBe(`/khata/${id}`));
+    expect(await db.customers.count()).toBe(1);
+  });
+
+  it('the owner adds a customer with an opening balance: one adjustment, list updated', async () => {
+    await seedShop();
+    await writeCurrentStaffId(STAFF_ID);
+    const { router } = renderAt('/khata');
+    fireEvent.click(await screen.findByRole('button', { name: 'Add customer' }));
+    fireEvent.change(screen.getByLabelText('Mobile number'), { target: { value: '0300 1234567' } });
+    fireEvent.change(screen.getByLabelText('Name (optional)'), { target: { value: 'Ali' } });
+    fireEvent.change(screen.getByLabelText('Opening balance (from your paper khata)'), {
+      target: { value: '1200' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Save customer' }));
+    await waitFor(() => expect(router.state.location.pathname).toMatch(/^\/khata\/.+/));
+    const entries = await db.khata_entries.toArray();
+    expect(entries).toHaveLength(1);
+    expect(entries[0]).toMatchObject({
+      type: 'adjustment',
+      amount_paisa: 120000,
+      note: 'Opening balance',
+      staff_id: STAFF_ID,
+    });
+    expect(await screen.findByText('Rs 1200', { selector: '.text-3xl' })).toBeInTheDocument();
+    await router.navigate('/khata');
+    expect(await screen.findByText('Total receivable')).toBeInTheDocument();
+    await waitFor(() => expect(screen.getByRole('link', { name: 'Call Ali' })).toBeInTheDocument());
+  });
+
+  it('a cashier entering an opening balance is asked for the owner PIN', async () => {
+    await seedShop('shop');
+    await writeCurrentStaffId(CASHIER);
+    renderAt('/khata');
+    fireEvent.click(await screen.findByRole('button', { name: 'Add customer' }));
+    fireEvent.change(screen.getByLabelText('Mobile number'), { target: { value: '0300 1234567' } });
+    fireEvent.change(screen.getByLabelText('Opening balance (from your paper khata)'), {
+      target: { value: '500' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Save customer' }));
+    const pin = await screen.findByRole('dialog', { name: 'Owner PIN needed' });
+    expect(await db.customers.count()).toBe(0);
+    for (const d of '4821') fireEvent.click(await within(pin).findByRole('button', { name: d }));
+    await waitFor(async () => expect(await db.khata_entries.count()).toBe(1));
+    expect((await db.khata_entries.toArray())[0]).toMatchObject({
+      amount_paisa: 50000,
+      note: 'Opening balance',
+      staff_id: STAFF_ID,
+    });
+    expect((await db.outbox.toArray()).at(-1)?.actor_staff_id).toBe(STAFF_ID);
+  });
+
+  it('the customer page offers Opening balance only while the customer has no entries', async () => {
+    await seedShop();
+    await writeCurrentStaffId(STAFF_ID);
+    const c = await findOrAddCustomer(ALI, 'Ali', STAFF_ID);
+    renderAt(`/khata/${c.id}`);
+    fireEvent.click(await screen.findByRole('button', { name: 'Opening balance' }));
+    const sheet = await screen.findByRole('dialog', { name: 'Opening balance' });
+    fireEvent.change(within(sheet).getByLabelText('Amount (Rs)'), { target: { value: '750' } });
+    fireEvent.click(within(sheet).getByRole('button', { name: 'Save opening balance' }));
+    expect(await screen.findByText('Rs 750', { selector: '.text-3xl' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Opening balance' })).toBeNull();
+    expect((await db.khata_entries.toArray())[0]).toMatchObject({
+      type: 'adjustment',
+      note: 'Opening balance',
+      amount_paisa: 75000,
+    });
   });
 });
 

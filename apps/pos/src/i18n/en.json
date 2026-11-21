@@ -435,9 +435,10 @@
       "over_limit": "Above the cashier discount limit: the owner must approve.",
       "khata_needs_customer": "Put on khata only with a customer attached."
     },
-    "khata": "Khata",
+    "khata": "Khata / Udhaar",
     "khataRow": "Khata ({{name}})",
-    "removeKhata": "Remove khata"
+    "removeKhata": "Remove khata",
+    "customer": "Customer: {{name}}"
   },
   "done": {
     "title": "Sale saved",
@@ -587,7 +588,10 @@
     "mobileFixed": "The mobile number cannot be changed. A new number is a new customer.",
     "errors": {
       "mobile": "Enter a Pakistani mobile number, e.g. 0300 1234567."
-    }
+    },
+    "openingBalance": "Opening balance (from your paper khata)",
+    "openingBalanceHint": "What this customer already owes in your khata book. Owner only.",
+    "ownerForOpening": "An opening balance needs the owner."
   },
   "khata": {
     "title": "Khata",
@@ -634,8 +638,13 @@
       "forbidden": "Only the owner can adjust a balance.",
       "note_required": "A note is required.",
       "note_too_long": "The note is too long (200 characters at most).",
-      "no_device": "This device is not set up."
-    }
+      "no_device": "This device is not set up.",
+      "has_entries": "This customer already has entries: use Adjust balance."
+    },
+    "addCustomer": "Add customer",
+    "opening": "Opening balance",
+    "openingTitle": "Opening balance",
+    "saveOpening": "Save opening balance"
   },
   "receipt": {
     "rs": "Rs {{amount}}",

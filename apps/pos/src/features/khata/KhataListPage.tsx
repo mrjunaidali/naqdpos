@@ -9,7 +9,9 @@ import {
 } from '@naqdpos/core';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Link } from 'react-router';
+import { Link, useNavigate } from 'react-router';
+import { Button } from '../../ui/Button.tsx';
+import { CustomerPicker } from './CustomerPicker.tsx';
 import { useRs } from '../sale/saleFormat.ts';
 import { matchCustomers } from './customerSearch.ts';
 import { useBalances, useCustomers } from './khataRepo.ts';
@@ -26,6 +28,8 @@ export function KhataListPage() {
   const rs = useRs();
   const customers = useCustomers();
   const balances = useBalances();
+  const navigate = useNavigate();
+  const [adding, setAdding] = useState(false);
   const [query, setQuery] = useState('');
   const [overdueOnly, setOverdueOnly] = useState(false);
   const [daysText, setDaysText] = useState(String(DEFAULT_OVERDUE_DAYS));
@@ -51,7 +55,23 @@ export function KhataListPage() {
 
   return (
     <section className="mx-auto max-w-2xl space-y-4">
-      <h1 className="text-2xl font-bold">{t('khata.title')}</h1>
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <h1 className="text-2xl font-bold">{t('khata.title')}</h1>
+        <Button className="w-auto" onClick={() => setAdding(true)}>
+          {t('khata.addCustomer')}
+        </Button>
+      </div>
+      {adding && (
+        <CustomerPicker
+          startAdding
+          onClose={() => setAdding(false)}
+          onPick={(c) => {
+            setAdding(false);
+            // A mobile that already exists opens that customer.
+            void navigate(`/khata/${c.id}`);
+          }}
+        />
+      )}
       <div className="rounded-2xl bg-hero p-4 text-hero-fg">
         <p className="text-sm text-hero-muted">{t('khata.receivable')}</p>
         <p className="text-3xl font-bold" dir="ltr">
