@@ -1,28 +1,13 @@
-import { businessDate, sumPaisa, type SaleRow } from '@naqdpos/core';
+import { businessDate, sumPaisa } from '@naqdpos/core';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { useTranslation } from 'react-i18next';
 import { Link, useParams } from 'react-router';
 import { db } from '../../db/schema.ts';
 import { getStoredDevice } from '../../db/session.ts';
-import { useCurrentStaff } from '../../staff/currentStaff.ts';
 import { SaleDetail } from './SaleDetail.tsx';
 import { useSaleBundle } from './saleData.ts';
 import { useRs } from './saleFormat.ts';
-
-/**
- * Who may see a sale: owners see every sale; cashiers only their own (US018). On a shared shop
- * device the server cannot tell who looks (the owner's session), so this is a UI rule
- * (architecture §5).
- */
-function visibleTo(sale: SaleRow, staffId: string | null, isOwner: boolean) {
-  return isOwner || sale.staff_id === staffId;
-}
-
-function useViewer() {
-  const current = useCurrentStaff();
-  if (!current?.valid) return { staffId: null, isOwner: false, ready: current !== undefined };
-  return { staffId: current.staff.id, isOwner: current.staff.role === 'owner', ready: true };
-}
+import { useViewer, visibleTo } from './saleVisibility.ts';
 
 /** Today's sales (Home → "Today's sales"), from Dexie. */
 export function SalesListPage() {
@@ -98,6 +83,12 @@ export function SaleViewPage() {
         {bundle.sale.receipt_no}
       </h1>
       <SaleDetail bundle={bundle} />
+      <Link
+        to={`/receipt/${bundle.sale.id}`}
+        className="flex min-h-12 items-center justify-center rounded-md border border-border bg-surface font-semibold text-text"
+      >
+        {t('done.receipt')}
+      </Link>
       <Link to="/sales" className="inline-flex min-h-11 items-center text-text underline">
         {t('sales.back')}
       </Link>

@@ -444,9 +444,9 @@
     "change": "Change",
     "newSale": "New sale",
     "receipt": "Receipt",
-    "receiptLater": "Receipts (WhatsApp, print) come next",
     "onKhata": "On khata: {{amount}}",
-    "newBalance": "New balance: {{amount}}"
+    "newBalance": "New balance: {{amount}}",
+    "noReceipt": "No receipt"
   },
   "sales": {
     "title": "Today’s sales",
@@ -633,6 +633,66 @@
       "note_required": "A note is required.",
       "note_too_long": "The note is too long (200 characters at most).",
       "no_device": "This device is not set up."
+    }
+  },
+  "receipt": {
+    "rs": "Rs {{amount}}",
+    "qtyRate": "{{qty}} × {{rate}}",
+    "receiptNo": "Receipt",
+    "date": "Date",
+    "cashier": "Cashier",
+    "customer": "Customer",
+    "foc": "FOC",
+    "focValue": "Free (value)",
+    "discount": "Discount",
+    "subtotal": "Subtotal",
+    "itemDiscounts": "Item discounts",
+    "billDiscount": "Bill discount",
+    "rounding": "Rounding",
+    "total": "Total",
+    "change": "Change",
+    "onKhata": "On khata",
+    "khataBalance": "Khata balance",
+    "title": "Receipt",
+    "shareWhatsapp": "Share on WhatsApp",
+    "print": "Print",
+    "bluetooth": "Bluetooth printer",
+    "printing": "Printing…",
+    "printed": "Sent to the printer",
+    "forgetPrinter": "Forget printer {{name}}",
+    "done": "Done",
+    "copied": "Receipt copied",
+    "shareFailed": "Could not share the receipt.",
+    "notFound": "Receipt not found.",
+    "errors": {
+      "unsupported": "This browser cannot use Bluetooth printers. Use Print.",
+      "bluetooth_off": "Turn on Bluetooth and try again.",
+      "not_found": "Printer not found. Turn it on and keep it close.",
+      "not_printer": "This device is not a supported receipt printer.",
+      "failed": "Printing failed — try again."
+    }
+  },
+  "shopProfile": {
+    "title": "Shop",
+    "name": "Shop name",
+    "address": "Address",
+    "phone": "Phone on receipts",
+    "footer": "Receipt footer",
+    "footerCount": "{{count}} / {{max}} characters",
+    "language": "Receipt language",
+    "lang": {
+      "en": "English",
+      "ur": "Urdu",
+      "both": "Both"
+    },
+    "paper": "Paper width",
+    "mm": "{{mm}} mm",
+    "save": "Save",
+    "logoLater": "Shop logo: coming soon.",
+    "errors": {
+      "required": "Required.",
+      "tooLong": "Too long.",
+      "invalid": "Not valid."
     }
   }
 }

@@ -41,7 +41,7 @@ Money: `*_paisa bigint`. Quantity: `*_milli bigint` (thousandths of the product'
 ## 3. Tables
 
 ### Tenancy and people
-- `shops` — id, name, type (`fruit_veg` | `grocery` | `meat` | `general`), address, phone, receipt_footer, logo_path, status (`active` | `suspended`), plan_id, timezone (default `Asia/Karachi`), cashier_expense_limit_paisa (default 200000 = Rs 2,000), cashier_max_discount_pct (integer 0–100, default 10; owner-only, §5).
+- `shops` — id, name, type (`fruit_veg` | `grocery` | `meat` | `general`), address, phone, receipt_footer, logo_path, status (`active` | `suspended`), plan_id, timezone (default `Asia/Karachi`), cashier_expense_limit_paisa (default 200000 = Rs 2,000), cashier_max_discount_pct (integer 0–100, default 10; owner-only, §5), receipt_language (`en` | `ur` | `both`, default `en`), paper_width_mm (58 | 80, default 58). Profile checks (22 Nov 2026): name 1–80, address ≤ 200, receipt_footer ≤ 200 (multi-line). Owners edit them in Settings → Shop. **Logo upload is deferred to the deploy step** (needs object storage); `<BrandMark />` keeps the NaqdPOS mark until then.
 - `users`, `sessions`, `accounts`, `verifications`, `two_factors` — login tables owned by Better Auth (created by its migration, kept in our `db/migrations`). `users`: id, email, name, email_verified, image. Not synced to devices.
 - `memberships` — user_id (`users`), shop_id, role (`owner` | `cashier` | `rider`). Online logins (owners; riders who sign in on their own phone). See §5.
 - `staff` — id, shop_id, name, phone, role (`owner` | `cashier` | `rider`), pin_hash (**always null since 20 Nov 2026**; kept for old apps, not pushable, to be dropped), membership_user_id null, active. Every sale/expense records `staff_id`.
@@ -184,6 +184,13 @@ Login runs inside our API with **Better Auth** (open-source library). Users and 
 - **Install**: capture `beforeinstallprompt` (Android/desktop) and show our own "Install app" button; on iOS show a short "Share → Add to Home Screen" guide. Installing is a step in owner onboarding.
 - **Desktop install** (shop PCs): same code path. Chrome and Edge (Windows, macOS, Linux, ChromeOS) fire `beforeinstallprompt`, so our button works. Safari on macOS shows a "File → Add to Dock" guide. Firefox desktop has no install support: the guide recommends Chrome or Edge for counter PCs. The installed app opens in its own window and works offline the same as on a phone.
 - Do **not** depend on the Background Sync API (not supported on iOS). Sync triggers in §4 work without it.
+- **Urdu font** (decided 22 Nov 2026): Noto Naskh Arabic (`@fontsource/noto-naskh-arabic`, OFL; Naskh reads better than Nastaliq on 58 mm thermal paper), loaded for Arabic script only (unicode-range) and precached with the app shell.
+
+### Receipts and printing (US036, decided 22 Nov 2026)
+- One receipt model (`receiptFor()` in core) in the **shop's** receipt language (en / ur / both; labels from i18next fixed to that language), rendered as plain text (WhatsApp), HTML (preview and browser print) and a canvas image (Bluetooth). Date and time in Asia/Karachi. Reprints read the same rows; the khata balance is the balance right after that sale.
+- **WhatsApp**: to the attached customer's `wa.me` number; otherwise `navigator.share`; otherwise copied to the clipboard.
+- **Browser print**: a print-only receipt at 58 / 80 mm (`@page size` set while printing), RTL for Urdu. Works with printers the OS knows, and on Android through RawBT; **classic-Bluetooth printers use this path**.
+- **Direct Bluetooth** (Chrome on Android / desktop; hidden where Web Bluetooth is missing): BLE ESC/POS printers. The receipt is drawn on a canvas 384 dots (58 mm) or 576 dots (80 mm) wide with the Urdu font, turned into a 1-bit raster and sent as `GS v 0` bands (128 rows), 180-byte writes, so Urdu prints on printers without Urdu fonts. The paired printer's id is remembered on the device (`meta.bluetooth_printer`); `getDevices()` reuses it where available, otherwise the chooser opens once more. No library; a small Web Bluetooth type file in `apps/pos/src/print/`.
 
 ### Storage persistence
 IndexedDB is best-effort by default: the browser may evict it under storage pressure, iOS Safari clears storage for sites unused for ~7 days unless installed to the Home Screen, and users can clear site data.

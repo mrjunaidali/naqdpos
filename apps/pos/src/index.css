@@ -1,6 +1,69 @@
 @import 'tailwindcss';
 @import './theme/default.css';
 
+:root {
+  /* Noto Naskh Arabic only covers Arabic script (unicode-range), so Latin text falls through. */
+  --font-app: 'Noto Naskh Arabic', ui-sans-serif, system-ui, sans-serif;
+}
+
+/* Receipts (US036): paper, so plain black on white rather than theme colours. */
+.receipt {
+  margin-inline: auto;
+  background: white;
+  color: black;
+  font-family: var(--font-app);
+  font-size: 13px;
+  line-height: 1.45;
+  padding: 2mm;
+}
+.receipt[data-paper='58'] {
+  width: 48mm;
+}
+.receipt[data-paper='80'] {
+  width: 72mm;
+}
+.receipt-title {
+  text-align: center;
+  font-weight: 700;
+  font-size: 16px;
+}
+.receipt-center {
+  text-align: center;
+  white-space: pre-wrap;
+}
+.receipt-pair {
+  display: flex;
+  justify-content: space-between;
+  gap: 2mm;
+}
+.receipt-strong {
+  font-weight: 700;
+  font-size: 15px;
+}
+.receipt-rule {
+  border: 0;
+  border-top: 1px dashed black;
+  margin: 1mm 0;
+}
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  .receipt-print,
+  .receipt-print * {
+    visibility: visible;
+  }
+  .receipt-print {
+    position: absolute;
+    inset-inline-start: 0;
+    top: 0;
+  }
+  .receipt {
+    padding: 0;
+    margin: 0;
+  }
+}
+
 @layer base {
   html,
   body,
@@ -10,5 +73,6 @@
 
   body {
     @apply bg-bg text-text antialiased;
+    font-family: var(--font-app);
   }
 }

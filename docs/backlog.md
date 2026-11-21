@@ -143,7 +143,7 @@ Build in this order, not in ID order. "Sheet step" is the step number in the ori
 
 ### F08 · Shop profile
 
-**US014** · Should · 2 · To do — As a shop owner, I want to set my shop name, address, phone, receipt footer and logo, so that receipts show my details.
+**US014** · Should · 2 · Done except the logo (deferred to the deploy step: needs object storage) — As a shop owner, I want to set my shop name, address, phone, receipt footer and logo, so that receipts show my details.
 - Editable shop profile; changes appear on the next receipt
 - Logo uploaded through a pre-signed URL to object storage (key `logos/<shop_id>/…`, never a URL in the row), cached for offline use; `<BrandMark />` shows it
 
@@ -287,7 +287,7 @@ Build in this order, not in ID order. "Sheet step" is the step number in the ori
 
 ### F19 · Receipts (R1)
 
-**US036** · Should · 5 · To do — As a cashier, I want to share the receipt on WhatsApp or print it, so that the customer has proof.
+**US036** · Should · 5 · Done — As a cashier, I want to share the receipt on WhatsApp or print it, so that the customer has proof.
 - Receipt from shop profile, lines, discounts, FOC, payments, khata balance if a customer is attached
 - WhatsApp share (`wa.me` text); Bluetooth ESC/POS 58 mm and 80 mm with browser print fallback; "No receipt" option
 

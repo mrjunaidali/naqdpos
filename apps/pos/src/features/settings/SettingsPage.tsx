@@ -49,6 +49,11 @@ export function SettingsPage() {
             {t('paymentMethods.title')}
           </Link>
         )}
+        {can(role, 'manage_shop_settings') && (
+          <Link to="/settings/shop" className={linkClass}>
+            {t('shopProfile.title')}
+          </Link>
+        )}
         {can(role, 'manage_discount_limit') && (
           <Link to="/settings/discount-limit" className={linkClass}>
             {t('discountLimit.title')}

@@ -146,6 +146,19 @@ export class NaqdDb extends Dexie {
       customers: 'id, shop_id, mobile, server_seq',
       khata_entries: 'id, shop_id, customer_id, business_date, server_seq',
     });
+    // Shop profile (migration 20261122180000_shop_profile): receipt language and paper width;
+    // shop rows pulled earlier get the server defaults until the shop is pulled again.
+    this.version(11)
+      .stores({})
+      .upgrade((tx) =>
+        tx
+          .table('shops')
+          .toCollection()
+          .modify((shop: { receipt_language?: string; paper_width_mm?: number }) => {
+            shop.receipt_language ??= 'en';
+            shop.paper_width_mm ??= 58;
+          }),
+      );
   }
 }
 

@@ -444,9 +444,9 @@
     "change": "TODO-ur بقایا",
     "newSale": "TODO-ur نئی سیل",
     "receipt": "TODO-ur رسید",
-    "receiptLater": "TODO-ur رسیدیں (واٹس ایپ، پرنٹ) اگلے مرحلے میں",
     "onKhata": "TODO-ur کھاتے پر: {{amount}}",
-    "newBalance": "TODO-ur نیا بقایا: {{amount}}"
+    "newBalance": "TODO-ur نیا بقایا: {{amount}}",
+    "noReceipt": "TODO-ur رسید نہیں"
   },
   "sales": {
     "title": "TODO-ur آج کی سیل",
@@ -633,6 +633,66 @@
       "note_required": "TODO-ur نوٹ ضروری ہے۔",
       "note_too_long": "TODO-ur نوٹ بہت لمبا ہے (زیادہ سے زیادہ 200 حروف)۔",
       "no_device": "TODO-ur یہ آلہ سیٹ اپ نہیں ہے۔"
+    }
+  },
+  "receipt": {
+    "rs": "{{amount}} روپے",
+    "qtyRate": "{{qty}} × {{rate}}",
+    "receiptNo": "رسید",
+    "date": "تاریخ",
+    "cashier": "کیشیئر",
+    "customer": "گاہک",
+    "foc": "مفت",
+    "focValue": "مفت (قیمت)",
+    "discount": "رعایت",
+    "subtotal": "کل رقم",
+    "itemDiscounts": "آئٹم رعایت",
+    "billDiscount": "بل رعایت",
+    "rounding": "راؤنڈنگ",
+    "total": "کل",
+    "change": "بقایا واپس",
+    "onKhata": "کھاتے پر",
+    "khataBalance": "کھاتہ بقایا",
+    "title": "TODO-ur رسید",
+    "shareWhatsapp": "TODO-ur واٹس ایپ پر بھیجیں",
+    "print": "TODO-ur پرنٹ",
+    "bluetooth": "TODO-ur بلوٹوتھ پرنٹر",
+    "printing": "TODO-ur پرنٹ ہو رہا ہے…",
+    "printed": "TODO-ur پرنٹر کو بھیج دیا",
+    "forgetPrinter": "TODO-ur پرنٹر {{name}} ہٹائیں",
+    "done": "TODO-ur ختم",
+    "copied": "TODO-ur رسید کاپی ہو گئی",
+    "shareFailed": "TODO-ur رسید نہیں بھیجی جا سکی۔",
+    "notFound": "TODO-ur رسید نہیں ملی۔",
+    "errors": {
+      "unsupported": "TODO-ur یہ براؤزر بلوٹوتھ پرنٹر استعمال نہیں کر سکتا۔ پرنٹ استعمال کریں۔",
+      "bluetooth_off": "TODO-ur بلوٹوتھ آن کریں اور دوبارہ کوشش کریں۔",
+      "not_found": "TODO-ur پرنٹر نہیں ملا۔ اسے آن کر کے قریب رکھیں۔",
+      "not_printer": "TODO-ur یہ رسید پرنٹر نہیں ہے۔",
+      "failed": "TODO-ur پرنٹ نہیں ہوا — دوبارہ کوشش کریں۔"
+    }
+  },
+  "shopProfile": {
+    "title": "TODO-ur دکان",
+    "name": "TODO-ur دکان کا نام",
+    "address": "TODO-ur پتا",
+    "phone": "TODO-ur رسید پر فون",
+    "footer": "TODO-ur رسید کے نیچے",
+    "footerCount": "TODO-ur {{count}} / {{max}} حروف",
+    "language": "TODO-ur رسید کی زبان",
+    "lang": {
+      "en": "TODO-ur انگریزی",
+      "ur": "TODO-ur اردو",
+      "both": "TODO-ur دونوں"
+    },
+    "paper": "TODO-ur کاغذ کی چوڑائی",
+    "mm": "TODO-ur {{mm}} ملی میٹر",
+    "save": "TODO-ur محفوظ کریں",
+    "logoLater": "TODO-ur دکان کا لوگو: جلد آ رہا ہے۔",
+    "errors": {
+      "required": "TODO-ur ضروری ہے۔",
+      "tooLong": "TODO-ur بہت لمبا ہے۔",
+      "invalid": "TODO-ur درست نہیں۔"
     }
   }
 }

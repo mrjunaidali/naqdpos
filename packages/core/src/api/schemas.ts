@@ -20,6 +20,7 @@ import {
   type KhataEntryRow,
 } from '../khata.ts';
 import { PK_MOBILE_PATTERN } from '../phone.ts';
+import { RECEIPT_LANGUAGES } from '../tenancy.ts';
 import { MAX_STOCK_NOTE_LENGTH, STOCK_REASONS, type StockMovementRow } from '../stock.ts';
 import {
   PAYMENT_KINDS,
@@ -82,6 +83,8 @@ export const ShopRowSchema = z.object({
   timezone: z.string(),
   cashier_expense_limit_paisa: z.number().int(),
   cashier_max_discount_pct: z.number().int().min(0).max(100),
+  receipt_language: z.enum(RECEIPT_LANGUAGES),
+  paper_width_mm: z.union([z.literal(58), z.literal(80)]),
   device_id: z.uuid().nullable(),
   created_at: iso,
   updated_at: iso,

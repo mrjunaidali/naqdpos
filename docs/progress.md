@@ -582,3 +582,34 @@ Customers by mobile (same number = same customer on every device), all or part o
 - Back-dated khata receipts (with closed days).
 - Khata receipts in daily closing (expected cash) and reports.
 - Returns (`return_credit`) with the returns story.
+
+## Step 16 — US014 shop profile, US036 receipts (WhatsApp, print, Bluetooth) (2026-11-22)
+
+Owners set what receipts show; every sale has a receipt to preview, share on WhatsApp, print in the browser (58 / 80 mm, RawBT on Android) or print directly on a BLE ESC/POS printer as an image (Urdu prints everywhere). Offline.
+
+**Built**
+- Migration `20261122180000_shop_profile.sql`: `shops.receipt_language` (en / ur / both), `shops.paper_width_mm` (58 / 80); checks on name, address and footer length; column grants; shop push columns; every shop touched once so devices pull them.
+- `packages/core`: `shopProfile.ts` (`validateShopProfile`); `receipt.ts` (`receiptFor` → header, items with qty × rate, line discounts, FOC with value, subtotal, item / bill discounts, rounding, total, payments by method, change, khata part and balance, footer; "both" = "English / اردو"; `receiptText`; `receiptDateTime` in Asia/Karachi); `escpos.ts` (`toMonoRaster`, `escposRaster` in 128-row `GS v 0` bands, `chunkBytes`, `PRINTER_DOTS`); `ShopRow` gains the two columns.
+- `apps/pos`:
+  - Urdu font `@fontsource/noto-naskh-arabic` 5.3.0 (approved option (a)), Arabic script only, precached (both weights in the service worker)
+  - Dexie **version 11** (no index change; upgrade fills the shop defaults)
+  - Settings → Shop (`/settings/shop`, owner PIN gate): name, address, phone, footer with a character count, receipt language, paper width; "logo coming soon"
+  - `/receipt/:saleId` (from the success screen and from any sale in Today's sales; cashiers only their own): preview at the paper width and language (RTL for Urdu), Share on WhatsApp, Print, Bluetooth printer (where supported) with "Forget printer", Done; the success screen has Receipt and "No receipt"
+  - `print/`: `receiptData` (builds the model from Dexie; balance right after the sale for reprints), `ReceiptView`, `share` (customer wa.me → share sheet → clipboard), `bluetooth` (pairing, remembered printer, writable characteristic, chunked writes, clear errors), `canvasReceipt`, `webBluetooth.d.ts`
+  - print styles in `index.css` (only the receipt prints; black on white because it is paper)
+  - `saleVisibility.ts` (the owner / own-sales rule shared by the sale and receipt pages)
+  - API: Kysely shop type gains the columns
+  - en + ur strings (`receipt.*` words on paper are full Urdu; screen strings TODO-ur)
+
+**Tests**: DB 159 (+3: defaults; owner saves the profile and every check refuses bad values; push / pull of the new columns; cashier actor refused, cashier session updates nothing). Core 317 (+10: receipt with every section in order; rounding and change without customer / footer / subtotal; Urdu labels, names and money with RTL; both languages; Karachi date; shop profile cleaning and errors; raster of a known 9 × 2 bitmap to the expected bytes incl. transparent and light pixels; bands; chunking). Pos 259 (+12: shop profile owner-only, saves through the outbox, long footer refused; Urdu preview RTL at 80 mm; WhatsApp to the customer offline with khata lines; clipboard fallback with toast; Receipt / No receipt; reprint from Today's sales; another person's receipt hidden from a cashier; Bluetooth hidden without Web Bluetooth; share fallbacks; Bluetooth chunks and remembered printer with a fake printer; Bluetooth off and printer not found).
+
+**Decisions**
+- Logo upload deferred to the deploy step (object storage); `<BrandMark />` unchanged.
+- Printing: browser print (58 / 80 mm, RawBT) for everything the OS knows and classic Bluetooth; Web Bluetooth for BLE ESC/POS, sent as a raster image so Urdu prints without printer fonts.
+- Urdu font: Noto Naskh Arabic, precached.
+- Receipts use the shop's receipt language, not the app language.
+
+**Follow-ups**
+- Logo upload (pre-signed URL, `logos/<shop_id>/…`) and on the receipt.
+- Drawing on a canvas is not covered by tests (jsdom has no canvas); try it on a real BLE printer (58 and 80 mm) before release.
+- Cash drawer kick and paper cut commands if printers need them.

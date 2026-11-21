@@ -3,6 +3,10 @@ import { createRoot } from 'react-dom/client';
 import { createBrowserRouter, RouterProvider } from 'react-router';
 import { UpdatePrompt } from './app/UpdatePrompt.tsx';
 import './i18n/index.ts';
+// Urdu font (architecture §6): precached with the app shell; used on screen, in print and on
+// the Bluetooth receipt image. Its unicode-range covers Arabic script only.
+import '@fontsource/noto-naskh-arabic/arabic-400.css';
+import '@fontsource/noto-naskh-arabic/arabic-700.css';
 import './index.css';
 import { routes } from './routes.tsx';
 import { useCartStore } from './features/sale/cartStore.ts';

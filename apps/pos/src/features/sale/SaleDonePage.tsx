@@ -59,14 +59,20 @@ export function SaleDonePage() {
       >
         {t('done.newSale')}
       </Link>
-      <button
-        type="button"
-        disabled
-        title={t('done.receiptLater')}
-        className="min-h-12 w-full rounded-md border border-border bg-surface font-semibold text-text opacity-60"
+      <Link
+        to={`/receipt/${bundle.sale.id}`}
+        state={change !== undefined ? { change } : undefined}
+        className="flex min-h-12 items-center justify-center rounded-md border border-border bg-surface font-semibold text-text"
       >
         {t('done.receipt')}
-      </button>
+      </Link>
+      <Link
+        to="/sale"
+        replace
+        className="flex min-h-12 items-center justify-center rounded-md text-muted underline"
+      >
+        {t('done.noReceipt')}
+      </Link>
     </section>
   );
 }

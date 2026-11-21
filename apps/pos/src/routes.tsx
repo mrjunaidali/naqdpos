@@ -20,6 +20,8 @@ import { SaleDonePage } from './features/sale/SaleDonePage.tsx';
 import { SalePage } from './features/sale/SalePage.tsx';
 import { SalesListPage, SaleViewPage } from './features/sale/SalesListPage.tsx';
 import { StockPage } from './features/stock/StockPage.tsx';
+import { ShopProfilePage } from './features/settings/ShopProfilePage.tsx';
+import { ReceiptPage } from './print/ReceiptPage.tsx';
 import { CustomerPage } from './features/khata/CustomerPage.tsx';
 import { KhataListPage } from './features/khata/KhataListPage.tsx';
 import { DiscountLimitPage } from './features/settings/DiscountLimitPage.tsx';
@@ -117,6 +119,25 @@ export const routes: RouteObject[] = [
         element: (
           <Gate state="ready">
             <SaleViewPage />
+          </Gate>
+        ),
+      },
+      {
+        path: 'settings/shop',
+        element: (
+          <Gate state="ready">
+            <OwnerPinGate>
+              <ShopProfilePage />
+            </OwnerPinGate>
+          </Gate>
+        ),
+      },
+      {
+        // Receipt preview, share and print (US036); also reprints from Today's sales.
+        path: 'receipt/:saleId',
+        element: (
+          <Gate state="ready">
+            <ReceiptPage />
           </Gate>
         ),
       },

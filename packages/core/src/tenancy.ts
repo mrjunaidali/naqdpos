@@ -33,6 +33,11 @@ interface SyncedMutable {
   server_seq: number | null;
 }
 
+export const RECEIPT_LANGUAGES = ['en', 'ur', 'both'] as const;
+export type ReceiptLanguage = (typeof RECEIPT_LANGUAGES)[number];
+export const PAPER_WIDTHS = [58, 80] as const;
+export type PaperWidth = (typeof PAPER_WIDTHS)[number];
+
 export interface ShopRow extends SyncedMutable {
   name: string;
   type: ShopType;
@@ -46,6 +51,9 @@ export interface ShopRow extends SyncedMutable {
   cashier_expense_limit_paisa: Paisa;
   /** A cashier's give-away per bill, as % of the paid lines' price (US032). Owners: no limit. */
   cashier_max_discount_pct: number;
+  /** Receipts (US036): language and paper width. */
+  receipt_language: ReceiptLanguage;
+  paper_width_mm: PaperWidth;
   device_id: string | null;
 }
 
