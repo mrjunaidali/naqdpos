@@ -3,6 +3,7 @@
 // All of it or none of it, and it never waits for the network (rule 1). Tracked products get a
 // 'sale' stock movement in the same transaction (US024); stock never blocks the sale.
 import {
+  DEFAULT_CASHIER_MAX_DISCOUNT_PCT,
   buildSale,
   buildSaleMovements,
   receiptCounter,
@@ -75,7 +76,19 @@ export async function completeSale(
     throw new SaleNotCompleted('no_staff');
   // A cart write still queued must land before the sale clears the stored cart.
   await cartSaved();
-  const cart = useCartStore.getState().lines;
+  const { lines: cart, billDiscount, approval: storedApproval } = useCartStore.getState();
+  // Only an active owner of this shop can approve a give-away above the cashier limit.
+  const approver = storedApproval ? await database.staff.get(storedApproval.staffId) : undefined;
+  const approval =
+    storedApproval &&
+    approver?.role === 'owner' &&
+    approver.active &&
+    approver.deleted_at === null &&
+    approver.shop_id === device.shop_id
+      ? storedApproval
+      : null;
+  const shop = await database.shops.get(device.shop_id);
+  const limitPct = shop?.cashier_max_discount_pct ?? DEFAULT_CASHIER_MAX_DISCOUNT_PCT;
   // One instant for the sale and its stock movements (same business date).
   const now = options.now ?? new Date();
 
@@ -96,6 +109,10 @@ export async function completeSale(
         shopId: device.shop_id,
         deviceId: device.id,
         staffId,
+        role: staff.role,
+        limitPct,
+        billDiscount,
+        approval,
         receiptNo: receiptNo(device.code, n),
         now,
       });
@@ -142,6 +159,6 @@ export async function completeSale(
       return built;
     },
   );
-  useCartStore.setState({ lines: [] });
+  useCartStore.setState({ lines: [], billDiscount: null, approval: null });
   return rows;
 }

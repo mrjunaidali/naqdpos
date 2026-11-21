@@ -25,6 +25,8 @@ export const ACTIONS = {
   record_wastage: ['owner', 'cashier'],
   /** Stock in and set stock (count): owner only (stock_movements_check() on the actor). */
   adjust_stock: ['owner'],
+  /** Set the cashier's discount limit (shops column grant + write_roles {owner}). */
+  manage_discount_limit: ['owner'],
   /** Edit shop settings (RLS shops_update_owner, column grants; write_roles). */
   manage_shop_settings: ['owner'],
 } as const satisfies Record<string, readonly Role[]>;

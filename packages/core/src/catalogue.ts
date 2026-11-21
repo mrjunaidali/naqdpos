@@ -1,6 +1,8 @@
 // Catalogue rows and rules (architecture §3, US019–US021, US072). Money is integer paisa,
 // entered in rupees (rupeesToPaisa); never floats.
 import { rupeesToPaisa, type Paisa } from './money.ts';
+import { parseQtyInput } from './cart.ts';
+import { MAX_FOC_QTY_MILLI, type FocRule } from './discount.ts';
 
 export const PRODUCT_UNITS = ['kg', 'g', 'dozen', 'piece', 'bundle', 'litre'] as const;
 export type ProductUnit = (typeof PRODUCT_UNITS)[number];
@@ -105,7 +107,8 @@ export interface ProductRow extends Synced {
   min_qty_milli: number | null;
   is_combo: boolean;
   packaging_cost_paisa: Paisa;
-  foc_rule: Record<string, unknown> | null;
+  /** Free with purchase (US033): offered as a one-tap suggestion, never added automatically. */
+  foc_rule: FocRule | null;
   /** Other names and Roman Urdu spellings (aloo, aalu…), for search. */
   search_terms: string[];
   /** One emoji shown on the tile (US078); absent in rows from before it existed. */
@@ -191,10 +194,21 @@ export interface ProductFormInput {
   trackStock: boolean;
   /** Picture (emoji) or null for none. */
   icon?: string | null;
+  /** "Free with purchase" (US033): on, minimum bill in rupees, quantity in the product's unit. */
+  focOn?: boolean;
+  focMinBill?: string;
+  focQty?: string;
 }
 
 export type ProductFormError =
-  'required' | 'too_long' | 'invalid_unit' | PriceError | 'too_many' | 'invalid_icon';
+  | 'required'
+  | 'too_long'
+  | 'invalid_unit'
+  | PriceError
+  | 'too_many'
+  | 'invalid_icon'
+  | 'invalid_qty'
+  | 'too_large';
 
 export interface ProductFormValue {
   name: string;
@@ -206,12 +220,22 @@ export interface ProductFormValue {
   search_terms: string[];
   track_stock: boolean;
   icon: string | null;
+  /** undefined = leave the product's rule as it is. */
+  foc_rule?: FocRule | null | undefined;
 }
 
 export interface ProductFormResult {
   errors: Partial<
     Record<
-      'name' | 'nameUr' | 'unit' | 'salePrice' | 'costPrice' | 'searchTerms' | 'icon',
+      | 'name'
+      | 'nameUr'
+      | 'unit'
+      | 'salePrice'
+      | 'costPrice'
+      | 'searchTerms'
+      | 'icon'
+      | 'focMinBill'
+      | 'focQty',
       ProductFormError
     >
   >;
@@ -243,6 +267,19 @@ export function validateProductForm(input: ProductFormInput): ProductFormResult 
   const icon = input.icon ?? null;
   if (icon !== null && !isProductIcon(icon)) errors.icon = 'invalid_icon';
 
+  let focRule: FocRule | null | undefined;
+  if (input.focOn === false) focRule = null;
+  else if (input.focOn && unit) {
+    const min = parseRupees(input.focMinBill ?? '', true);
+    if (min.error) errors.focMinBill = min.error;
+    const qty = parseQtyInput(input.focQty ?? '', unit);
+    if ('error' in qty) errors.focQty = qty.error === 'too_large' ? 'too_large' : 'invalid_qty';
+    else if (qty.qty_milli > MAX_FOC_QTY_MILLI) errors.focQty = 'too_large';
+    if (min.paisa !== null && 'qty_milli' in qty && !errors.focQty) {
+      focRule = { min_bill_paisa: min.paisa, qty_milli: qty.qty_milli };
+    }
+  }
+
   if (Object.keys(errors).length > 0 || !unit || sale.paisa === null) return { errors };
   return {
     errors,
@@ -256,6 +293,7 @@ export function validateProductForm(input: ProductFormInput): ProductFormResult 
       search_terms: terms,
       track_stock: input.trackStock,
       icon,
+      ...(focRule !== undefined && { foc_rule: focRule }),
     },
   };
 }

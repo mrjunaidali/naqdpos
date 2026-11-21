@@ -19,6 +19,7 @@ export interface ShopsTable {
   plan_id: string | null;
   timezone: Generated<string>;
   cashier_expense_limit_paisa: Generated<string>;
+  cashier_max_discount_pct: Generated<number>;
   created_at: Timestamp;
   updated_at: Timestamp;
   deleted_at: Date | null;

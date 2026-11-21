@@ -79,6 +79,36 @@ describe('validateProductForm', () => {
   });
 });
 
+describe('product form: free with purchase (US033)', () => {
+  it('builds the rule from rupees and the unit quantity', () => {
+    const r = validateProductForm({ ...valid, focOn: true, focMinBill: '200', focQty: '0.05' });
+    expect(r.value?.foc_rule).toEqual({ min_bill_paisa: 20000, qty_milli: 50 });
+  });
+
+  it('off clears the rule; not shown leaves it unchanged', () => {
+    expect(validateProductForm({ ...valid, focOn: false }).value?.foc_rule).toBeNull();
+    expect(validateProductForm(valid).value).not.toHaveProperty('foc_rule');
+  });
+
+  it('refuses a missing minimum and a bad quantity', () => {
+    expect(
+      validateProductForm({ ...valid, focOn: true, focMinBill: '', focQty: '0' }).errors,
+    ).toEqual({
+      focMinBill: 'required',
+      focQty: 'invalid_qty',
+    });
+    expect(
+      validateProductForm({
+        ...valid,
+        unit: 'bundle',
+        focOn: true,
+        focMinBill: '200',
+        focQty: '1.5',
+      }).errors,
+    ).toEqual({ focQty: 'invalid_qty' });
+  });
+});
+
 describe('helpers', () => {
   it('parses rupees', () => {
     expect(parseRupees('1,250.75', true)).toEqual({ paisa: 125075 });

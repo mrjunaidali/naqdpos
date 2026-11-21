@@ -37,6 +37,8 @@ export function PresetPickerPage() {
   const byName = useLiveQuery(productsByName);
   const [query, setQuery] = useState('');
   const [picked, setPicked] = useState<Map<string, string>>(new Map());
+  /** focDefault presets the owner wants to give free with purchases (off by default). */
+  const [focFree, setFocFree] = useState<Set<string>>(new Set());
   const [rateErrors, setRateErrors] = useState<Set<string>>(new Set());
   const [busy, setBusy] = useState(false);
 
@@ -67,7 +69,7 @@ export function PresetPickerPage() {
       if (rate === undefined) continue;
       const parsed = parseRupees(rate, false);
       if (parsed.error) bad.add(preset.key);
-      else choices.push({ preset, rate: parsed.paisa });
+      else choices.push({ preset, rate: parsed.paisa, focFree: focFree.has(preset.key) });
     }
     setRateErrors(bad);
     if (bad.size || choices.length === 0) return;
@@ -151,6 +153,25 @@ export function PresetPickerPage() {
                           rateErrors.has(preset.key) ? 'border-danger' : 'border-border'
                         }`}
                       />
+                    )}
+                    {checked && preset.focDefault && (
+                      <label className="flex min-h-11 items-center gap-3 text-sm">
+                        <input
+                          type="checkbox"
+                          checked={focFree.has(preset.key)}
+                          onChange={(e) =>
+                            setFocFree((prev) => {
+                              const next = new Set(prev);
+                              if (e.target.checked) next.add(preset.key);
+                              else next.delete(preset.key);
+                              return next;
+                            })
+                          }
+                          aria-label={t('presets.focFreeFor', { name: preset.en })}
+                          className="size-5 accent-primary"
+                        />
+                        {t('presets.focFree')}
+                      </label>
                     )}
                   </li>
                 );

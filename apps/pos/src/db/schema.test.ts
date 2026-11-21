@@ -18,6 +18,7 @@ const shop: ShopRow = {
   plan_id: null,
   timezone: 'Asia/Karachi',
   cashier_expense_limit_paisa: 200_000,
+  cashier_max_discount_pct: 10,
   device_id: null,
   created_at: NOW,
   updated_at: NOW,
@@ -72,10 +73,10 @@ describe('NaqdDb schema', () => {
     }
   });
 
-  it('is version 8 with the tenancy, sync, catalogue, sales and stock tables', async () => {
+  it('is version 9 with the tenancy, sync, catalogue, sales and stock tables', async () => {
     const db = track(new NaqdDb('naqdpos-test-schema'));
     await db.open();
-    expect(db.verno).toBe(8);
+    expect(db.verno).toBe(9);
     expect(db.tables.map((table) => table.name).sort()).toEqual([
       'categories',
       'devices',
@@ -129,7 +130,7 @@ describe('NaqdDb schema', () => {
 
     const db = track(new NaqdDb(name));
     await db.open();
-    expect(db.verno).toBe(8);
+    expect(db.verno).toBe(9);
     expect(await db.shops.get(SHOP_ID)).toEqual(shop);
     expect(await db.meta.get('device')).toEqual({ key: 'device', value: { id: device.id } });
     expect(await db.outbox.count()).toBe(0);
@@ -195,7 +196,7 @@ describe('NaqdDb schema', () => {
 
     const db = track(new NaqdDb(name));
     await db.open();
-    expect(db.verno).toBe(8);
+    expect(db.verno).toBe(9);
     expect(await db.meta.get('storage_persisted')).toEqual({
       key: 'storage_persisted',
       value: false,

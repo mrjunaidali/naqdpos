@@ -509,3 +509,43 @@ Stock is the sum of movements. A sale moves stock for tracked products in its ow
 - Combos (`combo_component`), returns and purchases add their own reasons later.
 - Wastage in daily and monthly reports (with value from cost history) comes with the reports stories.
 - Stock is summed from every movement on the device; cache it if large shops get slow.
+
+## Step 14 — US032 discounts, US033 free (FOC) items (2026-11-22)
+
+Line and bill discounts (Rs or whole %), free items that still move stock, one-tap "Add free …?" suggestions, and the cashier give-away limit with the owner's PIN above it. Offline, enforced in core.
+
+**Built**
+- Migration `20261122120000_discounts_foc.sql`: `shops.cashier_max_discount_pct` (0–100, default 10; column grant, shop push column; every shop touched once so devices pull it); `sales.discount_approved_by_staff_id` (FK to the shop's staff, trigger `sales_check_approver()`: must be an owner; push column); checks `sales_discount_within_subtotal` and `sale_lines_foc_free`; `foc_rule_ok()` check on `products.foc_rule`.
+- `packages/core`:
+  - `discount.ts`: `pctOfPaisa` (half up), `checkDiscount`, `discountOn` (limited to the base), `lineDiscountPaisa`, `lineNet`, `focValue`, `computeBill` (the order of calculation, with gross, line discounts, FOC value and give-away), `giveAway`, `withinLimit` (owners unlimited; nothing given away always passes), `approvalCovers`, `FocRule`, `suggestedFocRule`, `focSuggestions` (at most 3), `DEFAULT_CASHIER_MAX_DISCOUNT_PCT`
+  - `CartLine` gains `is_foc` and `discount` (as typed, so a % follows quantity changes); `normalizeCartLine` for carts stored earlier; `cartTotals` uses line nets
+  - `buildSale`: line discount, `is_foc`, net line totals, bill discount, approver; `over_limit` when a cashier is above the limit without a covering approval
+  - `FocRuleSchema` (strict); `ShopRow.cashier_max_discount_pct`; `SaleRow.discount_approved_by_staff_id`; product form "Free with purchase" fields; `ACTIONS.manage_discount_limit` (owner)
+- `apps/pos`:
+  - Dexie **version 9** (no index change; upgrade fills the shop limit)
+  - cart store keeps `billDiscount` and `approval` with the cart
+  - cart sheet: Discount (Rs / %) and Free per line, discounts as their own lines, FOC dashed green with value, live totals; `DiscountSheet`
+  - product panel "Add free"; editing a line keeps its discount and Free flag
+  - `FocSuggestions` chips above the cart bar; FOC tiles dashed with a green "FOC" label
+  - Charge (button and F2) and the pay screen read the seller and limit from Dexie at that moment (`currentSeller`) and ask for the owner PIN when needed
+  - pay screen: bill discount (locked while payments exist, unlocked when they are removed), item discounts, free value, rounding
+  - success screen / sale detail: line discounts, FOC lines, bill discount, "Discount approved by"
+  - product form "Free with purchase" (on / minimum bill / quantity; turning it on fills Rs 200 and 1 unit or 50 g); preset picker "Give free with purchases?" on focDefault presets (off by default)
+  - Settings → Cashier discount limit (owner PIN gate)
+  - API: Kysely shop type gains the column
+  - en + ur strings (`discount.*`, `foc.*`, `discountLimit.*`)
+
+**Tests**: DB 147 (+7: a discounted sale with a free line and owner approver accepted; free line with a total refused; bill discount above subtotal refused; approver must be an owner of the shop; foc_rule valid / missing / negative / zero / fractional / string / too large / extra key / array; limit 0–100, owner-only by actor and by RLS, default 10; push / pull round trip incl. the shop limit). API DB 36. Core 285 (+24: % to paisa half up and whole % only; discount above its base refused; order of calculation and rounding after discounts; nothing negative; free line 0 with value kept; give-away incl. FOC value with the paid-lines base; limit for cashier / owner / no seller; approval coverage; buildSale rows, consistent subtotal, `over_limit`, no approver within the limit, owner unlimited; suggestions at the threshold, below, already in the cart, line discounts counted, hidden / no rule, at most 3; FocRuleSchema; preset rule; product form rule fields). Pos 236 (+14: live % line discount; discount above the line refused; cashier within the limit without PIN; above: owner PIN, approver stored, more give-away asks again, sale records the owner; completeSale refuses `over_limit`; owner unlimited; limit from the shop setting, owner-only screen; free line total 0 with stock movement; preset toggle sets the rule; suggestion at the threshold adds FOC and the tile turns FOC; no suggestion below / when in the cart; bill discount live, locked by a payment and unlocked; success screen shows discounts, FOC, bill discount, approver; old stored cart loads).
+
+**Decisions**
+- Order: line totals → line discounts → bill discount → rounding → total; `sales.discount_paisa` = bill discount only; line totals are net.
+- Whole % only (1–100), converted half up in core.
+- The limit base is the paid lines' price before discounts; FOC value counts toward the give-away.
+- The bill discount is locked while payments exist; removing them unlocks it.
+- Approval covers the give-away the owner saw; giving away more asks again.
+- focDefault presets get a rule only when the owner ticks "Give free with purchases?" in the preset picker.
+
+**Follow-ups**
+- Receipt printing / sharing shows discounts and FOC with US036.
+- Discount and FOC value in reports (daily / monthly) with the reports stories.
+- A free "by amount" line is valued at qty × rate in the sale detail (its typed amount is not stored).

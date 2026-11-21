@@ -1,6 +1,7 @@
 // The cart (US029, US030): lines and totals before payment. Pure and integer-only: money in paisa,
 // quantities in qty_milli (thousandths of the product's unit); BigInt where values multiply.
 import type { ProductUnit } from './catalogue.ts';
+import { lineNet, type Discount } from './discount.ts';
 import { parseFixed } from './fixed.ts';
 import { uuidv7 } from './ids.ts';
 import { sumPaisa, type Paisa } from './money.ts';
@@ -23,7 +24,17 @@ export interface CartLine {
   icon: string | null;
   qty_milli: QtyMilli;
   unit_price_paisa: Paisa;
+  /** The line's price before its discount (qty × rate, or the typed amount). */
   line_total_paisa: Paisa;
+  /** Free of charge (US033): the customer pays 0; the price stays for reports. */
+  is_foc: boolean;
+  /** The line discount as typed (US032); applied by lineNet() in discount.ts. */
+  discount: Discount | null;
+}
+
+/** A cart line saved before discounts existed gets the new fields (stored carts survive updates). */
+export function normalizeCartLine(line: CartLine): CartLine {
+  return { ...line, is_foc: line.is_foc ?? false, discount: line.discount ?? null };
 }
 
 /** Sanity limit per line: 9,999 units (catches "15000" typed for 1.5). */
@@ -125,6 +136,8 @@ export function makeLine(
     qty_milli: qtyMilli,
     unit_price_paisa: source.unit_price_paisa,
     line_total_paisa: priceForQty(qtyMilli, source.unit_price_paisa),
+    is_foc: false,
+    discount: null,
   };
 }
 
@@ -151,6 +164,8 @@ export function makeAmountLine(
     qty_milli: qty,
     unit_price_paisa: source.unit_price_paisa,
     line_total_paisa: amountPaisa,
+    is_foc: false,
+    discount: null,
   };
 }
 
@@ -161,12 +176,12 @@ export function isLineError(value: CartLine | { error: LineError }): value is { 
 export interface CartTotals {
   itemCount: number;
   subtotal_paisa: Paisa;
-  /** Equals the subtotal until discounts (US032); paisa stay (bill rounding: payment story). */
+  /** After line discounts, before the bill discount and rounding (those are on the pay screen). */
   total_paisa: Paisa;
 }
 
 export function cartTotals(lines: readonly CartLine[]): CartTotals {
-  const subtotal = sumPaisa(lines.map((l) => l.line_total_paisa));
+  const subtotal = sumPaisa(lines.map(lineNet));
   return { itemCount: lines.length, subtotal_paisa: subtotal, total_paisa: subtotal };
 }
 

@@ -1,4 +1,4 @@
-import { displayName, searchItems, type CartLine, type ProductRow } from '@naqdpos/core';
+import { giveAway, displayName, searchItems, type CartLine, type ProductRow } from '@naqdpos/core';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -9,6 +9,9 @@ import { useCategories, usePriceLabel, useShopProducts } from '../catalogue/cata
 import { CategoryTabs } from '../catalogue/CategoryTabs.tsx';
 import { ProductIcon } from '../catalogue/ProductIcon.tsx';
 import { CartBar } from './CartBar.tsx';
+import { currentSeller, ownerApprovalNeeded } from './discountLimit.ts';
+import { FocSuggestions } from './FocSuggestions.tsx';
+import { OwnerPinDialog } from './OwnerPinDialog.tsx';
 import { CartSheet } from './CartSheet.tsx';
 import { useCartStore } from './cartStore.ts';
 import { CustomItemDialog } from './CustomItemDialog.tsx';
@@ -43,6 +46,7 @@ export function SalePage() {
   const [open, setOpen] = useState<Open>(null);
   const search = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
+  const [askOwner, setAskOwner] = useState(false);
 
   useEffect(() => {
     void hydrate();
@@ -57,16 +61,33 @@ export function SalePage() {
         e.preventDefault();
         search.current?.focus();
       }
-      // F2 = Charge (desktop counters)
-      // Read the cart now, not from the render the listener was made in.
-      if (e.key === 'F2' && useCartStore.getState().lines.length > 0) {
-        e.preventDefault();
-        void navigate('/sale/pay');
-      }
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [navigate]);
+  }, []);
+
+  /** Charge: a cashier over the discount limit needs the owner's PIN first (US032). */
+  async function charge() {
+    // Read the cart now, not from the render the handler was made in.
+    const cart = useCartStore.getState();
+    if (cart.lines.length === 0) return;
+    const seller = await currentSeller();
+    if (ownerApprovalNeeded(cart.lines, cart.billDiscount, cart.approval, seller).needed) {
+      setAskOwner(true);
+      return;
+    }
+    void navigate('/sale/pay');
+  }
+  // F2 = Charge (desktop counters); re-attached with the latest charge().
+  useEffect(() => {
+    const onF2 = (e: KeyboardEvent) => {
+      if (e.key !== 'F2') return;
+      e.preventDefault();
+      void charge();
+    };
+    window.addEventListener('keydown', onF2);
+    return () => window.removeEventListener('keydown', onF2);
+  });
 
   const canSell = current?.valid === true;
   const visible = searchItems(
@@ -144,7 +165,21 @@ export function SalePage() {
         </ul>
       )}
 
-      <CartBar onOpen={() => setOpen({ kind: 'cart' })} />
+      {canSell && products && <FocSuggestions products={products} />}
+      <CartBar onOpen={() => setOpen({ kind: 'cart' })} onCharge={() => void charge()} />
+      {askOwner && (
+        <OwnerPinDialog
+          message={t('discount.ownerNeeded')}
+          onClose={() => setAskOwner(false)}
+          onSuccess={(ownerId) => {
+            const cart = useCartStore.getState();
+            const { give_away_paisa } = giveAway(cart.lines, cart.billDiscount);
+            cart.setApproval({ staffId: ownerId, give_away_paisa });
+            setAskOwner(false);
+            void navigate('/sale/pay');
+          }}
+        />
+      )}
 
       {open?.kind === 'product' && (
         <QuantityPanel
@@ -197,7 +232,7 @@ function SaleTile(props: {
   disabled: boolean;
   onTap: () => void;
 }) {
-  const { i18n } = useTranslation();
+  const { t, i18n } = useTranslation();
   const priceLabel = usePriceLabel();
   const qtyText = useQtyText();
   const { product, line } = props;
@@ -210,9 +245,14 @@ function SaleTile(props: {
         onClick={props.onTap}
         data-in-cart={line ? 'true' : undefined}
         className={`relative flex h-full min-h-28 w-full flex-col rounded-2xl border-2 bg-surface p-2 text-start disabled:opacity-60 ${
-          line ? 'border-primary' : 'border-border'
+          line?.is_foc ? 'border-dashed border-success' : line ? 'border-primary' : 'border-border'
         }`}
       >
+        {line?.is_foc && (
+          <span className="absolute start-1 top-1 rounded-full bg-success px-2 text-xs font-bold text-surface">
+            {t('foc.label')}
+          </span>
+        )}
         {line && (
           <span
             className="absolute end-1 top-1 rounded-full bg-primary px-2 text-xs font-semibold text-primary-fg"

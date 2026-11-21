@@ -73,12 +73,14 @@ export function QuantityPanel({ source, existing, onClose }: Props) {
   const name = i18n.language === 'ur' ? source.name_ur || source.name : source.name;
   const unit = t(`unit.${source.unit}`);
 
-  function commit(line: LineResult) {
+  /** Saves the line; an edit keeps its discount and Free flag, "Add free" makes it FOC. */
+  function commit(line: LineResult, free?: boolean) {
     if (isError(line)) {
       setError(t(QTY_ERRORS[line.error] ?? 'errors.generic'));
       return;
     }
-    put(line);
+    const isFoc = free ?? existing?.is_foc ?? false;
+    put({ ...line, is_foc: isFoc, discount: isFoc ? null : (existing?.discount ?? null) });
     onClose();
   }
 
@@ -248,6 +250,18 @@ export function QuantityPanel({ source, existing, onClose }: Props) {
           >
             {existing ? t('sale.update') : t('sale.add')}
           </Button>
+          {!existing && mode === 'qty' && (
+            <Button
+              variant="secondary"
+              disabled={!text}
+              onClick={() => {
+                const line = preview();
+                if (line) commit(line, true);
+              }}
+            >
+              {t('foc.addFree')}
+            </Button>
+          )}
           {existing && (
             <Button
               variant="secondary"

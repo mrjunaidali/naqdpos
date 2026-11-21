@@ -113,6 +113,8 @@ describe('buildSale', () => {
     shopId: 's1',
     deviceId: 'd1',
     staffId: 'st1',
+    role: 'cashier' as const,
+    limitPct: 10,
     receiptNo: 'A2-000001',
     now: new Date('2026-11-21T19:30:00.000Z'),
   };

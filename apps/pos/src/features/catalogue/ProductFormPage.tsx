@@ -1,6 +1,7 @@
 import {
   displayName,
   PRODUCT_UNITS,
+  suggestedFocRule,
   validateProductForm,
   type Paisa,
   type ProductFormResult,
@@ -16,6 +17,7 @@ import { Field } from '../../ui/Field.tsx';
 import { useActingOwnerId } from '../pin/actingOwner.ts';
 import { rupeesInput, useCategories, useCostsHere } from './catalogueData.ts';
 import { saveProduct, setProductHidden } from './catalogueRepo.ts';
+import { qtyToKeypad } from '../sale/saleFormat.ts';
 import { ProductStockLine } from '../stock/ProductStockLine.tsx';
 import { IconPicker } from './IconPicker.tsx';
 
@@ -49,6 +51,8 @@ const ERROR_KEYS: Record<string, string> = {
   invalid: 'products.errors.price',
   negative: 'products.errors.negative',
   too_many: 'products.errors.tooManyTerms',
+  invalid_qty: 'products.errors.focQty',
+  too_large: 'sale.errors.tooLarge',
 };
 
 function ProductForm(props: {
@@ -73,6 +77,10 @@ function ProductForm(props: {
     searchTerms: existing?.search_terms.join(', ') ?? '',
     trackStock: existing?.track_stock ?? false,
     icon: existing?.icon ?? null,
+    // Free with purchase (US033): off unless the product has a rule; on fills a suggestion.
+    focOn: existing?.foc_rule != null,
+    focMinBill: existing?.foc_rule ? rupeesInput(existing.foc_rule.min_bill_paisa) : '',
+    focQty: existing?.foc_rule ? qtyToKeypad(existing.foc_rule.qty_milli) : '',
   });
   const [errors, setErrors] = useState<ProductFormResult['errors']>({});
   const [failed, setFailed] = useState(false);
@@ -210,6 +218,50 @@ function ProductForm(props: {
         {t('products.trackStock')}
       </label>
       {existing && values.trackStock && <ProductStockLine product={existing} />}
+      <fieldset className="space-y-3 rounded-xl border border-border p-3">
+        <legend className="px-1 font-medium">{t('foc.section')}</legend>
+        <label className="flex min-h-11 items-center gap-3">
+          <input
+            type="checkbox"
+            checked={values.focOn}
+            onChange={(e) => {
+              const on = e.target.checked;
+              setValues((v) => {
+                if (!on || v.focMinBill || v.focQty) return { ...v, focOn: on };
+                const rule = suggestedFocRule(v.unit);
+                return {
+                  ...v,
+                  focOn: true,
+                  focMinBill: rupeesInput(rule.min_bill_paisa),
+                  focQty: qtyToKeypad(rule.qty_milli),
+                };
+              });
+            }}
+            className="size-5 accent-primary"
+          />
+          {t('foc.offer')}
+        </label>
+        {values.focOn && (
+          <>
+            <Field
+              label={t('foc.minBill')}
+              value={values.focMinBill}
+              onChange={set('focMinBill')}
+              error={errorText('focMinBill')}
+              inputMode="decimal"
+              dir="ltr"
+            />
+            <Field
+              label={t('foc.qty', { unit: t(`unit.${values.unit}`) })}
+              value={values.focQty}
+              onChange={set('focQty')}
+              error={errorText('focQty')}
+              inputMode="decimal"
+              dir="ltr"
+            />
+          </>
+        )}
+      </fieldset>
       <Button type="submit" disabled={busy}>
         {busy ? t('common.wait') : t('products.save')}
       </Button>

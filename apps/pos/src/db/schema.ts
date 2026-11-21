@@ -125,6 +125,18 @@ export class NaqdDb extends Dexie {
     this.version(8).stores({
       stock_movements: 'id, shop_id, product_id, business_date, server_seq',
     });
+    // Discounts (migration 20261122120000_discounts_foc): no new indexes; shop rows pulled before
+    // the column existed get the server default until the shop is pulled again.
+    this.version(9)
+      .stores({})
+      .upgrade((tx) =>
+        tx
+          .table('shops')
+          .toCollection()
+          .modify((shop: { cashier_max_discount_pct?: number }) => {
+            shop.cashier_max_discount_pct ??= 10;
+          }),
+      );
   }
 }
 

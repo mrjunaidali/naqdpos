@@ -72,7 +72,8 @@ export function CustomItemDialog(props: { existing?: CartLine | undefined; onClo
       setErrors({ qty: t('sale.errors.qty') });
       return;
     }
-    put(line);
+    // Editing keeps the line's discount and Free flag.
+    put({ ...line, is_foc: e?.is_foc ?? false, discount: e?.discount ?? null });
     props.onClose();
   }
 

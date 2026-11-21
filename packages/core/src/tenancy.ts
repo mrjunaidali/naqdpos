@@ -44,6 +44,8 @@ export interface ShopRow extends SyncedMutable {
   plan_id: string | null;
   timezone: string;
   cashier_expense_limit_paisa: Paisa;
+  /** A cashier's give-away per bill, as % of the paid lines' price (US032). Owners: no limit. */
+  cashier_max_discount_pct: number;
   device_id: string | null;
 }
 

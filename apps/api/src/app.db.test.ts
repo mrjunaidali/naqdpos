@@ -278,6 +278,7 @@ describe('GET /me', () => {
       id: shop.shop_id,
       name: shop.name,
       cashier_expense_limit_paisa: 200_000,
+      cashier_max_discount_pct: 10,
       timezone: 'Asia/Karachi',
     });
     expect(typeof entry?.shop.server_seq).toBe('number');

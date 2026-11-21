@@ -49,6 +49,8 @@ const fakeLine = (): CartLine => ({
   qty_milli: 1000,
   unit_price_paisa: 100,
   line_total_paisa: 100,
+  is_foc: false,
+  discount: null,
 });
 
 const chip = () => screen.findByRole('link', { name: /Sync status/ });

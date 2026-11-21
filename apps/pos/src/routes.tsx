@@ -20,6 +20,7 @@ import { SaleDonePage } from './features/sale/SaleDonePage.tsx';
 import { SalePage } from './features/sale/SalePage.tsx';
 import { SalesListPage, SaleViewPage } from './features/sale/SalesListPage.tsx';
 import { StockPage } from './features/stock/StockPage.tsx';
+import { DiscountLimitPage } from './features/settings/DiscountLimitPage.tsx';
 import { PaymentMethodsPage } from './features/settings/PaymentMethodsPage.tsx';
 import { SettingsPage } from './features/settings/SettingsPage.tsx';
 import { StaffFormPage } from './features/staff/StaffFormPage.tsx';
@@ -97,6 +98,16 @@ export const routes: RouteObject[] = [
         element: (
           <Gate state="ready">
             <SaleViewPage />
+          </Gate>
+        ),
+      },
+      {
+        path: 'settings/discount-limit',
+        element: (
+          <Gate state="ready">
+            <OwnerPinGate>
+              <DiscountLimitPage />
+            </OwnerPinGate>
           </Gate>
         ),
       },

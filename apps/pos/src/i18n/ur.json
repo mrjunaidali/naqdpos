@@ -266,7 +266,8 @@
       "unit": "TODO-ur اکائی منتخب کریں۔",
       "price": "TODO-ur روپے لکھیں، مثلاً 120 یا 120.50۔",
       "negative": "TODO-ur قیمت منفی نہیں ہو سکتی۔",
-      "tooManyTerms": "TODO-ur زیادہ سے زیادہ 20 نام۔"
+      "tooManyTerms": "TODO-ur زیادہ سے زیادہ 20 نام۔",
+      "focQty": "TODO-ur یونٹ کے مطابق 0 سے زیادہ مقدار لکھیں۔"
     },
     "picture": "TODO-ur تصویر",
     "pictureHint": "TODO-ur چیز کے خانے پر دکھائی جاتی ہے تاکہ جلدی ملے۔",
@@ -300,7 +301,9 @@
     "rateError": "TODO-ur سرخ نشان والے ریٹ دیکھیں۔",
     "skip": "TODO-ur ابھی نہیں",
     "save_one": "TODO-ur {{count}} چیز شامل کریں",
-    "save_other": "TODO-ur {{count}} اشیاء شامل کریں"
+    "save_other": "TODO-ur {{count}} اشیاء شامل کریں",
+    "focFree": "TODO-ur خریداری کے ساتھ مفت دیں؟",
+    "focFreeFor": "TODO-ur {{name}} خریداری کے ساتھ مفت دیں"
   },
   "rates": {
     "title": "TODO-ur آج کے ریٹ",
@@ -425,7 +428,8 @@
       "overpaid": "TODO-ur ادائیگیاں بل سے زیادہ ہیں۔",
       "bad_payment": "TODO-ur ایک ادائیگی کی رقم درست نہیں۔",
       "no_device": "TODO-ur یہ ڈیوائس سیٹ اپ نہیں۔",
-      "no_staff": "TODO-ur کوئی کام پر نہیں۔ پہلے عملہ تبدیل کریں۔"
+      "no_staff": "TODO-ur کوئی کام پر نہیں۔ پہلے عملہ تبدیل کریں۔",
+      "over_limit": "TODO-ur کیشیئر کی رعایت کی حد سے زیادہ: مالک کی منظوری ضروری ہے۔"
     }
   },
   "done": {
@@ -509,5 +513,52 @@
       "no_device": "TODO-ur یہ آلہ سیٹ اپ نہیں ہے۔",
       "no_staff": "TODO-ur پہلے کسی اسٹاف ممبر پر سوئچ کریں۔"
     }
+  },
+  "discount": {
+    "button": "TODO-ur رعایت",
+    "change": "TODO-ur بدلیں",
+    "apply": "TODO-ur رعایت لگائیں",
+    "remove": "TODO-ur رعایت ہٹائیں",
+    "kind": "TODO-ur رعایت",
+    "rs": "TODO-ur روپے",
+    "pct": "%",
+    "typed": "TODO-ur لکھی گئی رعایت",
+    "preview": "TODO-ur {{of}} میں سے {{amount}} کم",
+    "line": "TODO-ur رعایت",
+    "linePct": "TODO-ur رعایت {{pct}}%",
+    "lineAmount": "TODO-ur رعایت −{{amount}}",
+    "lines": "TODO-ur آئٹم رعایت",
+    "bill": "TODO-ur بل رعایت",
+    "billPct": "TODO-ur بل رعایت {{pct}}%",
+    "forLine": "TODO-ur {{name}} پر رعایت",
+    "lineTitle": "TODO-ur رعایت — {{name}}",
+    "billTitle": "TODO-ur بل رعایت",
+    "lockedByPayments": "TODO-ur بل رعایت بدلنے کے لیے ادائیگیاں ہٹائیں۔",
+    "ownerNeeded": "TODO-ur کیشیئر کی حد سے زیادہ رعایت اور مفت آئٹم کے لیے مالک ضروری ہے۔",
+    "approvedBy": "TODO-ur رعایت کی منظوری: {{name}}",
+    "errors": {
+      "bad": "TODO-ur 0 سے زیادہ رقم، یا 1 سے 100 تک پورا % لکھیں۔",
+      "tooMuch": "TODO-ur رعایت رقم سے زیادہ ہے۔"
+    }
+  },
+  "foc": {
+    "label": "TODO-ur مفت",
+    "toggle": "TODO-ur مفت",
+    "toggleFor": "TODO-ur مفت: {{name}}",
+    "value": "TODO-ur {{amount}} کی",
+    "total": "TODO-ur مفت آئٹم (قیمت)",
+    "addFree": "TODO-ur مفت شامل کریں",
+    "suggest": "TODO-ur {{name}} ({{qty}}) مفت دیں؟",
+    "section": "TODO-ur خریداری کے ساتھ مفت",
+    "offer": "TODO-ur بڑے بل پر یہ مفت دیں",
+    "minBill": "TODO-ur بل کم از کم (روپے)",
+    "qty": "TODO-ur مفت مقدار ({{unit}})"
+  },
+  "discountLimit": {
+    "title": "TODO-ur کیشیئر رعایت کی حد",
+    "intro": "TODO-ur کیشیئر بل کے اتنے % تک رعایت اور مفت آئٹم دے سکتا ہے۔ اس سے زیادہ پر مالک اپنا PIN لگائے۔ مالک کی کوئی حد نہیں۔",
+    "label": "TODO-ur حد (%)",
+    "save": "TODO-ur حد محفوظ کریں",
+    "invalid": "TODO-ur 0 سے 100 تک پورا نمبر لکھیں۔"
   }
 }

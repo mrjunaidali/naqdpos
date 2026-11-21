@@ -1,10 +1,11 @@
 import {
   applyPayment,
-  cartTotals,
   changeDue,
+  computeBill,
+  giveAway,
   parseRupees,
   remainingDue,
-  roundBill,
+  type Discount,
   type PaymentDraft,
 } from '@naqdpos/core';
 import { useEffect, useState } from 'react';
@@ -16,6 +17,9 @@ import { rupeesInput } from '../catalogue/catalogueData.ts';
 import { methodName, usePaymentMethods } from '../settings/paymentMethods.ts';
 import { useCartStore } from './cartStore.ts';
 import { completeSale, SaleNotCompleted } from './completeSale.ts';
+import { currentSeller, ownerApprovalNeeded } from './discountLimit.ts';
+import { DiscountSheet } from './DiscountSheet.tsx';
+import { OwnerPinDialog } from './OwnerPinDialog.tsx';
 import { NumberPad } from './NumberPad.tsx';
 import { useRs } from './saleFormat.ts';
 
@@ -30,12 +34,23 @@ const ERRORS: Record<string, string> = {
 /**
  * Pay (US034, US035): the rounded total, method chips, cash with change, split payments with an
  * optional reference. Completing writes the sale on the device; nothing waits for the network.
+ * The bill discount (US032) can change only while no payment is added; a cashier over the
+ * discount limit needs the owner's PIN (when applying the discount, and again before completing
+ * if the bill changed).
  */
 export function PayPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const rs = useRs();
   const lines = useCartStore((s) => s.lines);
+  const billDiscount = useCartStore((s) => s.billDiscount);
+  const setBillDiscount = useCartStore((s) => s.setBillDiscount);
+  const setApproval = useCartStore((s) => s.setApproval);
+  const [editingDiscount, setEditingDiscount] = useState(false);
+  type Ask =
+    | { kind: 'discount'; discount: Discount }
+    | { kind: 'finish'; all: PaymentDraft[]; change: number };
+  const [askOwner, setAskOwner] = useState<Ask | null>(null);
   const ready = useCartStore((s) => s.ready);
   const hydrate = useCartStore((s) => s.hydrate);
   useEffect(() => {
@@ -51,7 +66,7 @@ export function PayPage() {
 
   if (ready && lines.length === 0 && !busy) return <Navigate to="/sale" replace />;
 
-  const bill = roundBill(cartTotals(lines).subtotal_paisa);
+  const bill = computeBill(lines, billDiscount);
   const due = remainingDue(bill.total_paisa, payments);
   // Cash is offered even before the shop's methods have been pulled (every shop has it).
   const active = (methods ?? []).filter((m) => m.active);
@@ -63,6 +78,12 @@ export function PayPage() {
   const change = isCash && typed ? changeDue(typed, due) : 0;
 
   async function finish(all: PaymentDraft[], changePaisa: number) {
+    const cart = useCartStore.getState();
+    const seller = await currentSeller();
+    if (ownerApprovalNeeded(cart.lines, cart.billDiscount, cart.approval, seller).needed) {
+      setAskOwner({ kind: 'finish', all, change: changePaisa });
+      return;
+    }
     setBusy(true);
     try {
       const rows = await completeSale(all);
@@ -103,6 +124,29 @@ export function PayPage() {
     setReference('');
   }
 
+  async function applyDiscount(discount: Discount) {
+    const cart = useCartStore.getState();
+    setEditingDiscount(false);
+    const seller = await currentSeller();
+    if (ownerApprovalNeeded(cart.lines, discount, cart.approval, seller).needed) {
+      setAskOwner({ kind: 'discount', discount });
+      return;
+    }
+    setBillDiscount(discount);
+  }
+
+  function ownerApproved(ownerId: string) {
+    const ask = askOwner;
+    setAskOwner(null);
+    if (!ask) return;
+    const cart = useCartStore.getState();
+    const discount = ask.kind === 'discount' ? ask.discount : cart.billDiscount;
+    const { give_away_paisa } = giveAway(cart.lines, discount);
+    setApproval({ staffId: ownerId, give_away_paisa });
+    if (ask.kind === 'discount') setBillDiscount(ask.discount);
+    else void finish(ask.all, ask.change);
+  }
+
   const chooseMethod = (code: string) => {
     setMethod(code);
     setError(undefined);
@@ -123,7 +167,7 @@ export function PayPage() {
             {t('pay.rounding', {
               sign: bill.rounding_paisa > 0 ? '+' : '−',
               amount: rs(Math.abs(bill.rounding_paisa)),
-              subtotal: rs(bill.subtotal_paisa),
+              subtotal: rs(bill.subtotal_paisa - bill.discount_paisa),
             })}
           </p>
         )}
@@ -131,6 +175,42 @@ export function PayPage() {
           <p className="mt-2 font-semibold">{t('pay.remaining', { amount: rs(due) })}</p>
         )}
       </div>
+
+      <dl className="space-y-1 rounded-2xl border border-border bg-surface p-3">
+        {bill.line_discount_paisa > 0 && (
+          <div className="flex justify-between text-sm text-muted">
+            <dt>{t('discount.lines')}</dt>
+            <dd dir="ltr">−{rs(bill.line_discount_paisa)}</dd>
+          </div>
+        )}
+        {bill.foc_value_paisa > 0 && (
+          <div className="flex justify-between text-sm text-muted">
+            <dt>{t('foc.total')}</dt>
+            <dd dir="ltr">{rs(bill.foc_value_paisa)}</dd>
+          </div>
+        )}
+        <div className="flex items-center justify-between gap-2">
+          <dt>
+            {billDiscount?.kind === 'pct'
+              ? t('discount.billPct', { pct: billDiscount.value })
+              : t('discount.bill')}
+          </dt>
+          <dd className="flex items-center gap-2">
+            {bill.discount_paisa > 0 && <span dir="ltr">−{rs(bill.discount_paisa)}</span>}
+            <button
+              type="button"
+              disabled={payments.length > 0 || busy}
+              onClick={() => setEditingDiscount(true)}
+              className="min-h-11 rounded-md border border-border px-3 text-sm disabled:opacity-50"
+            >
+              {billDiscount ? t('discount.change') : t('discount.button')}
+            </button>
+          </dd>
+        </div>
+        {payments.length > 0 && (
+          <p className="text-xs text-muted">{t('discount.lockedByPayments')}</p>
+        )}
+      </dl>
 
       {payments.length > 0 && (
         <ul className="divide-y divide-border rounded-2xl border border-border bg-surface">
@@ -237,6 +317,26 @@ export function PayPage() {
       <Button variant="secondary" disabled={busy} onClick={() => void navigate('/sale')}>
         {t('pay.backToCart')}
       </Button>
+      {editingDiscount && (
+        <DiscountSheet
+          title={t('discount.billTitle')}
+          basePaisa={bill.subtotal_paisa}
+          initial={billDiscount}
+          onApply={(discount) => void applyDiscount(discount)}
+          onRemove={() => {
+            setBillDiscount(null);
+            setEditingDiscount(false);
+          }}
+          onClose={() => setEditingDiscount(false)}
+        />
+      )}
+      {askOwner && (
+        <OwnerPinDialog
+          message={t('discount.ownerNeeded')}
+          onClose={() => setAskOwner(null)}
+          onSuccess={ownerApproved}
+        />
+      )}
     </section>
   );
 }

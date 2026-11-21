@@ -49,6 +49,11 @@ export function SettingsPage() {
             {t('paymentMethods.title')}
           </Link>
         )}
+        {can(role, 'manage_discount_limit') && (
+          <Link to="/settings/discount-limit" className={linkClass}>
+            {t('discountLimit.title')}
+          </Link>
+        )}
         {can(role, 'manage_devices') && (
           <Link to="/settings/device" className={linkClass}>
             {t('deviceMode.title')}

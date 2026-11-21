@@ -2,6 +2,7 @@ export * from './api/index.ts';
 export * from './appVersion.ts';
 export * from './cart.ts';
 export * from './catalogue.ts';
+export * from './discount.ts';
 export * from './ids.ts';
 export * from './money.ts';
 export * from './permissions.ts';

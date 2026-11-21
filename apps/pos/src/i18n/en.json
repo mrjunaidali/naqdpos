@@ -266,7 +266,8 @@
       "unit": "Choose a unit.",
       "price": "Enter rupees, e.g. 120 or 120.50.",
       "negative": "The price cannot be negative.",
-      "tooManyTerms": "Use at most 20 names."
+      "tooManyTerms": "Use at most 20 names.",
+      "focQty": "Enter a quantity above 0 that fits the unit."
     },
     "picture": "Picture",
     "pictureHint": "Shown on the product tile so it is quick to find.",
@@ -300,7 +301,9 @@
     "rateError": "Check the rates marked in red.",
     "skip": "Skip for now",
     "save_one": "Add {{count}} product",
-    "save_other": "Add {{count}} products"
+    "save_other": "Add {{count}} products",
+    "focFree": "Give free with purchases?",
+    "focFreeFor": "Give {{name}} free with purchases"
   },
   "rates": {
     "title": "Today’s rates",
@@ -425,7 +428,8 @@
       "overpaid": "The payments are more than the bill.",
       "bad_payment": "A payment amount is not valid.",
       "no_device": "This device is not set up.",
-      "no_staff": "Nobody is switched in. Switch staff first."
+      "no_staff": "Nobody is switched in. Switch staff first.",
+      "over_limit": "Above the cashier discount limit: the owner must approve."
     }
   },
   "done": {
@@ -509,5 +513,52 @@
       "no_device": "This device is not set up.",
       "no_staff": "Switch to a staff member first."
     }
+  },
+  "discount": {
+    "button": "Discount",
+    "change": "Change",
+    "apply": "Apply discount",
+    "remove": "Remove discount",
+    "kind": "Discount in",
+    "rs": "Rs",
+    "pct": "%",
+    "typed": "Discount typed",
+    "preview": "{{amount}} off {{of}}",
+    "line": "Discount",
+    "linePct": "Discount {{pct}}%",
+    "lineAmount": "Discount −{{amount}}",
+    "lines": "Item discounts",
+    "bill": "Bill discount",
+    "billPct": "Bill discount {{pct}}%",
+    "forLine": "Discount on {{name}}",
+    "lineTitle": "Discount — {{name}}",
+    "billTitle": "Bill discount",
+    "lockedByPayments": "Remove the payments to change the bill discount.",
+    "ownerNeeded": "Discounts and free items above the cashier limit need the owner.",
+    "approvedBy": "Discount approved by {{name}}",
+    "errors": {
+      "bad": "Enter an amount above 0, or a whole % from 1 to 100.",
+      "tooMuch": "The discount is more than the amount."
+    }
+  },
+  "foc": {
+    "label": "FOC",
+    "toggle": "Free",
+    "toggleFor": "Free: {{name}}",
+    "value": "{{amount}} value",
+    "total": "Free items (value)",
+    "addFree": "Add free",
+    "suggest": "Add free {{name}} ({{qty}})?",
+    "section": "Free with purchase",
+    "offer": "Offer this free with bigger bills",
+    "minBill": "From a bill of (Rs)",
+    "qty": "Free quantity ({{unit}})"
+  },
+  "discountLimit": {
+    "title": "Cashier discount limit",
+    "intro": "A cashier can give away (discounts and free items) up to this % of a bill. Above it the owner enters their PIN. Owners have no limit.",
+    "label": "Limit (%)",
+    "save": "Save limit",
+    "invalid": "Enter a whole number from 0 to 100."
   }
 }

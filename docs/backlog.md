@@ -25,7 +25,7 @@ Build in this order, not in ID order. "Sheet step" is the step number in the ori
 | 6 | Products, categories, produce presets, today's rates | US019, US021, US072, US020 | 11, 12, —, 13 | Done (Step 7); change device mode added (Step 8) |
 | 6b | Product pictures (emoji icons) | US078 | — | Done (Step 10) |
 | 7 | Selling: cart, custom item, cash, wallets/split | US029, US030, US034, US035 | 14, 15, 16, 20 | Done (Steps 11–12) |
-| 8 | Stock, wastage, discounts, FOC | US024, US025, US032, US033 | 21–24 | Partly done (US024, US025 in Step 13) |
+| 8 | Stock, wastage, discounts, FOC | US024, US025, US032, US033 | 21–24 | Done (Steps 13–14) |
 | 9 | Customers and khata | US038, US039, US040, US041 | 25–28 | To do |
 | 10 | Shop profile and receipts | US014, US036 | 29, 30 | To do |
 | 11 | Expenses | US065, US046, US066 | 30a, 31, 31a | To do |
@@ -266,11 +266,11 @@ Build in this order, not in ID order. "Sheet step" is the step number in the ori
 
 ### F17 · Discounts & free items (R1)
 
-**US032** · Must · 3 · To do — As a cashier, I want to give a discount on an item or the whole bill (Rs or %), so that I can handle bargaining.
+**US032** · Must · 3 · Done (receipt printing with US036, reports later) — As a cashier, I want to give a discount on an item or the whole bill (Rs or %), so that I can handle bargaining.
 - Line and bill discounts; owner sets the cashier's maximum discount % (owner unlimited), enforced in core
 - Shown on receipt and in reports
 
-**US033** · Should · 3 · To do — As a cashier, I want to add free items (mint, coriander, chillies with sabzi), so that stock reduces but the customer isn't charged.
+**US033** · Should · 3 · Done — As a cashier, I want to add free items (mint, coriander, chillies with sabzi), so that stock reduces but the customer isn't charged.
 - FOC line at Rs 0 (`is_foc`), value at sale price kept for reporting, stock reduced
 - Optional `foc_rule` per product shown as a one-tap suggestion; presets mark usual FOC items
 

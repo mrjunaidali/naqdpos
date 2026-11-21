@@ -2,9 +2,19 @@
 // business date, receipt number and the rows to write. Money is integer paisa.
 import type { CartLine } from './cart.ts';
 import type { ProductUnit } from './catalogue.ts';
+import {
+  approvalCovers,
+  computeBill,
+  giveAway,
+  lineDiscountPaisa,
+  lineNet,
+  withinLimit,
+  type Discount,
+  type DiscountApproval,
+} from './discount.ts';
 import { uuidv7 } from './ids.ts';
 import { sumPaisa, type Paisa } from './money.ts';
-import { DEFAULT_TIMEZONE } from './tenancy.ts';
+import { DEFAULT_TIMEZONE, type Role } from './tenancy.ts';
 
 // --- Rows (architecture §3) ---
 
@@ -41,6 +51,8 @@ export interface SaleRow {
   rounding_paisa: Paisa;
   total_paisa: Paisa;
   note: string | null;
+  /** The owner who approved a give-away above the cashier limit (US032); null otherwise. */
+  discount_approved_by_staff_id: string | null;
   created_at: string;
   device_id: string | null;
   server_seq: number | null;
@@ -196,11 +208,19 @@ export interface SaleContext {
   shopId: string;
   deviceId: string | null;
   staffId: string;
+  /** The seller's role: owners have no discount limit. */
+  role: Role;
   receiptNo: string;
   now: Date;
+  /** Bill discount (Rs or whole %), applied after line discounts. */
+  billDiscount?: Discount | null | undefined;
+  /** shops.cashier_max_discount_pct. */
+  limitPct: number;
+  /** An owner's PIN approval for a give-away above the limit; the caller checks it is an owner. */
+  approval?: DiscountApproval | null | undefined;
 }
 
-export type SaleError = 'empty_cart' | 'not_paid' | 'overpaid' | 'bad_payment';
+export type SaleError = 'empty_cart' | 'not_paid' | 'overpaid' | 'bad_payment' | 'over_limit';
 
 export interface SaleRows {
   sale: SaleRow;
@@ -221,7 +241,14 @@ export function buildSale(
   if (payments.some((p) => !Number.isSafeInteger(p.amount_paisa) || p.amount_paisa <= 0)) {
     return { error: 'bad_payment' };
   }
-  const bill = roundBill(sumPaisa(cart.map((l) => l.line_total_paisa)));
+  const summary = computeBill(cart, ctx.billDiscount ?? null);
+  const amounts = giveAway(cart, ctx.billDiscount ?? null);
+  // Above a cashier's limit only an owner's approval (covering this give-away) lets it through.
+  const needsApproval = !withinLimit(ctx.role, amounts, ctx.limitPct);
+  if (needsApproval && !approvalCovers(ctx.approval, amounts.give_away_paisa)) {
+    return { error: 'over_limit' };
+  }
+  const bill = roundBill(summary.subtotal_paisa, summary.discount_paisa);
   const left = remainingDue(bill.total_paisa, payments);
   if (left > 0) return { error: 'not_paid' };
   if (left < 0) return { error: 'overpaid' };
@@ -240,6 +267,7 @@ export function buildSale(
     source: 'walk_in',
     ...bill,
     note: null,
+    discount_approved_by_staff_id: needsApproval ? ctx.approval!.staffId : null,
     created_at: created,
     device_id: ctx.deviceId,
     server_seq: null,
@@ -254,10 +282,10 @@ export function buildSale(
     unit_snapshot: l.unit,
     qty_milli: l.qty_milli,
     unit_price_paisa: l.unit_price_paisa,
-    discount_paisa: 0,
-    is_foc: false,
+    discount_paisa: lineDiscountPaisa(l),
+    is_foc: l.is_foc,
     by_amount: l.by_amount,
-    line_total_paisa: l.line_total_paisa,
+    line_total_paisa: lineNet(l),
     created_at: created,
     device_id: ctx.deviceId,
     server_seq: null,

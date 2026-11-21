@@ -3,6 +3,7 @@
 // writes a price_history row; a cost change (owner devices only) writes product_costs and a
 // product_cost_history row.
 import {
+  suggestedFocRule,
   PRESET_CATEGORIES,
   uuidv7,
   type CategoryRow,
@@ -129,6 +130,7 @@ export async function saveProduct(
     search_terms: value.search_terms,
     track_stock: value.track_stock,
     icon: value.icon,
+    ...(value.foc_rule !== undefined && { foc_rule: value.foc_rule }),
   };
   const product: ProductRow = existing
     ? { ...existing, ...fields, updated_at: c.now }
@@ -247,6 +249,8 @@ export interface PresetChoice {
   preset: ProducePreset;
   /** Today's rate; null = blank (price 0, asked at the first sale). */
   rate: Paisa | null;
+  /** "Give free with purchases?" (focDefault presets only): sets the suggested foc_rule. */
+  focFree?: boolean;
 }
 
 export interface PresetResult {
@@ -301,7 +305,8 @@ export async function createFromPresets(
     return id;
   };
 
-  for (const { preset, rate } of choices) {
+  for (const { preset, rate, focFree } of choices) {
+    const focRule = focFree && preset.focDefault ? suggestedFocRule(preset.unit) : null;
     const existing = byName.get(preset.en.toLowerCase());
     if (existing && existing.deleted_at === null) {
       result.skipped += 1;
@@ -316,6 +321,8 @@ export async function createFromPresets(
           sale_price_paisa: price,
           // Keep a picture the owner already chose; otherwise take the preset's.
           icon: existing.icon ?? preset.icon,
+          // A rule the owner already set stays; otherwise the one they just asked for.
+          foc_rule: existing.foc_rule ?? focRule,
           updated_at: c.now,
         }),
       );
@@ -334,6 +341,7 @@ export async function createFromPresets(
       sale_price_paisa: rate ?? 0,
       search_terms: [...preset.roman],
       icon: preset.icon,
+      foc_rule: focRule,
     });
     writes.push(write('products', product));
     if (rate !== null) writes.push(priceRow(c, product.id, rate));

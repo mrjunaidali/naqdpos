@@ -31,6 +31,7 @@ export function shopRow(overrides: Partial<ShopRow> = {}): ShopRow {
     plan_id: null,
     timezone: 'Asia/Karachi',
     cashier_expense_limit_paisa: 200_000,
+    cashier_max_discount_pct: 10,
     device_id: null,
     created_at: NOW,
     updated_at: NOW,

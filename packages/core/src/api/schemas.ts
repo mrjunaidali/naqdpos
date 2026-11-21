@@ -12,6 +12,7 @@ import {
   type ProductCostRow,
   type ProductRow,
 } from '../catalogue.ts';
+import { MAX_FOC_QTY_MILLI, type FocRule } from '../discount.ts';
 import { PK_MOBILE_PATTERN } from '../phone.ts';
 import { MAX_STOCK_NOTE_LENGTH, STOCK_REASONS, type StockMovementRow } from '../stock.ts';
 import {
@@ -54,6 +55,12 @@ export type ConfigResponse = z.infer<typeof ConfigResponse>;
 // --- Rows as the API returns them (bigint columns converted to numbers) ---
 
 const iso = z.string();
+
+/** products.foc_rule (US033): exactly these two keys; the SQL check foc_rule_ok() agrees. */
+export const FocRuleSchema = z.strictObject({
+  min_bill_paisa: z.number().int().min(0),
+  qty_milli: z.number().int().min(1).max(MAX_FOC_QTY_MILLI),
+}) satisfies z.ZodType<FocRule>;
 const nullableText = z.string().nullable();
 
 export const ShopRowSchema = z.object({
@@ -68,6 +75,7 @@ export const ShopRowSchema = z.object({
   plan_id: nullableText,
   timezone: z.string(),
   cashier_expense_limit_paisa: z.number().int(),
+  cashier_max_discount_pct: z.number().int().min(0).max(100),
   device_id: z.uuid().nullable(),
   created_at: iso,
   updated_at: iso,
@@ -273,7 +281,7 @@ export const ProductRowSchema = z.object({
   min_qty_milli: z.number().int().nonnegative().nullable(),
   is_combo: z.boolean(),
   packaging_cost_paisa: paisa,
-  foc_rule: z.record(z.string(), z.unknown()).nullable(),
+  foc_rule: FocRuleSchema.nullable(),
   search_terms: z.array(z.string().min(1).max(MAX_SEARCH_TERM_LENGTH)).max(MAX_SEARCH_TERMS),
   // Optional: rows and payloads from before US078 have no icon.
   icon: z.string().refine(isProductIcon, 'not an emoji icon').nullable().optional(),
@@ -349,6 +357,7 @@ export const SaleRowSchema = z.object({
   rounding_paisa: z.number().int().min(-50).max(50),
   total_paisa: paisa,
   note: z.string().max(500).nullable(),
+  discount_approved_by_staff_id: z.uuid().nullable(),
   created_at: iso,
   device_id: z.uuid().nullable(),
   server_seq: z.number().int().nullable(),
