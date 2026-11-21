@@ -54,6 +54,11 @@ export function SettingsPage() {
             {t('shopProfile.title')}
           </Link>
         )}
+        {can(role, 'manage_expenses') && (
+          <Link to="/settings/expense-categories" className={linkClass}>
+            {t('expenseCategories.title')}
+          </Link>
+        )}
         {can(role, 'manage_discount_limit') && (
           <Link to="/settings/discount-limit" className={linkClass}>
             {t('discountLimit.title')}

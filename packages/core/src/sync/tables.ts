@@ -9,6 +9,8 @@ import {
   StockMovementRowSchema,
   CustomerRowSchema,
   KhataEntryRowSchema,
+  ExpenseCategoryRowSchema,
+  ExpenseRowSchema,
   SaleLineRowSchema,
   SaleRowSchema,
   DeviceRowSchema,
@@ -124,6 +126,15 @@ export const SYNC_TABLES = {
     scope: 'all',
     schema: KhataEntryRowSchema,
   },
+  // Expenses (US065, US046, US066). Shop devices pulling only open dates comes with day_closes.
+  expense_categories: {
+    kind: 'mutable',
+    key: 'id',
+    pushable: true,
+    scope: 'all',
+    schema: ExpenseCategoryRowSchema,
+  },
+  expenses: { kind: 'append', key: 'id', pushable: true, scope: 'all', schema: ExpenseRowSchema },
 } as const satisfies Record<string, SyncTableSpec>;
 
 export type SyncTableName = keyof typeof SYNC_TABLES;

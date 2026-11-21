@@ -613,3 +613,30 @@ Owners set what receipts show; every sale has a receipt to preview, share on Wha
 - Logo upload (pre-signed URL, `logos/<shop_id>/…`) and on the receipt.
 - Drawing on a canvas is not covered by tests (jsdom has no canvas); try it on a real BLE printer (58 and 80 mm) before release.
 - Cash drawer kick and paper cut commands if printers need them.
+
+## Step 17 — US065 expense categories, US046 record an expense, US066 reverse an expense (2026-11-22)
+
+Expense categories per shop type, expenses offline with the cashier limit and owner PIN, today's list (owners all, cashiers their own), and owner reversals that keep history.
+
+**Built**
+- Migration `20261122210000_expenses.sql`: `expense_categories` (mutable, owner writes, `name_ur` approved; `seed_expense_categories()` for every shop and in `create_shop`, no Wastage); `expenses` (append-only; sign check; composite FKs to category, payment method, staff, approver, payee staff and the original; trigger `expenses_check()`); RLS owners / cashiers, riders none; registry rows. `shops.cashier_expense_limit_paisa` already existed.
+- `packages/core`: `expenses.ts` (`ExpenseCategoryRow`, `ExpenseRow`, `EXPENSE_CATEGORY_DEFAULTS` / `defaultExpenseCategories`, `needsOwnerApproval`, `canAddExpense`, `canReverse`, `isDayClosed`, `buildExpense`, `buildReversal`, `expenseTotals` by category and method with reversals netted); schemas and registry; `ACTIONS.add_expense` (owner, cashier), `ACTIONS.manage_expenses` (owner); shop profile gains the cashier expense limit.
+- `apps/pos`:
+  - Dexie **version 12** (`expense_categories`, `expenses` with a `reverses_expense_id` index)
+  - Settings → Expense categories (owner PIN gate): add (en + ur), rename (clears the default's key), ↑ / ↓, archive / restore
+  - Home → Expense: `/expenses` (today's total and list; owners all, cashiers own; Reversed / Reversal marks), `/expenses/new` (category, amount, method, note, payee; owner PIN above the limit; "Saved offline" note), `/expenses/:id` (details, approver, original link; owner Reverse with a required reason)
+  - Settings → Shop: cashier expense limit (Rs)
+  - en + ur strings (default category names in Urdu; screens TODO-ur)
+
+**Tests**: DB 168 (+9: seeds per shop type with no Wastage; `create_shop` seeds; categories owner-only by actor and by session; cashier expense with and without an owner approver, a non-owner approver refused; zero amount refused, unknown method `missing_parent`, riders refused and see nothing; closed day refused; reversal refused for a cashier actor, wrong amount refused, once only (unique), a reversal of a reversal refused, no reason refused; original from another shop not found; append-only, isolation, push / pull). API DB 36. Core 330 (+7: defaults; approval rule; build with / without approval; riders, zero, closed day; reversal amount, reason, date today; owner only, once only, never a reversal; totals netted by category and method in a date range; shop profile limit). Pos 269 (+10: archived hidden for new but shown on old; categories owner-only; add / rename / reorder / archive / restore with the owner as actor; cashier within the limit offline with the note and no API call; above the limit owner PIN and approver; riders cannot add; cashier sees own and today only, owner all; reverse with reason, Reversed shown, no second reverse; cashiers get no Reverse; limit setting).
+
+**Decisions**
+- No Wastage expense category (stock movements + cost history instead).
+- `expense_categories.name_ur` added for owner-typed Urdu names.
+- Defaults seeded on the server with i18n keys; renaming clears the key.
+- Expenses use `pull_scope all` until `day_closes` adds "open dates only" for shop devices.
+- "Not cash" expenses are not a method; expenses use the shop's payment methods.
+
+**Follow-ups**
+- Closed-day check on the device and the shop-device pull filter: with `day_closes` (US044).
+- Expenses in closing (US067), expense report (US068), bill photos (US069, `expense_attachments`), recurring expenses and `payee_staff_id` (Release 2).

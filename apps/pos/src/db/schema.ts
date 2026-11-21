@@ -1,4 +1,6 @@
 import type {
+  ExpenseCategoryRow,
+  ExpenseRow,
   CustomerRow,
   KhataEntryRow,
   StockMovementRow,
@@ -69,6 +71,8 @@ export class NaqdDb extends Dexie {
   declare payments: EntityTable<PaymentRow, 'id'>;
   declare stock_movements: EntityTable<StockMovementRow, 'id'>;
   declare customers: EntityTable<CustomerRow, 'id'>;
+  declare expense_categories: EntityTable<ExpenseCategoryRow, 'id'>;
+  declare expenses: EntityTable<ExpenseRow, 'id'>;
   declare khata_entries: EntityTable<KhataEntryRow, 'id'>;
   declare products: EntityTable<ProductRow, 'id'>;
   declare product_costs: EntityTable<ProductCostRow, 'product_id'>;
@@ -159,6 +163,11 @@ export class NaqdDb extends Dexie {
             shop.paper_width_mm ??= 58;
           }),
       );
+    // Expenses (migration 20261122210000_expenses).
+    this.version(12).stores({
+      expense_categories: 'id, shop_id, server_seq',
+      expenses: 'id, shop_id, business_date, reverses_expense_id, server_seq',
+    });
   }
 }
 

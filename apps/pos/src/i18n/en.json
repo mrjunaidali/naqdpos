@@ -20,7 +20,8 @@
     "deviceCode": "This device: {{code}}",
     "newSale": "New sale",
     "todaysSales": "Today’s sales",
-    "khata": "Khata"
+    "khata": "Khata",
+    "expense": "Expense"
   },
   "signIn": {
     "title": "Sign in",
@@ -693,6 +694,84 @@
       "required": "Required.",
       "tooLong": "Too long.",
       "invalid": "Not valid."
+    },
+    "expenseLimit": "Cashier expense limit (Rs)",
+    "expenseLimitHint": "Above this a cashier needs the owner PIN. Owners have no limit."
+  },
+  "expense": {
+    "cat": {
+      "mandi_transport": "Mandi transport",
+      "rent": "Rent",
+      "bijli_gas": "Bijli/gas",
+      "staff_salary": "Staff salary",
+      "staff_advance": "Staff advance",
+      "petrol": "Petrol",
+      "shopping_bags": "Shopping bags",
+      "other": "Other"
+    }
+  },
+  "expenses": {
+    "title": "Expenses",
+    "todayTotal": "Today's expenses",
+    "add": "Add expense",
+    "addTitle": "Add expense",
+    "empty": "No expenses today.",
+    "category": "Category",
+    "amount": "Amount (Rs)",
+    "note": "Note (optional)",
+    "payee": "Paid to (optional)",
+    "save": "Save expense",
+    "saved": "Expense saved",
+    "savedOffline": "Saved offline — will sync when online",
+    "ownerNeeded": "This amount is above the cashier limit: the owner must approve.",
+    "reversal": "Reversal",
+    "reversed": "Reversed",
+    "reversedBy": "Reversed: {{reason}}",
+    "date": "Date",
+    "addedBy": "Added by",
+    "approvedBy": "Approved by",
+    "reason": "Reason",
+    "original": "See the original expense",
+    "reverse": "Reverse",
+    "confirmReverse": "Reverse {{amount}}",
+    "ownerToReverse": "Reversing an expense needs the owner.",
+    "back": "Back to expenses",
+    "notFound": "Expense not found.",
+    "errors": {
+      "forbidden": "Riders cannot add expenses.",
+      "bad_amount": "Enter an amount above 0.",
+      "no_category": "Pick a category.",
+      "no_method": "Pick a payment method.",
+      "needs_owner": "The owner must approve this amount.",
+      "day_closed": "Today is already closed: no more expenses can be added for it.",
+      "note_too_long": "The note is too long.",
+      "payee_too_long": "The name is too long.",
+      "reason_required": "A reason is required.",
+      "is_reversal": "A reversal cannot be reversed.",
+      "already_reversed": "This expense is already reversed.",
+      "no_device": "This device is not set up.",
+      "generic": "Something went wrong. Try again."
+    }
+  },
+  "expenseCategories": {
+    "title": "Expense categories",
+    "up": "Move {{name}} up",
+    "down": "Move {{name}} down",
+    "rename": "Rename",
+    "renameFor": "Rename {{name}}",
+    "archive": "Archive",
+    "archiveFor": "Archive {{name}}",
+    "unarchive": "Restore",
+    "unarchiveFor": "Restore {{name}}",
+    "archived": "Archived (hidden for new expenses)",
+    "addTitle": "Add a category",
+    "renameTitle": "Rename category",
+    "name": "Name (English)",
+    "nameUr": "Name (Urdu, optional)",
+    "add": "Add category",
+    "saveRename": "Save name",
+    "errors": {
+      "name": "Enter a name of 1 to 40 characters."
     }
   }
 }

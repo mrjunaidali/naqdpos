@@ -234,6 +234,7 @@ describe('shop profile', () => {
     receiptFooter: 'Thank you!  \nShukriya',
     receiptLanguage: 'both',
     paperWidth: 80,
+    expenseLimit: '2500',
   };
   it('cleans and accepts a valid profile', () => {
     expect(validateShopProfile(ok).value).toEqual({
@@ -243,6 +244,7 @@ describe('shop profile', () => {
       receipt_footer: 'Thank you!\nShukriya',
       receipt_language: 'both',
       paper_width_mm: 80,
+      cashier_expense_limit_paisa: 250000,
     });
   });
   it('refuses bad input', () => {
@@ -254,6 +256,7 @@ describe('shop profile', () => {
         receiptFooter: 'x'.repeat(201),
         receiptLanguage: 'fr',
         paperWidth: 72,
+        expenseLimit: '-5',
       }).errors,
     ).toEqual({
       name: 'required',
@@ -261,6 +264,7 @@ describe('shop profile', () => {
       receiptFooter: 'too_long',
       receiptLanguage: 'invalid',
       paperWidth: 'invalid',
+      expenseLimit: 'invalid',
     });
     expect(validateShopProfile({ ...ok, name: 'x'.repeat(81) }).errors).toEqual({
       name: 'too_long',

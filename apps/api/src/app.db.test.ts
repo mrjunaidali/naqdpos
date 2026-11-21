@@ -449,7 +449,7 @@ describe('/sync/push and /sync/pull', () => {
     expect(pulled?.row.name).toBe('Bilal');
     expect(typeof pulled?.row.server_seq).toBe('number');
     expect(new Set(page.rows.map((r) => r.table))).toEqual(
-      new Set(['shops', 'staff', 'staff_pins', 'devices', 'payment_methods']),
+      new Set(['shops', 'staff', 'staff_pins', 'devices', 'payment_methods', 'expense_categories']),
     );
     expect((await pullPage(d, page.next_seq)).rows).toEqual([]);
   });

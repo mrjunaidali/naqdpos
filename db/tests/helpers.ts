@@ -150,4 +150,6 @@ export const TENANT_TABLES = [
   'stock_movements',
   'customers',
   'khata_entries',
+  'expense_categories',
+  'expenses',
 ] as const;

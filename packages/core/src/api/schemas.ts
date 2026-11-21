@@ -19,6 +19,13 @@ import {
   type CustomerRow,
   type KhataEntryRow,
 } from '../khata.ts';
+import {
+  MAX_CATEGORY_NAME,
+  MAX_EXPENSE_NOTE,
+  MAX_EXPENSE_PAYEE,
+  type ExpenseCategoryRow,
+  type ExpenseRow,
+} from '../expenses.ts';
 import { PK_MOBILE_PATTERN } from '../phone.ts';
 import { RECEIPT_LANGUAGES } from '../tenancy.ts';
 import { MAX_STOCK_NOTE_LENGTH, STOCK_REASONS, type StockMovementRow } from '../stock.ts';
@@ -386,6 +393,48 @@ export const KhataEntryRowSchema = z.object({
   device_id: z.uuid().nullable(),
   server_seq: z.number().int().nullable(),
 }) satisfies z.ZodType<KhataEntryRow>;
+
+export const ExpenseCategoryRowSchema = z.object({
+  id: z.uuid(),
+  shop_id: z.uuid(),
+  name: z.string().trim().min(1).max(MAX_CATEGORY_NAME),
+  name_ur: z.string().trim().min(1).max(MAX_CATEGORY_NAME).nullable(),
+  i18n_key: z
+    .string()
+    .regex(/^expense\.cat\.[a-z_]{1,32}$/)
+    .nullable(),
+  icon: z.string().max(16).nullable(),
+  sort: z.number().int(),
+  archived_at: iso.nullable(),
+  device_id: z.uuid().nullable(),
+  created_at: iso,
+  updated_at: iso,
+  deleted_at: iso.nullable(),
+  server_seq: z.number().int().nullable(),
+}) satisfies z.ZodType<ExpenseCategoryRow>;
+
+export const ExpenseRowSchema = z.object({
+  id: z.uuid(),
+  shop_id: z.uuid(),
+  business_date: dateOnly,
+  category_id: z.uuid(),
+  amount_paisa: z
+    .number()
+    .int()
+    .refine((n) => n !== 0, 'amount_paisa must not be 0'),
+  paid_method_code: z.string().regex(/^[a-z0-9_]{1,32}$/),
+  note: z.string().max(MAX_EXPENSE_NOTE).nullable(),
+  payee: z.string().max(MAX_EXPENSE_PAYEE).nullable(),
+  payee_staff_id: z.uuid().nullable(),
+  staff_id: z.uuid(),
+  approved_by_staff_id: z.uuid().nullable(),
+  reverses_expense_id: z.uuid().nullable(),
+  reversal_reason: z.string().max(MAX_EXPENSE_NOTE).nullable(),
+  recurring_expense_id: z.uuid().nullable(),
+  created_at: iso,
+  device_id: z.uuid().nullable(),
+  server_seq: z.number().int().nullable(),
+}) satisfies z.ZodType<ExpenseRow>;
 
 export const SaleRowSchema = z.object({
   id: z.uuid(),

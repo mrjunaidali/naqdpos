@@ -48,6 +48,12 @@ export function HomePage() {
       >
         {t('home.khata')}
       </Link>
+      <Link
+        to="/expenses"
+        className="flex min-h-12 items-center justify-center rounded-2xl border border-border bg-surface font-semibold text-text"
+      >
+        {t('home.expense')}
+      </Link>
     </section>
   );
 }

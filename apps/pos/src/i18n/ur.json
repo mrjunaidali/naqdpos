@@ -20,7 +20,8 @@
     "deviceCode": "یہ ڈیوائس: {{code}}",
     "newSale": "TODO-ur نئی سیل",
     "todaysSales": "TODO-ur آج کی سیل",
-    "khata": "TODO-ur کھاتہ"
+    "khata": "TODO-ur کھاتہ",
+    "expense": "TODO-ur خرچہ"
   },
   "signIn": {
     "title": "سائن ان",
@@ -693,6 +694,84 @@
       "required": "TODO-ur ضروری ہے۔",
       "tooLong": "TODO-ur بہت لمبا ہے۔",
       "invalid": "TODO-ur درست نہیں۔"
+    },
+    "expenseLimit": "TODO-ur کیشیئر خرچے کی حد (روپے)",
+    "expenseLimitHint": "TODO-ur اس سے زیادہ پر کیشیئر کو مالک کا PIN چاہیے۔ مالک کی کوئی حد نہیں۔"
+  },
+  "expense": {
+    "cat": {
+      "mandi_transport": "منڈی کرایہ",
+      "rent": "کرایہ",
+      "bijli_gas": "بجلی/گیس",
+      "staff_salary": "عملے کی تنخواہ",
+      "staff_advance": "عملے کو ایڈوانس",
+      "petrol": "پیٹرول",
+      "shopping_bags": "شاپنگ بیگ",
+      "other": "دیگر"
+    }
+  },
+  "expenses": {
+    "title": "TODO-ur خرچے",
+    "todayTotal": "TODO-ur آج کے خرچے",
+    "add": "TODO-ur خرچہ شامل کریں",
+    "addTitle": "TODO-ur خرچہ شامل کریں",
+    "empty": "TODO-ur آج کوئی خرچہ نہیں۔",
+    "category": "TODO-ur قسم",
+    "amount": "TODO-ur رقم (روپے)",
+    "note": "TODO-ur نوٹ (اختیاری)",
+    "payee": "TODO-ur کس کو دیا (اختیاری)",
+    "save": "TODO-ur خرچہ محفوظ کریں",
+    "saved": "TODO-ur خرچہ محفوظ ہو گیا",
+    "savedOffline": "TODO-ur آف لائن محفوظ — آن لائن ہونے پر سنک ہو گا",
+    "ownerNeeded": "TODO-ur یہ رقم کیشیئر کی حد سے زیادہ ہے: مالک کی منظوری ضروری ہے۔",
+    "reversal": "TODO-ur واپسی",
+    "reversed": "TODO-ur واپس",
+    "reversedBy": "TODO-ur واپس: {{reason}}",
+    "date": "TODO-ur تاریخ",
+    "addedBy": "TODO-ur کس نے لکھا",
+    "approvedBy": "TODO-ur منظوری",
+    "reason": "TODO-ur وجہ",
+    "original": "TODO-ur اصل خرچہ دیکھیں",
+    "reverse": "TODO-ur واپس کریں",
+    "confirmReverse": "TODO-ur {{amount}} واپس کریں",
+    "ownerToReverse": "TODO-ur خرچہ واپس کرنے کے لیے مالک ضروری ہے۔",
+    "back": "TODO-ur خرچوں پر واپس",
+    "notFound": "TODO-ur خرچہ نہیں ملا۔",
+    "errors": {
+      "forbidden": "TODO-ur رائیڈر خرچہ نہیں لکھ سکتے۔",
+      "bad_amount": "TODO-ur 0 سے زیادہ رقم لکھیں۔",
+      "no_category": "TODO-ur قسم چنیں۔",
+      "no_method": "TODO-ur ادائیگی کا طریقہ چنیں۔",
+      "needs_owner": "TODO-ur اس رقم کے لیے مالک کی منظوری ضروری ہے۔",
+      "day_closed": "TODO-ur آج کا دن بند ہو چکا ہے: اب خرچہ نہیں لکھا جا سکتا۔",
+      "note_too_long": "TODO-ur نوٹ بہت لمبا ہے۔",
+      "payee_too_long": "TODO-ur نام بہت لمبا ہے۔",
+      "reason_required": "TODO-ur وجہ ضروری ہے۔",
+      "is_reversal": "TODO-ur واپسی کو واپس نہیں کیا جا سکتا۔",
+      "already_reversed": "TODO-ur یہ خرچہ پہلے ہی واپس ہو چکا ہے۔",
+      "no_device": "TODO-ur یہ آلہ سیٹ اپ نہیں ہے۔",
+      "generic": "TODO-ur کچھ غلط ہو گیا۔ دوبارہ کوشش کریں۔"
+    }
+  },
+  "expenseCategories": {
+    "title": "TODO-ur خرچوں کی اقسام",
+    "up": "TODO-ur {{name}} اوپر",
+    "down": "TODO-ur {{name}} نیچے",
+    "rename": "TODO-ur نام بدلیں",
+    "renameFor": "TODO-ur {{name}} کا نام بدلیں",
+    "archive": "TODO-ur محفوظ کریں",
+    "archiveFor": "TODO-ur {{name}} محفوظ کریں",
+    "unarchive": "TODO-ur واپس لائیں",
+    "unarchiveFor": "TODO-ur {{name}} واپس لائیں",
+    "archived": "TODO-ur محفوظ شدہ (نئے خرچوں میں نہیں)",
+    "addTitle": "TODO-ur نئی قسم",
+    "renameTitle": "TODO-ur قسم کا نام بدلیں",
+    "name": "TODO-ur نام (انگریزی)",
+    "nameUr": "TODO-ur نام (اردو، اختیاری)",
+    "add": "TODO-ur قسم شامل کریں",
+    "saveRename": "TODO-ur نام محفوظ کریں",
+    "errors": {
+      "name": "TODO-ur 1 سے 40 حروف کا نام لکھیں۔"
     }
   }
 }

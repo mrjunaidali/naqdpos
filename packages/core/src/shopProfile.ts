@@ -1,4 +1,5 @@
 // Shop profile (US014): what the owner edits in Settings → Shop and what receipts show.
+import { parseRupees } from './catalogue.ts';
 import {
   PAPER_WIDTHS,
   RECEIPT_LANGUAGES,
@@ -17,6 +18,8 @@ export interface ShopProfileInput {
   receiptFooter: string;
   receiptLanguage: string;
   paperWidth: number;
+  /** Cashier expense limit in rupees (US046); owners have none. */
+  expenseLimit: string;
 }
 
 export interface ShopProfileValue {
@@ -26,6 +29,7 @@ export interface ShopProfileValue {
   receipt_footer: string | null;
   receipt_language: ReceiptLanguage;
   paper_width_mm: PaperWidth;
+  cashier_expense_limit_paisa: number;
 }
 
 export type ShopProfileError = 'required' | 'too_long' | 'invalid';
@@ -62,8 +66,12 @@ export function validateShopProfile(input: ShopProfileInput): {
     ? (input.paperWidth as PaperWidth)
     : null;
   if (!width) errors.paperWidth = 'invalid';
+  const limit = parseRupees(input.expenseLimit, true);
+  if (limit.error) errors.expenseLimit = limit.error === 'required' ? 'required' : 'invalid';
 
-  if (Object.keys(errors).length > 0 || !language || !width) return { errors };
+  if (Object.keys(errors).length > 0 || !language || !width || limit.paisa === null) {
+    return { errors };
+  }
   return {
     errors,
     value: {
@@ -73,6 +81,7 @@ export function validateShopProfile(input: ShopProfileInput): {
       receipt_footer: footer || null,
       receipt_language: language,
       paper_width_mm: width,
+      cashier_expense_limit_paisa: limit.paisa,
     },
   };
 }

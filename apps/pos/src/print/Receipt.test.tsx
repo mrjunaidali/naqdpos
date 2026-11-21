@@ -128,6 +128,7 @@ describe('receipt screen (US036)', () => {
         receipt_footer: 'Shukriya',
         receipt_language: 'ur',
         paper_width_mm: 80,
+        cashier_expense_limit_paisa: 200_000,
       },
       STAFF_ID,
     );

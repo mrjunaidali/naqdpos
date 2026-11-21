@@ -59,6 +59,8 @@ describe('sync schemas', () => {
       'categories',
       'customers',
       'devices',
+      'expense_categories',
+      'expenses',
       'khata_entries',
       'payment_methods',
       'payments',

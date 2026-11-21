@@ -20,6 +20,9 @@ import { SaleDonePage } from './features/sale/SaleDonePage.tsx';
 import { SalePage } from './features/sale/SalePage.tsx';
 import { SalesListPage, SaleViewPage } from './features/sale/SalesListPage.tsx';
 import { StockPage } from './features/stock/StockPage.tsx';
+import { AddExpensePage } from './features/expenses/AddExpensePage.tsx';
+import { ExpenseCategoriesPage } from './features/expenses/ExpenseCategoriesPage.tsx';
+import { ExpenseDetailPage, ExpensesPage } from './features/expenses/ExpensesPage.tsx';
 import { ShopProfilePage } from './features/settings/ShopProfilePage.tsx';
 import { ReceiptPage } from './print/ReceiptPage.tsx';
 import { CustomerPage } from './features/khata/CustomerPage.tsx';
@@ -119,6 +122,41 @@ export const routes: RouteObject[] = [
         element: (
           <Gate state="ready">
             <SaleViewPage />
+          </Gate>
+        ),
+      },
+      {
+        path: 'settings/expense-categories',
+        element: (
+          <Gate state="ready">
+            <OwnerPinGate>
+              <ExpenseCategoriesPage />
+            </OwnerPinGate>
+          </Gate>
+        ),
+      },
+      {
+        // Owners and cashiers (US046); riders are refused on the page. Reverse asks for the owner.
+        path: 'expenses',
+        element: (
+          <Gate state="ready">
+            <ExpensesPage />
+          </Gate>
+        ),
+      },
+      {
+        path: 'expenses/new',
+        element: (
+          <Gate state="ready">
+            <AddExpensePage />
+          </Gate>
+        ),
+      },
+      {
+        path: 'expenses/:expenseId',
+        element: (
+          <Gate state="ready">
+            <ExpenseDetailPage />
           </Gate>
         ),
       },

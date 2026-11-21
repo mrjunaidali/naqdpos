@@ -14,6 +14,7 @@ import { db } from '../../db/schema.ts';
 import { getStoredDevice } from '../../db/session.ts';
 import { Alert, Button } from '../../ui/Button.tsx';
 import { Field } from '../../ui/Field.tsx';
+import { rupeesInput } from '../catalogue/catalogueData.ts';
 import { useActingOwnerId } from '../pin/actingOwner.ts';
 import { saveShopProfile } from './shopProfile.ts';
 
@@ -46,11 +47,13 @@ function ShopProfileForm({ shop }: { shop: ShopRow }) {
     receiptFooter: shop.receipt_footer ?? '',
     receiptLanguage: shop.receipt_language ?? 'en',
     paperWidth: shop.paper_width_mm ?? 58,
+    expenseLimit: rupeesInput(shop.cashier_expense_limit_paisa),
   });
   const [errors, setErrors] = useState<ReturnType<typeof validateShopProfile>['errors']>({});
   const [failed, setFailed] = useState(false);
-  const set = (key: 'name' | 'address' | 'phone') => (e: { target: { value: string } }) =>
-    setValues((v) => ({ ...v, [key]: e.target.value }));
+  const set =
+    (key: 'name' | 'address' | 'phone' | 'expenseLimit') => (e: { target: { value: string } }) =>
+      setValues((v) => ({ ...v, [key]: e.target.value }));
   const errorText = (key: keyof ShopProfileInput) =>
     errors[key] ? t(ERRORS[errors[key]] ?? 'errors.generic') : undefined;
 
@@ -153,6 +156,15 @@ function ShopProfileForm({ shop }: { shop: ShopRow }) {
           ))}
         </div>
       </fieldset>
+      <Field
+        label={t('shopProfile.expenseLimit')}
+        hint={t('shopProfile.expenseLimitHint')}
+        value={values.expenseLimit}
+        onChange={set('expenseLimit')}
+        error={errorText('expenseLimit')}
+        inputMode="decimal"
+        dir="ltr"
+      />
       <p className="text-sm text-muted">{t('shopProfile.logoLater')}</p>
       <Button type="submit">{t('shopProfile.save')}</Button>
     </form>

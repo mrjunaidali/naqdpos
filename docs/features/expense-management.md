@@ -23,7 +23,7 @@ Shops record every rupee that leaves the business (rent, bijli, mandi transport,
 - Money in paisa, `business_date` in `Asia/Karachi`, UUIDv7 ids made on the device, every row has `shop_id` and `staff_id`.
 - `expenses` stays **append-only**. A wrong entry is fixed by a **reversal row** (negative amount, linked to the original), never by editing or deleting.
 - No expense can be created for a business date that is already closed (`day_closes`).
-- Only **cash** expenses reduce expected cash. Wallet, bank and "not cash" (e.g. wastage at cost) do not.
+- Only **cash** expenses reduce expected cash. Wallet and bank expenses (the shop's other `payment_methods`) do not.
 - Money the owner takes home is **not an expense**. It is recorded at daily closing as an owner withdrawal (`day_closes.owner_withdrawal_paisa`).
 
 ## Permissions
@@ -48,7 +48,7 @@ As a cashier or owner, I record an expense so the money is accounted for.
 
 ### US065 (EXP-2) Expense categories
 As an owner, I keep a short list of categories that match my shop.
-- New shops get default categories by shop type. Fruit & veg: Mandi transport, Rent, Bijli/gas, Staff salary, Staff advance, Petrol, Shopping bags, Wastage, Other.
+- New shops get default categories by shop type. Fruit & veg: Mandi transport, Rent, Bijli/gas, Staff salary, Staff advance, Petrol, Shopping bags, Other. Other shop types: the same without Mandi transport. **Wastage is not an expense category** (decided 22 Nov 2026): wastage is recorded as stock movements (US025) and valued from `product_cost_history` in reports, so an expense would count it twice. Defaults are seeded on the server (`seed_expense_categories()`, for existing shops and in `create_shop`) with `i18n_key` names, like payment methods; renaming a default clears its key so the owner's names show.
 - Owner can add, rename, reorder and archive categories. Archived categories are hidden for new entries but stay on old ones.
 - Categories show in Urdu and English (i18n keys for defaults; owner-typed names shown as typed).
 
@@ -88,7 +88,8 @@ As an owner, I track advances (peshgi) against each staff member's salary.
 
 ## Schema (approved — in `docs/architecture.md` §3)
 
-- **New `expense_categories`** (mutable): `id, shop_id, name, i18n_key null, icon, sort, archived_at null`.
+- **New `expense_categories`** (mutable, owner-only writes): `id, shop_id, name, name_ur null` (owner-typed Urdu name, approved 22 Nov 2026)`, i18n_key null, icon, sort, archived_at null`.
+- Built in Step 17: `expense_categories` and `expenses` (with the `expenses_check()` trigger: reversals owner-only, `reverses_expense_id` unique, amount = −original, never a reversal of a reversal, approver an owner). `expense_attachments` (bill photos, US069) is not created yet; `recurring_expense_id` and `payee_staff_id` stay nullable for Release 2.
 - **`expenses`**: `category_id` (replaces the text `category`), plus `payee`, `payee_staff_id`, `reverses_expense_id` (unique), `reversal_reason`, `recurring_expense_id`, `approved_by_staff_id` — all nullable.
 - **New `expense_attachments`** (append-only): `id, shop_id, expense_id, storage_path, uploaded_at`. Replaces the proposed `expenses.photo_path`, because an append-only expense row can't be updated after the upload finishes.
 - **New `recurring_expenses`** (mutable, Release 2): `id, shop_id, category_id, amount_paisa, method_code, frequency ('monthly' | 'weekly'), due_day, next_due_date, active`.

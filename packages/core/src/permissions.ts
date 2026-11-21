@@ -31,6 +31,10 @@ export const ACTIONS = {
   use_khata: ['owner', 'cashier'],
   /** Khata adjustments (khata_entries_check() on the actor). */
   adjust_khata: ['owner'],
+  /** Add an expense (RLS expenses_insert_seller; write_roles). Riders: Release 2. */
+  add_expense: ['owner', 'cashier'],
+  /** Expense categories, reversals and the cashier expense limit (expenses_check() on the actor). */
+  manage_expenses: ['owner'],
   /** Edit shop settings (RLS shops_update_owner, column grants; write_roles). */
   manage_shop_settings: ['owner'],
 } as const satisfies Record<string, readonly Role[]>;

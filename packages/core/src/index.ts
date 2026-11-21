@@ -4,6 +4,7 @@ export * from './cart.ts';
 export * from './catalogue.ts';
 export * from './discount.ts';
 export * from './escpos.ts';
+export * from './expenses.ts';
 export * from './ids.ts';
 export * from './khata.ts';
 export * from './money.ts';

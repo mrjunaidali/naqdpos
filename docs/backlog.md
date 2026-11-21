@@ -28,7 +28,7 @@ Build in this order, not in ID order. "Sheet step" is the step number in the ori
 | 8 | Stock, wastage, discounts, FOC | US024, US025, US032, US033 | 21–24 | Done (Steps 13–14) |
 | 9 | Customers and khata | US038, US039, US040, US041 | 25–28 | Done (Step 15) |
 | 10 | Shop profile and receipts | US014, US036 | 29, 30 | To do |
-| 11 | Expenses | US065, US046, US066 | 30a, 31, 31a | To do |
+| 11 | Expenses | US065, US046, US066 | 30a, 31, 31a | Done (Step 17) |
 | 12 | Daily closing | US044, US045, US067 | 32, 33, 33a | To do |
 | 13 | Admin portal | US010, US011, US012, US013 | 34, 35, 7, 36 | To do |
 | 14 | Reports | US047, US048, US049, US068 | 37, 38, 39, 39a | To do |
@@ -345,11 +345,11 @@ Build in this order, not in ID order. "Sheet step" is the step number in the ori
 
 ### F38 · Expense management (R1 + R2) — spec: `docs/features/expense-management.md`
 
-**US065** · Must · 3 · R1 · To do (EXP-2) — Expense categories: defaults per shop type (fruit & veg: Mandi transport, Rent, Bijli/gas, Staff salary, Staff advance, Petrol, Shopping bags, Wastage, Other); owner adds, renames, reorders, archives; defaults via i18n keys. Includes the expense schema migration + Dexie bump.
+**US065** · Must · 3 · R1 · Done (EXP-2) — Expense categories: defaults per shop type (fruit & veg: Mandi transport, Rent, Bijli/gas, Staff salary, Staff advance, Petrol, Shopping bags, Other; no Wastage — it is a stock movement); owner adds, renames, reorders, archives; defaults via i18n keys. Includes the expense schema migration + Dexie bump.
 
-**US046** · Must · 3 · R1 · To do (EXP-1) — Record an expense offline: category, amount > 0, method, optional note/payee; one row + outbox entry; cashier above `cashier_expense_limit_paisa` needs owner PIN (`approved_by_staff_id`); blocked on a closed day; riders cannot add.
+**US046** · Must · 3 · R1 · Done (EXP-1; closed-day check on the device comes with `day_closes`) — Record an expense offline: category, amount > 0, method, optional note/payee; one row + outbox entry; cashier above `cashier_expense_limit_paisa` needs owner PIN (`approved_by_staff_id`); blocked on a closed day; riders cannot add.
 
-**US066** · Should · 3 · R1 · To do (EXP-3) — Reverse a wrong expense (owner only): reason, negative row with `reverses_expense_id`, once only, dated today if the original day is closed.
+**US066** · Should · 3 · R1 · Done (EXP-3) — Reverse a wrong expense (owner only): reason, negative row with `reverses_expense_id`, once only, dated today if the original day is closed.
 
 **US067** · Must · 2 · R1 · To do (EXP-4) — Expenses in closing: expected cash subtracts cash expenses net of reversals and the owner withdrawal; closing lists expenses by category; WhatsApp summary includes total expenses.
 
