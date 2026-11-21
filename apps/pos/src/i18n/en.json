@@ -19,7 +19,8 @@
     "welcome": "Welcome",
     "deviceCode": "This device: {{code}}",
     "newSale": "New sale",
-    "todaysSales": "Today’s sales"
+    "todaysSales": "Today’s sales",
+    "khata": "Khata"
   },
   "signIn": {
     "title": "Sign in",
@@ -429,8 +430,12 @@
       "bad_payment": "A payment amount is not valid.",
       "no_device": "This device is not set up.",
       "no_staff": "Nobody is switched in. Switch staff first.",
-      "over_limit": "Above the cashier discount limit: the owner must approve."
-    }
+      "over_limit": "Above the cashier discount limit: the owner must approve.",
+      "khata_needs_customer": "Put on khata only with a customer attached."
+    },
+    "khata": "Khata",
+    "khataRow": "Khata ({{name}})",
+    "removeKhata": "Remove khata"
   },
   "done": {
     "title": "Sale saved",
@@ -439,7 +444,9 @@
     "change": "Change",
     "newSale": "New sale",
     "receipt": "Receipt",
-    "receiptLater": "Receipts (WhatsApp, print) come next"
+    "receiptLater": "Receipts (WhatsApp, print) come next",
+    "onKhata": "On khata: {{amount}}",
+    "newBalance": "New balance: {{amount}}"
   },
   "sales": {
     "title": "Today’s sales",
@@ -560,5 +567,72 @@
     "label": "Limit (%)",
     "save": "Save limit",
     "invalid": "Enter a whole number from 0 to 100."
+  },
+  "customers": {
+    "pickTitle": "Customer",
+    "search": "Search customers",
+    "searchPlaceholder": "Mobile or name",
+    "noMatch": "No customers found.",
+    "addNew": "Add new customer",
+    "mobile": "Mobile number",
+    "nameOptional": "Name (optional)",
+    "address": "Address (optional)",
+    "save": "Save customer",
+    "change": "Change customer",
+    "remove": "Remove customer",
+    "balanceShort": "owes {{amount}}",
+    "edit": "Edit details",
+    "mobileFixed": "The mobile number cannot be changed. A new number is a new customer.",
+    "errors": {
+      "mobile": "Enter a Pakistani mobile number, e.g. 0300 1234567."
+    }
+  },
+  "khata": {
+    "title": "Khata",
+    "receivable": "Total receivable",
+    "overdueOnly": "Overdue only",
+    "noPaymentFor": "No payment for",
+    "days": "Days without payment",
+    "daysUnit": "days",
+    "empty": "No khata balances yet.",
+    "noMatch": "No customers match.",
+    "overdue": "Overdue",
+    "call": "Call {{name}}",
+    "whatsapp": "WhatsApp {{name}}",
+    "balance": "Balance",
+    "receive": "Receive payment",
+    "adjust": "Adjust balance",
+    "ledger": "Ledger",
+    "noEntries": "No khata entries yet.",
+    "after": "Balance {{amount}}",
+    "notFound": "Customer not found.",
+    "type": {
+      "credit_sale": "Sale on khata",
+      "payment": "Payment received",
+      "return_credit": "Return",
+      "adjustment": "Adjustment"
+    },
+    "receiveTitle": "Receive payment",
+    "receivedTitle": "Payment received",
+    "received": "{{amount}} received.",
+    "shareWhatsapp": "Share on WhatsApp",
+    "amount": "Amount (Rs)",
+    "saveReceipt": "Save payment",
+    "adjustTitle": "Adjust balance",
+    "direction": "Change",
+    "add": "Add to balance",
+    "reduce": "Reduce balance",
+    "note": "Note (required)",
+    "saveAdjustment": "Save adjustment",
+    "ownerPin": "Adjusting a balance needs the owner.",
+    "errors": {
+      "amount": "Enter an amount above 0.",
+      "noteRequired": "A note is required.",
+      "bad_amount": "Enter an amount above 0.",
+      "forbidden": "Only the owner can adjust a balance.",
+      "note_required": "A note is required.",
+      "note_too_long": "The note is too long (200 characters at most).",
+      "no_device": "This device is not set up."
+    }
   }
 }

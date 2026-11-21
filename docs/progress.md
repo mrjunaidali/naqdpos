@@ -549,3 +549,36 @@ Line and bill discounts (Rs or whole %), free items that still move stock, one-t
 - Receipt printing / sharing shows discounts and FOC with US036.
 - Discount and FOC value in reports (daily / monthly) with the reports stories.
 - A free "by amount" line is valued at qty × rate in the sale detail (its typed amount is not stored).
+
+## Step 15 — US038 customers, US039 sale on khata, US040 receive payment, US041 khata list (2026-11-22)
+
+Customers by mobile (same number = same customer on every device), all or part of a bill on khata, payments received with a WhatsApp receipt, and the khata list with overdue filter and customer ledger. Offline.
+
+**Built**
+- Migration `20261122150000_khata.sql`: `customers` (mutable; mobile E.164 check, unique per shop, fixed by trigger `customers_mobile_fixed()`); `khata_entries` (append-only; per-type checks; composite FKs to customer, sale, payment, staff; trigger `khata_entries_check()`: adjustments owner-only); FKs `sales_customer_fk`, `payments_customer_fk`; `payments_khata_receipt_customer` check; view `customer_balances` (security_invoker); RLS owners / cashiers, riders none; registry rows (`write_roles {owner, cashier}`).
+- `packages/core`: `uuid5.ts` (`uuidv5` with WebCrypto SHA-1, `customerId(shop, mobile)`); `khata.ts` (`CustomerRow`, `KhataEntryRow`, `khataBalance`, `runningBalance`, `isOverdue`, `lastKhataPayment`, `splitWithKhata`, `creditSaleEntry`, `buildKhataReceipt`, `buildKhataAdjustment`, `rupeesText`, `khataReceiptText` (en / ur), `waLink`, `telLink`); `buildSale` takes the customer and the khata part (payments + khata = total; `khata_needs_customer`) and returns the `credit_sale` entry; sale payments carry the customer; schemas and registry entries; `ACTIONS.use_khata` (owner, cashier), `ACTIONS.adjust_khata` (owner).
+- `apps/pos`:
+  - Dexie **version 10** (`customers`, `khata_entries`)
+  - cart store keeps the attached customer; `completeSale` writes the khata entry in the sale's transaction
+  - sale screen customer chip (`CustomerChip`, `CustomerPicker`): search by mobile or name, add (Pakistani mobile via `phone.ts`, name optional), balance shown, remove
+  - pay screen: "Khata" option only with a customer (rest or a typed part, its own row, removable; also locks the bill discount)
+  - success screen: customer, "On khata", "New balance"
+  - `/khata` (Home → Khata): total receivable, highest balance first, overdue filter (days, default 30), search, call / WhatsApp
+  - `/khata/:id`: balance, ledger with running balance (sales link to the sale), edit name / address (mobile fixed), Receive payment (amount, method, reference; WhatsApp receipt), owner-only Adjust balance (owner PIN rules, note required)
+  - en + ur strings (`customers.*`, `khata.*`, pay / done additions)
+- Pay test: the F2 wait is 5 s (Charge reads the seller from Dexie first).
+
+**Tests**: DB 156 (+9: same customer from two devices merges with the newer name and no duplicate; mobile change refused; sale partly on khata and the balance view; credit_sale before its sale → `missing_parent` then accepted, without a sale refused, a sale for an unknown customer waits; receipt payment + entry, khata_receipt without customer and payment entry without payment refused; adjustment refused for a cashier actor and a cashier session, refused without a note, accepted for the owner; closed day refused; append-only, shop isolation and riders see nothing incl. the view, riders cannot push customers; push / pull round trip). Core 307 (+22: UUIDv5 RFC and Python vectors, version / variant, bad namespace; same mobile in any format → same id, per shop and per number; balance and running balance; overdue rules; split with khata; buildSale fully / partly on khata, khata needs a customer, must close the bill; receipt rows; adjustment owner-only and note; receipt text en / ur, grouped rupees; wa.me / tel; customer schema). Pos 247 (+11: same mobile same customer; chip adds a customer offline and shows the balance; non-mobile refused; Khata only with a customer; whole bill on khata with new balance and outbox order; part cash part khata; one transaction on failure; receive payment writes both rows and the WhatsApp link; list order, total, overdue, search, call / WhatsApp; ledger running balance and sale link; adjust asks a cashier for the owner PIN and needs a note).
+
+**Decisions**
+- Customer id = UUIDv5(shop_id, E.164 mobile); the one exception to the UUIDv7 rule; mobile fixed after creation.
+- Overdue = balance > 0 and no khata payment for N days (default 30); never paid counts from the first entry.
+- Khata corrections are owner-only adjustments with a note.
+- Khata on a bill is a `credit_sale` entry, not a payments row: payments + khata = total.
+- Payments are received with today's business date.
+
+**Follow-ups**
+- Credit limit warning (US042) — `credit_limit_paisa` exists, unused.
+- Back-dated khata receipts (with closed days).
+- Khata receipts in daily closing (expected cash) and reports.
+- Returns (`return_credit`) with the returns story.

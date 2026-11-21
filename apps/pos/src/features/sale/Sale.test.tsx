@@ -79,7 +79,8 @@ describe('sale screen (US029)', () => {
     await waitFor(() => expect(router.state.location.pathname).toBe('/sale'));
     expect(await screen.findByRole('heading', { name: 'New sale' })).toBeInTheDocument();
     expect((await screen.findAllByText('Ali · A1')).length).toBeGreaterThan(0);
-    expect(screen.getByRole('button', { name: 'Customer' })).toBeDisabled();
+    // Customers can be attached (US038) once someone is switched in.
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Customer' })).toBeEnabled());
   });
 
   it('searches English, Urdu and Roman Urdu; "/" focuses the search', async () => {

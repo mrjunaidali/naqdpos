@@ -13,6 +13,12 @@ import {
   type ProductRow,
 } from '../catalogue.ts';
 import { MAX_FOC_QTY_MILLI, type FocRule } from '../discount.ts';
+import {
+  KHATA_TYPES,
+  MAX_KHATA_NOTE_LENGTH,
+  type CustomerRow,
+  type KhataEntryRow,
+} from '../khata.ts';
 import { PK_MOBILE_PATTERN } from '../phone.ts';
 import { MAX_STOCK_NOTE_LENGTH, STOCK_REASONS, type StockMovementRow } from '../stock.ts';
 import {
@@ -342,6 +348,41 @@ export const PaymentMethodRowSchema = z.object({
   deleted_at: iso.nullable(),
   server_seq: z.number().int().nullable(),
 }) satisfies z.ZodType<PaymentMethodRow>;
+
+/** customers (US038): the id is UUIDv5(shop_id, mobile); the mobile is E.164 and fixed. */
+export const CustomerRowSchema = z.object({
+  id: z.uuid(),
+  shop_id: z.uuid(),
+  mobile: z.string().regex(PK_MOBILE_PATTERN),
+  name: z.string().trim().min(1).max(60).nullable(),
+  address: z.string().max(200).nullable(),
+  credit_limit_paisa: z.number().int().min(0).nullable(),
+  whatsapp_opt_in: z.boolean(),
+  device_id: z.uuid().nullable(),
+  created_at: iso,
+  updated_at: iso,
+  deleted_at: iso.nullable(),
+  server_seq: z.number().int().nullable(),
+}) satisfies z.ZodType<CustomerRow>;
+
+export const KhataEntryRowSchema = z.object({
+  id: z.uuid(),
+  shop_id: z.uuid(),
+  customer_id: z.uuid(),
+  business_date: dateOnly,
+  type: z.enum(KHATA_TYPES),
+  amount_paisa: z
+    .number()
+    .int()
+    .refine((n) => n !== 0, 'amount_paisa must not be 0'),
+  sale_id: z.uuid().nullable(),
+  payment_id: z.uuid().nullable(),
+  note: z.string().max(MAX_KHATA_NOTE_LENGTH).nullable(),
+  staff_id: z.uuid(),
+  created_at: iso,
+  device_id: z.uuid().nullable(),
+  server_seq: z.number().int().nullable(),
+}) satisfies z.ZodType<KhataEntryRow>;
 
 export const SaleRowSchema = z.object({
   id: z.uuid(),

@@ -42,6 +42,12 @@ export function HomePage() {
       >
         {t('home.todaysSales')}
       </Link>
+      <Link
+        to="/khata"
+        className="flex min-h-12 items-center justify-center rounded-2xl border border-border bg-surface font-semibold text-text"
+      >
+        {t('home.khata')}
+      </Link>
     </section>
   );
 }

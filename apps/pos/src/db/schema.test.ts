@@ -73,13 +73,15 @@ describe('NaqdDb schema', () => {
     }
   });
 
-  it('is version 9 with the tenancy, sync, catalogue, sales and stock tables', async () => {
+  it('is version 10 with the tenancy, sync, catalogue, sales and stock tables', async () => {
     const db = track(new NaqdDb('naqdpos-test-schema'));
     await db.open();
-    expect(db.verno).toBe(9);
+    expect(db.verno).toBe(10);
     expect(db.tables.map((table) => table.name).sort()).toEqual([
       'categories',
+      'customers',
       'devices',
+      'khata_entries',
       'meta',
       'outbox',
       'payment_methods',
@@ -130,7 +132,7 @@ describe('NaqdDb schema', () => {
 
     const db = track(new NaqdDb(name));
     await db.open();
-    expect(db.verno).toBe(9);
+    expect(db.verno).toBe(10);
     expect(await db.shops.get(SHOP_ID)).toEqual(shop);
     expect(await db.meta.get('device')).toEqual({ key: 'device', value: { id: device.id } });
     expect(await db.outbox.count()).toBe(0);
@@ -196,7 +198,7 @@ describe('NaqdDb schema', () => {
 
     const db = track(new NaqdDb(name));
     await db.open();
-    expect(db.verno).toBe(9);
+    expect(db.verno).toBe(10);
     expect(await db.meta.get('storage_persisted')).toEqual({
       key: 'storage_persisted',
       value: false,

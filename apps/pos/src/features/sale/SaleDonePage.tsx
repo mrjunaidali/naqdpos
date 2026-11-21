@@ -5,6 +5,7 @@ import { useOnline } from '../../app/useOnline.ts';
 import { db } from '../../db/schema.ts';
 import { useSyncStatus } from '../../sync/useSyncStatus.ts';
 import { showToast } from '../../ui/toastStore.ts';
+import { SaleKhataLine } from '../khata/SaleKhataLine.tsx';
 import { SaleDetail } from './SaleDetail.tsx';
 import { useSaleBundle } from './saleData.ts';
 
@@ -48,6 +49,9 @@ export function SaleDonePage() {
       </div>
       {!online && <p className="text-muted">{t('done.savedOffline')}</p>}
       <SaleDetail bundle={bundle} {...(change !== undefined ? { change } : {})} />
+      {bundle.sale.customer_id && (
+        <SaleKhataLine saleId={bundle.sale.id} customerId={bundle.sale.customer_id} />
+      )}
       <Link
         to="/sale"
         replace

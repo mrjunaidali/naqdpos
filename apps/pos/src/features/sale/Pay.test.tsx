@@ -272,7 +272,10 @@ describe('pay screen (US034, US035)', () => {
     const { router } = renderAt('/sale');
     await screen.findByRole('button', { name: 'Charge' });
     fireEvent.keyDown(window, { key: 'F2' });
-    await waitFor(() => expect(router.state.location.pathname).toBe('/sale/pay'));
+    // Charge reads the seller from Dexie first; slow when every package's tests run at once.
+    await waitFor(() => expect(router.state.location.pathname).toBe('/sale/pay'), {
+      timeout: 5000,
+    });
   });
 
   it('shows the reminder toast after the sale when sync is behind, at most once per 30 minutes', async () => {

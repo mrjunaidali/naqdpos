@@ -2,6 +2,7 @@ import {
   applyPayment,
   changeDue,
   computeBill,
+  formatPkMobile,
   giveAway,
   parseRupees,
   remainingDue,
@@ -16,12 +17,16 @@ import { Field } from '../../ui/Field.tsx';
 import { rupeesInput } from '../catalogue/catalogueData.ts';
 import { methodName, usePaymentMethods } from '../settings/paymentMethods.ts';
 import { useCartStore } from './cartStore.ts';
+import { useCustomer } from '../khata/khataRepo.ts';
 import { completeSale, SaleNotCompleted } from './completeSale.ts';
 import { currentSeller, ownerApprovalNeeded } from './discountLimit.ts';
 import { DiscountSheet } from './DiscountSheet.tsx';
 import { OwnerPinDialog } from './OwnerPinDialog.tsx';
 import { NumberPad } from './NumberPad.tsx';
 import { useRs } from './saleFormat.ts';
+
+/** The Khata chip's pseudo method code (never stored: khata is not a payment). */
+const KHATA = '__khata';
 
 const QUICK_CASH = [10_000, 50_000, 100_000, 500_000] as const; // Rs 100, 500, 1000, 5000
 
@@ -49,7 +54,7 @@ export function PayPage() {
   const [editingDiscount, setEditingDiscount] = useState(false);
   type Ask =
     | { kind: 'discount'; discount: Discount }
-    | { kind: 'finish'; all: PaymentDraft[]; change: number };
+    | { kind: 'finish'; all: PaymentDraft[]; change: number; khata: number };
   const [askOwner, setAskOwner] = useState<Ask | null>(null);
   const ready = useCartStore((s) => s.ready);
   const hydrate = useCartStore((s) => s.hydrate);
@@ -58,6 +63,10 @@ export function PayPage() {
   }, [hydrate]);
   const methods = usePaymentMethods();
   const [payments, setPayments] = useState<PaymentDraft[]>([]);
+  /** The part on the customer's khata (US039): not a payments row. */
+  const [khata, setKhata] = useState(0);
+  const customerId = useCartStore((s) => s.customerId);
+  const customer = useCustomer(customerId);
   const [method, setMethod] = useState('cash');
   const [amount, setAmount] = useState('');
   const [reference, setReference] = useState('');
@@ -67,26 +76,29 @@ export function PayPage() {
   if (ready && lines.length === 0 && !busy) return <Navigate to="/sale" replace />;
 
   const bill = computeBill(lines, billDiscount);
-  const due = remainingDue(bill.total_paisa, payments);
+  const due = remainingDue(bill.total_paisa, payments) - khata;
+  const settling = payments.length > 0 || khata > 0;
   // Cash is offered even before the shop's methods have been pulled (every shop has it).
   const active = (methods ?? []).filter((m) => m.active);
   const chips = active.some((m) => m.code === 'cash')
     ? active
     : [{ id: 'cash', code: 'cash', label: 'Cash' }, ...active];
+  const customerLabel = customer ? (customer.name ?? formatPkMobile(customer.mobile)) : '';
   const typed = parseRupees(amount, false).paisa;
   const isCash = method === 'cash';
+  const isKhata = method === KHATA;
   const change = isCash && typed ? changeDue(typed, due) : 0;
 
-  async function finish(all: PaymentDraft[], changePaisa: number) {
+  async function finish(all: PaymentDraft[], changePaisa: number, khataPaisa: number) {
     const cart = useCartStore.getState();
     const seller = await currentSeller();
     if (ownerApprovalNeeded(cart.lines, cart.billDiscount, cart.approval, seller).needed) {
-      setAskOwner({ kind: 'finish', all, change: changePaisa });
+      setAskOwner({ kind: 'finish', all, change: changePaisa, khata: khataPaisa });
       return;
     }
     setBusy(true);
     try {
-      const rows = await completeSale(all);
+      const rows = await completeSale(all, { khataPaisa });
       void navigate(`/sale/done/${rows.sale.id}`, {
         replace: true,
         state: { change: changePaisa },
@@ -102,6 +114,21 @@ export function PayPage() {
       setError(t('pay.errors.zero'));
       return;
     }
+    if (isKhata) {
+      // On khata: up to what is left; the rest is still paid by money.
+      if (paisa <= 0) return setError(t('pay.errors.zero'));
+      if (paisa > due) return setError(t('pay.errors.tooMuch'));
+      setError(undefined);
+      const next = khata + paisa;
+      if (paisa === due) {
+        void finish(payments, 0, next);
+        return;
+      }
+      setKhata(next);
+      setAmount('');
+      chooseMethod('cash');
+      return;
+    }
     const result = applyPayment(due, method, paisa, isCash ? null : reference.trim() || null);
     if ('error' in result) {
       setError(t(ERRORS[result.error] ?? 'errors.generic'));
@@ -115,8 +142,8 @@ export function PayPage() {
       reference: result.payment.reference,
     };
     const all = [...payments, row];
-    if (remainingDue(bill.total_paisa, all) === 0) {
-      void finish(all, result.change_paisa);
+    if (remainingDue(bill.total_paisa, all) - khata === 0) {
+      void finish(all, result.change_paisa, khata);
       return;
     }
     setPayments(all);
@@ -144,7 +171,7 @@ export function PayPage() {
     const { give_away_paisa } = giveAway(cart.lines, discount);
     setApproval({ staffId: ownerId, give_away_paisa });
     if (ask.kind === 'discount') setBillDiscount(ask.discount);
-    else void finish(ask.all, ask.change);
+    else void finish(ask.all, ask.change, ask.khata);
   }
 
   const chooseMethod = (code: string) => {
@@ -171,7 +198,7 @@ export function PayPage() {
             })}
           </p>
         )}
-        {payments.length > 0 && (
+        {settling && (
           <p className="mt-2 font-semibold">{t('pay.remaining', { amount: rs(due) })}</p>
         )}
       </div>
@@ -199,7 +226,7 @@ export function PayPage() {
             {bill.discount_paisa > 0 && <span dir="ltr">−{rs(bill.discount_paisa)}</span>}
             <button
               type="button"
-              disabled={payments.length > 0 || busy}
+              disabled={settling || busy}
               onClick={() => setEditingDiscount(true)}
               className="min-h-11 rounded-md border border-border px-3 text-sm disabled:opacity-50"
             >
@@ -207,13 +234,25 @@ export function PayPage() {
             </button>
           </dd>
         </div>
-        {payments.length > 0 && (
-          <p className="text-xs text-muted">{t('discount.lockedByPayments')}</p>
-        )}
+        {settling && <p className="text-xs text-muted">{t('discount.lockedByPayments')}</p>}
       </dl>
 
-      {payments.length > 0 && (
+      {settling && (
         <ul className="divide-y divide-border rounded-2xl border border-border bg-surface">
+          {khata > 0 && (
+            <li className="flex items-center gap-2 px-3 py-2">
+              <span className="flex-1">{t('pay.khataRow', { name: customerLabel })}</span>
+              <span dir="ltr">{rs(khata)}</span>
+              <button
+                type="button"
+                className="min-h-11 min-w-11 rounded-md border border-border"
+                aria-label={t('pay.removeKhata')}
+                onClick={() => setKhata(0)}
+              >
+                ✕
+              </button>
+            </li>
+          )}
           {payments.map((p, i) => (
             <li key={i} className="flex items-center gap-2 px-3 py-2">
               <span className="flex-1">
@@ -256,6 +295,20 @@ export function PayPage() {
             {methodName(m, t)}
           </button>
         ))}
+        {customer && (
+          <button
+            type="button"
+            aria-pressed={isKhata}
+            onClick={() => chooseMethod(KHATA)}
+            className={`min-h-11 rounded-full border px-4 font-medium ${
+              isKhata
+                ? 'border-primary bg-primary text-primary-fg'
+                : 'border-border bg-surface text-text'
+            }`}
+          >
+            {t('pay.khata')}
+          </button>
+        )}
       </div>
 
       {error && <Alert>{error}</Alert>}
@@ -297,7 +350,7 @@ export function PayPage() {
         </p>
       )}
       <NumberPad value={amount} onChange={setAmount} decimals={2} />
-      {!isCash && (
+      {!isCash && !isKhata && (
         <Field
           label={t('pay.reference')}
           value={reference}

@@ -19,7 +19,8 @@
     "welcome": "خوش آمدید",
     "deviceCode": "یہ ڈیوائس: {{code}}",
     "newSale": "TODO-ur نئی سیل",
-    "todaysSales": "TODO-ur آج کی سیل"
+    "todaysSales": "TODO-ur آج کی سیل",
+    "khata": "TODO-ur کھاتہ"
   },
   "signIn": {
     "title": "سائن ان",
@@ -429,8 +430,12 @@
       "bad_payment": "TODO-ur ایک ادائیگی کی رقم درست نہیں۔",
       "no_device": "TODO-ur یہ ڈیوائس سیٹ اپ نہیں۔",
       "no_staff": "TODO-ur کوئی کام پر نہیں۔ پہلے عملہ تبدیل کریں۔",
-      "over_limit": "TODO-ur کیشیئر کی رعایت کی حد سے زیادہ: مالک کی منظوری ضروری ہے۔"
-    }
+      "over_limit": "TODO-ur کیشیئر کی رعایت کی حد سے زیادہ: مالک کی منظوری ضروری ہے۔",
+      "khata_needs_customer": "TODO-ur کھاتہ صرف گاہک کے ساتھ۔"
+    },
+    "khata": "TODO-ur کھاتہ",
+    "khataRow": "TODO-ur کھاتہ ({{name}})",
+    "removeKhata": "TODO-ur کھاتہ ہٹائیں"
   },
   "done": {
     "title": "TODO-ur سیل محفوظ ہو گئی",
@@ -439,7 +444,9 @@
     "change": "TODO-ur بقایا",
     "newSale": "TODO-ur نئی سیل",
     "receipt": "TODO-ur رسید",
-    "receiptLater": "TODO-ur رسیدیں (واٹس ایپ، پرنٹ) اگلے مرحلے میں"
+    "receiptLater": "TODO-ur رسیدیں (واٹس ایپ، پرنٹ) اگلے مرحلے میں",
+    "onKhata": "TODO-ur کھاتے پر: {{amount}}",
+    "newBalance": "TODO-ur نیا بقایا: {{amount}}"
   },
   "sales": {
     "title": "TODO-ur آج کی سیل",
@@ -560,5 +567,72 @@
     "label": "TODO-ur حد (%)",
     "save": "TODO-ur حد محفوظ کریں",
     "invalid": "TODO-ur 0 سے 100 تک پورا نمبر لکھیں۔"
+  },
+  "customers": {
+    "pickTitle": "TODO-ur گاہک",
+    "search": "TODO-ur گاہک تلاش کریں",
+    "searchPlaceholder": "TODO-ur موبائل یا نام",
+    "noMatch": "TODO-ur کوئی گاہک نہیں ملا۔",
+    "addNew": "TODO-ur نیا گاہک شامل کریں",
+    "mobile": "TODO-ur موبائل نمبر",
+    "nameOptional": "TODO-ur نام (اختیاری)",
+    "address": "TODO-ur پتا (اختیاری)",
+    "save": "TODO-ur گاہک محفوظ کریں",
+    "change": "TODO-ur گاہک بدلیں",
+    "remove": "TODO-ur گاہک ہٹائیں",
+    "balanceShort": "TODO-ur {{amount}} باقی",
+    "edit": "TODO-ur تفصیل بدلیں",
+    "mobileFixed": "TODO-ur موبائل نمبر نہیں بدل سکتا۔ نیا نمبر = نیا گاہک۔",
+    "errors": {
+      "mobile": "TODO-ur پاکستانی موبائل نمبر لکھیں، جیسے 0300 1234567۔"
+    }
+  },
+  "khata": {
+    "title": "TODO-ur کھاتہ",
+    "receivable": "TODO-ur کل وصولی",
+    "overdueOnly": "TODO-ur صرف تاخیر والے",
+    "noPaymentFor": "TODO-ur ادائیگی نہیں",
+    "days": "TODO-ur بغیر ادائیگی کے دن",
+    "daysUnit": "TODO-ur دن",
+    "empty": "TODO-ur ابھی کوئی کھاتہ بقایا نہیں۔",
+    "noMatch": "TODO-ur کوئی گاہک نہیں ملا۔",
+    "overdue": "TODO-ur تاخیر",
+    "call": "TODO-ur {{name}} کو کال",
+    "whatsapp": "TODO-ur {{name}} کو واٹس ایپ",
+    "balance": "TODO-ur بقایا",
+    "receive": "TODO-ur ادائیگی وصول کریں",
+    "adjust": "TODO-ur بقایا درست کریں",
+    "ledger": "TODO-ur کھاتہ تفصیل",
+    "noEntries": "TODO-ur ابھی کوئی اندراج نہیں۔",
+    "after": "TODO-ur بقایا {{amount}}",
+    "notFound": "TODO-ur گاہک نہیں ملا۔",
+    "type": {
+      "credit_sale": "TODO-ur کھاتے پر سیل",
+      "payment": "TODO-ur ادائیگی وصول",
+      "return_credit": "TODO-ur واپسی",
+      "adjustment": "TODO-ur درستی"
+    },
+    "receiveTitle": "TODO-ur ادائیگی وصول کریں",
+    "receivedTitle": "TODO-ur ادائیگی وصول ہو گئی",
+    "received": "TODO-ur {{amount}} وصول ہوئے۔",
+    "shareWhatsapp": "TODO-ur واٹس ایپ پر بھیجیں",
+    "amount": "TODO-ur رقم (روپے)",
+    "saveReceipt": "TODO-ur ادائیگی محفوظ کریں",
+    "adjustTitle": "TODO-ur بقایا درست کریں",
+    "direction": "TODO-ur تبدیلی",
+    "add": "TODO-ur بقایا بڑھائیں",
+    "reduce": "TODO-ur بقایا کم کریں",
+    "note": "TODO-ur نوٹ (ضروری)",
+    "saveAdjustment": "TODO-ur درستی محفوظ کریں",
+    "ownerPin": "TODO-ur بقایا درست کرنے کے لیے مالک ضروری ہے۔",
+    "errors": {
+      "amount": "TODO-ur 0 سے زیادہ رقم لکھیں۔",
+      "noteRequired": "TODO-ur نوٹ ضروری ہے۔",
+      "bad_amount": "TODO-ur 0 سے زیادہ رقم لکھیں۔",
+      "forbidden": "TODO-ur صرف مالک بقایا درست کر سکتا ہے۔",
+      "note_required": "TODO-ur نوٹ ضروری ہے۔",
+      "note_too_long": "TODO-ur نوٹ بہت لمبا ہے (زیادہ سے زیادہ 200 حروف)۔",
+      "no_device": "TODO-ur یہ آلہ سیٹ اپ نہیں ہے۔"
+    }
   }
 }

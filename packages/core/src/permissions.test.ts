@@ -15,6 +15,8 @@ const EXPECTED: Record<Action, Role[]> = {
   record_wastage: ['owner', 'cashier'],
   adjust_stock: ['owner'],
   manage_discount_limit: ['owner'],
+  use_khata: ['owner', 'cashier'],
+  adjust_khata: ['owner'],
 };
 
 describe('can(role, action)', () => {

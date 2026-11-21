@@ -8,6 +8,7 @@ import { useCurrentStaff } from '../../staff/currentStaff.ts';
 import { useCategories, usePriceLabel, useShopProducts } from '../catalogue/catalogueData.ts';
 import { CategoryTabs } from '../catalogue/CategoryTabs.tsx';
 import { ProductIcon } from '../catalogue/ProductIcon.tsx';
+import { CustomerChip } from '../khata/CustomerChip.tsx';
 import { CartBar } from './CartBar.tsx';
 import { currentSeller, ownerApprovalNeeded } from './discountLimit.ts';
 import { FocSuggestions } from './FocSuggestions.tsx';
@@ -115,14 +116,7 @@ export function SalePage() {
             {code ? ` · ${code}` : ''}
           </span>
         )}
-        <button
-          type="button"
-          disabled
-          title={t('sale.customerLater')}
-          className="min-h-11 rounded-full border border-border px-3 text-sm text-muted opacity-60"
-        >
-          {t('sale.customer')}
-        </button>
+        <CustomerChip disabled={!canSell} />
       </div>
 
       <input

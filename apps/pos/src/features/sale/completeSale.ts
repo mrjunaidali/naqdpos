@@ -65,7 +65,12 @@ export async function reconcileReceiptCounter(database: NaqdDb = defaultDb): Pro
 
 export async function completeSale(
   payments: readonly PaymentDraft[],
-  options: { now?: Date; database?: NaqdDb } = {},
+  options: {
+    now?: Date;
+    database?: NaqdDb;
+    /** The part put on the attached customer's khata (US039); payments + khata = total. */
+    khataPaisa?: number;
+  } = {},
 ): Promise<SaleRows> {
   const database = options.database ?? defaultDb;
   const device = await getStoredDevice();
@@ -76,7 +81,15 @@ export async function completeSale(
     throw new SaleNotCompleted('no_staff');
   // A cart write still queued must land before the sale clears the stored cart.
   await cartSaved();
-  const { lines: cart, billDiscount, approval: storedApproval } = useCartStore.getState();
+  const {
+    lines: cart,
+    billDiscount,
+    approval: storedApproval,
+    customerId,
+  } = useCartStore.getState();
+  // A customer that is not on this device (removed, other shop) is not attached.
+  const customer = customerId ? await database.customers.get(customerId) : undefined;
+  const attached = customer && customer.shop_id === device.shop_id ? customer.id : null;
   // Only an active owner of this shop can approve a give-away above the cashier limit.
   const approver = storedApproval ? await database.staff.get(storedApproval.staffId) : undefined;
   const approval =
@@ -99,6 +112,7 @@ export async function completeSale(
       database.sale_lines,
       database.payments,
       database.stock_movements,
+      database.khata_entries,
       database.products,
       database.outbox,
       database.meta,
@@ -113,6 +127,8 @@ export async function completeSale(
         limitPct,
         billDiscount,
         approval,
+        customerId: attached,
+        khataPaisa: options.khataPaisa ?? 0,
         receiptNo: receiptNo(device.code, n),
         now,
       });
@@ -147,6 +163,9 @@ export async function completeSale(
           op: 'insert',
           row: { ...row },
         })),
+        ...(built.khata
+          ? [{ table: 'khata_entries', op: 'insert', row: { ...built.khata } } as LocalWrite]
+          : []),
         ...movements.map((row): LocalWrite => ({
           table: 'stock_movements',
           op: 'insert',
@@ -159,6 +178,6 @@ export async function completeSale(
       return built;
     },
   );
-  useCartStore.setState({ lines: [], billDiscount: null, approval: null });
+  useCartStore.setState({ lines: [], billDiscount: null, approval: null, customerId: null });
   return rows;
 }

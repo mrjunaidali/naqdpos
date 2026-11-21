@@ -27,6 +27,10 @@ export const ACTIONS = {
   adjust_stock: ['owner'],
   /** Set the cashier's discount limit (shops column grant + write_roles {owner}). */
   manage_discount_limit: ['owner'],
+  /** Customers, khata on a sale, receive khata payments (RLS *_seller; write_roles). */
+  use_khata: ['owner', 'cashier'],
+  /** Khata adjustments (khata_entries_check() on the actor). */
+  adjust_khata: ['owner'],
   /** Edit shop settings (RLS shops_update_owner, column grants; write_roles). */
   manage_shop_settings: ['owner'],
 } as const satisfies Record<string, readonly Role[]>;

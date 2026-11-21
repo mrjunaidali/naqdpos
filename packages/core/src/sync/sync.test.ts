@@ -57,7 +57,9 @@ describe('sync schemas', () => {
   it('registers the tenancy tables; salaries are owner-device only', () => {
     expect(Object.keys(SYNC_TABLES).sort()).toEqual([
       'categories',
+      'customers',
       'devices',
+      'khata_entries',
       'payment_methods',
       'payments',
       'price_history',

@@ -1,4 +1,6 @@
 import type {
+  CustomerRow,
+  KhataEntryRow,
   StockMovementRow,
   CategoryRow,
   PaymentMethodRow,
@@ -66,6 +68,8 @@ export class NaqdDb extends Dexie {
   declare sale_lines: EntityTable<SaleLineRow, 'id'>;
   declare payments: EntityTable<PaymentRow, 'id'>;
   declare stock_movements: EntityTable<StockMovementRow, 'id'>;
+  declare customers: EntityTable<CustomerRow, 'id'>;
+  declare khata_entries: EntityTable<KhataEntryRow, 'id'>;
   declare products: EntityTable<ProductRow, 'id'>;
   declare product_costs: EntityTable<ProductCostRow, 'product_id'>;
   declare price_history: EntityTable<PriceHistoryRow, 'id'>;
@@ -137,6 +141,11 @@ export class NaqdDb extends Dexie {
             shop.cashier_max_discount_pct ??= 10;
           }),
       );
+    // Customers and khata (migration 20261122150000_khata).
+    this.version(10).stores({
+      customers: 'id, shop_id, mobile, server_seq',
+      khata_entries: 'id, shop_id, customer_id, business_date, server_seq',
+    });
   }
 }
 

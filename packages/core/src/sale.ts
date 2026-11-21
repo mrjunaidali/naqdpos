@@ -13,6 +13,7 @@ import {
   type DiscountApproval,
 } from './discount.ts';
 import { uuidv7 } from './ids.ts';
+import { creditSaleEntry, type KhataEntryRow } from './khata.ts';
 import { sumPaisa, type Paisa } from './money.ts';
 import { DEFAULT_TIMEZONE, type Role } from './tenancy.ts';
 
@@ -218,19 +219,27 @@ export interface SaleContext {
   limitPct: number;
   /** An owner's PIN approval for a give-away above the limit; the caller checks it is an owner. */
   approval?: DiscountApproval | null | undefined;
+  /** The customer attached to the sale (US038). */
+  customerId?: string | null | undefined;
+  /** The part of the total put on the customer's khata (US039); not a payments row. */
+  khataPaisa?: Paisa | undefined;
 }
 
-export type SaleError = 'empty_cart' | 'not_paid' | 'overpaid' | 'bad_payment' | 'over_limit';
+export type SaleError =
+  'empty_cart' | 'not_paid' | 'overpaid' | 'bad_payment' | 'over_limit' | 'khata_needs_customer';
 
 export interface SaleRows {
   sale: SaleRow;
   lines: SaleLineRow[];
   payments: PaymentRow[];
+  /** The credit_sale entry when part of the bill went on khata. */
+  khata: KhataEntryRow | null;
 }
 
 /**
  * The rows for a paid cart. Checks what the database cannot check across rows: there is at least
- * one line, line totals add up to the subtotal, payments add up exactly to the rounded total.
+ * one line, line totals add up to the subtotal, payments + khata add up exactly to the rounded
+ * total, khata only with a customer.
  */
 export function buildSale(
   cart: readonly CartLine[],
@@ -241,6 +250,10 @@ export function buildSale(
   if (payments.some((p) => !Number.isSafeInteger(p.amount_paisa) || p.amount_paisa <= 0)) {
     return { error: 'bad_payment' };
   }
+  const khataPaisa = ctx.khataPaisa ?? 0;
+  if (!Number.isSafeInteger(khataPaisa) || khataPaisa < 0) return { error: 'bad_payment' };
+  const customerId = ctx.customerId ?? null;
+  if (khataPaisa > 0 && !customerId) return { error: 'khata_needs_customer' };
   const summary = computeBill(cart, ctx.billDiscount ?? null);
   const amounts = giveAway(cart, ctx.billDiscount ?? null);
   // Above a cashier's limit only an owner's approval (covering this give-away) lets it through.
@@ -249,7 +262,7 @@ export function buildSale(
     return { error: 'over_limit' };
   }
   const bill = roundBill(summary.subtotal_paisa, summary.discount_paisa);
-  const left = remainingDue(bill.total_paisa, payments);
+  const left = remainingDue(bill.total_paisa, payments) - khataPaisa;
   if (left > 0) return { error: 'not_paid' };
   if (left < 0) return { error: 'overpaid' };
 
@@ -262,7 +275,7 @@ export function buildSale(
     receipt_no: ctx.receiptNo,
     business_date: date,
     staff_id: ctx.staffId,
-    customer_id: null,
+    customer_id: customerId,
     order_type: 'walk_in',
     source: 'walk_in',
     ...bill,
@@ -296,7 +309,7 @@ export function buildSale(
     business_date: date,
     kind: 'sale',
     sale_id: saleId,
-    customer_id: null,
+    customer_id: customerId,
     method_code: p.method_code,
     amount_paisa: p.amount_paisa,
     reference: p.reference?.trim() || null,
@@ -305,5 +318,14 @@ export function buildSale(
     device_id: ctx.deviceId,
     server_seq: null,
   }));
-  return { sale, lines, payments: paymentRows };
+  const khata =
+    khataPaisa > 0 && customerId
+      ? creditSaleEntry(
+          { shopId: ctx.shopId, deviceId: ctx.deviceId, staffId: ctx.staffId, now: ctx.now },
+          customerId,
+          saleId,
+          khataPaisa,
+        )
+      : null;
+  return { sale, lines, payments: paymentRows, khata };
 }

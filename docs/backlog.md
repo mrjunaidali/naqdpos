@@ -26,7 +26,7 @@ Build in this order, not in ID order. "Sheet step" is the step number in the ori
 | 6b | Product pictures (emoji icons) | US078 | — | Done (Step 10) |
 | 7 | Selling: cart, custom item, cash, wallets/split | US029, US030, US034, US035 | 14, 15, 16, 20 | Done (Steps 11–12) |
 | 8 | Stock, wastage, discounts, FOC | US024, US025, US032, US033 | 21–24 | Done (Steps 13–14) |
-| 9 | Customers and khata | US038, US039, US040, US041 | 25–28 | To do |
+| 9 | Customers and khata | US038, US039, US040, US041 | 25–28 | Done (Step 15) |
 | 10 | Shop profile and receipts | US014, US036 | 29, 30 | To do |
 | 11 | Expenses | US065, US046, US066 | 30a, 31, 31a | To do |
 | 12 | Daily closing | US044, US045, US067 | 32, 33, 33a | To do |
@@ -304,18 +304,18 @@ Build in this order, not in ID order. "Sheet step" is the step number in the ori
 
 ### F21 · Customer lookup (R1)
 
-**US038** · Must · 3 · To do — As a cashier, I want to attach a customer to any sale by mobile number, so that their purchases and balance are tracked.
+**US038** · Must · 3 · Done — As a cashier, I want to attach a customer to any sale by mobile number, so that their purchases and balance are tracked.
 - Search or create by mobile (normalised to +92 with `phone.ts`); name optional; unique per shop; works offline
 
 ### F22 · Khata ledger
 
-**US039** · Must · 3 · R1 · To do — As a cashier, I want to put all or part of a bill on the customer's khata, so that regulars can pay later.
+**US039** · Must · 3 · R1 · Done — As a cashier, I want to put all or part of a bill on the customer's khata, so that regulars can pay later.
 - Needs a customer; unpaid amount → `khata_entries` `credit_sale`; balance via core, shown when the customer is picked; offline
 
-**US040** · Must · 3 · R1 · To do — As a shop owner, I want to record a payment from a khata customer, so that their balance goes down.
+**US040** · Must · 3 · R1 · Done (received today; back-dating later) — As a shop owner, I want to record a payment from a khata customer, so that their balance goes down.
 - Amount, method, date → `payments` (`khata_receipt`) + `khata_entries` (`payment`, negative); shareable WhatsApp receipt text; offline
 
-**US041** · Must · 3 · R1 · To do — As a shop owner, I want khata customers sorted by highest balance, so that I know who to follow up.
+**US041** · Must · 3 · R1 · Done (overdue = no payment for N days, decided 22 Nov 2026) — As a shop owner, I want khata customers sorted by highest balance, so that I know who to follow up.
 - Total receivable; overdue filter (oldest unpaid credit older than X days); call (`tel:`) and WhatsApp (`wa.me`) buttons; customer ledger page
 
 **US042** · Could · 2 · R2 · To do — As a shop owner, I want a credit limit per customer, so that I don't over-lend.

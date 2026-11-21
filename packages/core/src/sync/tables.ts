@@ -7,6 +7,8 @@ import {
   PaymentMethodRowSchema,
   PaymentRowSchema,
   StockMovementRowSchema,
+  CustomerRowSchema,
+  KhataEntryRowSchema,
   SaleLineRowSchema,
   SaleRowSchema,
   DeviceRowSchema,
@@ -106,6 +108,21 @@ export const SYNC_TABLES = {
     pushable: true,
     scope: 'all',
     schema: StockMovementRowSchema,
+  },
+  // Customers and khata (US038–US041): customers merge by their UUIDv5 id (last write wins).
+  customers: {
+    kind: 'mutable',
+    key: 'id',
+    pushable: true,
+    scope: 'all',
+    schema: CustomerRowSchema,
+  },
+  khata_entries: {
+    kind: 'append',
+    key: 'id',
+    pushable: true,
+    scope: 'all',
+    schema: KhataEntryRowSchema,
   },
 } as const satisfies Record<string, SyncTableSpec>;
 

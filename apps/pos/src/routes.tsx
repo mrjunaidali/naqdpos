@@ -20,6 +20,8 @@ import { SaleDonePage } from './features/sale/SaleDonePage.tsx';
 import { SalePage } from './features/sale/SalePage.tsx';
 import { SalesListPage, SaleViewPage } from './features/sale/SalesListPage.tsx';
 import { StockPage } from './features/stock/StockPage.tsx';
+import { CustomerPage } from './features/khata/CustomerPage.tsx';
+import { KhataListPage } from './features/khata/KhataListPage.tsx';
 import { DiscountLimitPage } from './features/settings/DiscountLimitPage.tsx';
 import { PaymentMethodsPage } from './features/settings/PaymentMethodsPage.tsx';
 import { SettingsPage } from './features/settings/SettingsPage.tsx';
@@ -81,6 +83,23 @@ export const routes: RouteObject[] = [
         element: (
           <Gate state="ready">
             <SaleDonePage />
+          </Gate>
+        ),
+      },
+      {
+        // Owners and cashiers (US041); Adjust balance asks for the owner PIN per action.
+        path: 'khata',
+        element: (
+          <Gate state="ready">
+            <KhataListPage />
+          </Gate>
+        ),
+      },
+      {
+        path: 'khata/:customerId',
+        element: (
+          <Gate state="ready">
+            <CustomerPage />
           </Gate>
         ),
       },

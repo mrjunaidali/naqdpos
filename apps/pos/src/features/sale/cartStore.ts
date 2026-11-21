@@ -19,6 +19,7 @@ interface StoredCart {
   lines?: CartLine[];
   bill_discount?: Discount | null;
   approval?: DiscountApproval | null;
+  customer_id?: string | null;
 }
 
 interface CartState {
@@ -27,6 +28,8 @@ interface CartState {
   billDiscount: Discount | null;
   /** An owner's PIN approval for a give-away above the cashier limit. */
   approval: DiscountApproval | null;
+  /** The customer attached to the sale (US038). */
+  customerId: string | null;
   /** True once the stored cart was loaded. */
   ready: boolean;
   hydrate: () => Promise<void>;
@@ -35,16 +38,18 @@ interface CartState {
   remove: (id: string) => void;
   setBillDiscount: (discount: Discount | null) => void;
   setApproval: (approval: DiscountApproval | null) => void;
+  setCustomer: (customerId: string | null) => void;
   clear: () => void;
 }
 
 // Writes run one after another, so an older snapshot never overwrites a newer one.
 let writing: Promise<unknown> = Promise.resolve();
-function persist(state: Pick<CartState, 'lines' | 'billDiscount' | 'approval'>) {
+function persist(state: Pick<CartState, 'lines' | 'billDiscount' | 'approval' | 'customerId'>) {
   const value: StoredCart = {
     lines: state.lines,
     bill_discount: state.billDiscount,
     approval: state.approval,
+    customer_id: state.customerId,
   };
   writing = writing.then(() => db.meta.put({ key: CART_KEY, value })).catch(() => {});
 }
@@ -58,6 +63,7 @@ export const useCartStore = create<CartState>((set, get) => ({
   lines: [],
   billDiscount: null,
   approval: null,
+  customerId: null,
   ready: false,
   hydrate: async () => {
     if (get().ready) return;
@@ -71,6 +77,7 @@ export const useCartStore = create<CartState>((set, get) => ({
         lines: [...saved, ...state.lines.filter((l) => !ids.has(l.id))],
         billDiscount: state.billDiscount ?? stored?.bill_discount ?? null,
         approval: state.approval ?? stored?.approval ?? null,
+        customerId: state.customerId ?? stored?.customer_id ?? null,
         ready: true,
       };
     });
@@ -95,8 +102,12 @@ export const useCartStore = create<CartState>((set, get) => ({
     set({ approval });
     persist(get());
   },
+  setCustomer: (customerId) => {
+    set({ customerId });
+    persist(get());
+  },
   clear: () => {
-    set({ lines: [], billDiscount: null, approval: null });
+    set({ lines: [], billDiscount: null, approval: null, customerId: null });
     persist(get());
   },
 }));
