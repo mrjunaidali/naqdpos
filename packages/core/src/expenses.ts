@@ -2,7 +2,7 @@
 // expense is fixed by a reversal row (owner only), never by editing. Money is integer paisa.
 import { uuidv7 } from './ids.ts';
 import type { Paisa } from './money.ts';
-import { businessDate } from './sale.ts';
+import { businessDateFor } from './sale.ts';
 import type { Role, ShopType } from './tenancy.ts';
 
 export interface ExpenseCategoryRow {
@@ -150,8 +150,8 @@ export function buildExpense(
   if (payee && [...payee].length > MAX_EXPENSE_PAYEE) return { error: 'payee_too_long' };
   const needs = needsOwnerApproval(input.amountPaisa, ctx.role, ctx.limitPaisa);
   if (needs && !ctx.approvedByStaffId) return { error: 'needs_owner' };
-  const date = businessDate(ctx.now);
-  if (ctx.closedDates && isDayClosed(date, ctx.closedDates)) return { error: 'day_closed' };
+  // After closing, a new expense counts for the next open day (it never blocks).
+  const date = businessDateFor(ctx.now, ctx.closedDates);
   return {
     id: uuidv7(),
     shop_id: ctx.shopId,
@@ -189,8 +189,7 @@ export function buildReversal(
   const text = reason.trim();
   if (!text) return { error: 'reason_required' };
   if ([...text].length > MAX_EXPENSE_NOTE) return { error: 'note_too_long' };
-  const today = businessDate(ctx.now);
-  if (ctx.closedDates && isDayClosed(today, ctx.closedDates)) return { error: 'day_closed' };
+  const today = businessDateFor(ctx.now, ctx.closedDates);
   return {
     ...original,
     id: uuidv7(),

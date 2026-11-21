@@ -58,6 +58,7 @@ describe('sync schemas', () => {
     expect(Object.keys(SYNC_TABLES).sort()).toEqual([
       'categories',
       'customers',
+      'day_closes',
       'devices',
       'expense_categories',
       'expenses',

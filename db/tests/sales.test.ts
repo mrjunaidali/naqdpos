@@ -178,7 +178,7 @@ describe('pushing a sale', () => {
     });
   });
 
-  it('refuses a closed business date (is_day_closed)', async () => {
+  it('accepts a late row for a closed business date (flagged at closing, not rejected)', async () => {
     const client = await admin.connect();
     try {
       await client.query('begin');
@@ -191,7 +191,7 @@ describe('pushing a sale', () => {
       const q: Query = (text, values) => client.query(text, values);
       const closed = sale({ date: '2026-11-20' });
       const result = await push(q, f.deviceA, [closed.sale]);
-      expect(result.errors.map((e) => e.code)).toEqual(['day_closed']);
+      expect(result.errors).toEqual([]);
     } finally {
       await client.query('rollback');
       client.release();

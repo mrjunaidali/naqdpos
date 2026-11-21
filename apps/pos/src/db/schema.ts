@@ -1,4 +1,5 @@
 import type {
+  DayCloseRow,
   ExpenseCategoryRow,
   ExpenseRow,
   CustomerRow,
@@ -71,6 +72,7 @@ export class NaqdDb extends Dexie {
   declare payments: EntityTable<PaymentRow, 'id'>;
   declare stock_movements: EntityTable<StockMovementRow, 'id'>;
   declare customers: EntityTable<CustomerRow, 'id'>;
+  declare day_closes: EntityTable<DayCloseRow, 'id'>;
   declare expense_categories: EntityTable<ExpenseCategoryRow, 'id'>;
   declare expenses: EntityTable<ExpenseRow, 'id'>;
   declare khata_entries: EntityTable<KhataEntryRow, 'id'>;
@@ -167,6 +169,10 @@ export class NaqdDb extends Dexie {
     this.version(12).stores({
       expense_categories: 'id, shop_id, server_seq',
       expenses: 'id, shop_id, business_date, reverses_expense_id, server_seq',
+    });
+    // Daily closing (migration 20261123090000_day_closes).
+    this.version(13).stores({
+      day_closes: 'id, shop_id, business_date, server_seq',
     });
   }
 }

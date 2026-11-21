@@ -14,6 +14,7 @@ import { useLiveQuery } from 'dexie-react-hooks';
 import { localWriteMany } from '../../db/outbox.ts';
 import { db } from '../../db/schema.ts';
 import { getStoredDevice } from '../../db/session.ts';
+import { shopClosedDates } from '../closing/closedDates.ts';
 
 export class KhataNotSaved extends Error {
   constructor(readonly reason: string) {
@@ -146,6 +147,7 @@ export async function receiveKhataPayment(
       deviceId: device.id,
       staffId: staff.id,
       now: new Date(),
+      closedDates: await shopClosedDates(),
       customerId: customer.id,
       methodCode,
       reference,
@@ -180,6 +182,7 @@ export async function adjustKhata(
       deviceId: device.id,
       staffId: owner.id,
       now: new Date(),
+      closedDates: await shopClosedDates(),
       customerId: customer.id,
       role: owner.role,
     },

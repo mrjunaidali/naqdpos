@@ -152,4 +152,5 @@ export const TENANT_TABLES = [
   'khata_entries',
   'expense_categories',
   'expenses',
+  'day_closes',
 ] as const;

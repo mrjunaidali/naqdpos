@@ -26,6 +26,7 @@ import {
   type ExpenseCategoryRow,
   type ExpenseRow,
 } from '../expenses.ts';
+import type { DayCloseRow } from '../closing.ts';
 import { PK_MOBILE_PATTERN } from '../phone.ts';
 import { RECEIPT_LANGUAGES } from '../tenancy.ts';
 import { MAX_STOCK_NOTE_LENGTH, STOCK_REASONS, type StockMovementRow } from '../stock.ts';
@@ -435,6 +436,23 @@ export const ExpenseRowSchema = z.object({
   device_id: z.uuid().nullable(),
   server_seq: z.number().int().nullable(),
 }) satisfies z.ZodType<ExpenseRow>;
+
+export const DayCloseRowSchema = z.object({
+  id: z.uuid(),
+  shop_id: z.uuid(),
+  business_date: dateOnly,
+  opening_cash_paisa: z.number().int().min(0),
+  expected_cash_paisa: z.number().int(),
+  counted_cash_paisa: z.number().int().min(0),
+  difference_paisa: z.number().int(),
+  owner_withdrawal_paisa: z.number().int().min(0),
+  note: z.string().max(500).nullable(),
+  closed_by_staff_id: z.uuid(),
+  closed_at: iso,
+  seen_through_seq: z.number().int().min(0),
+  device_id: z.uuid().nullable(),
+  server_seq: z.number().int().nullable(),
+}) satisfies z.ZodType<DayCloseRow>;
 
 export const SaleRowSchema = z.object({
   id: z.uuid(),

@@ -1,6 +1,6 @@
 import { giveAway, displayName, searchItems, type CartLine, type ProductRow } from '@naqdpos/core';
 import { useLiveQuery } from 'dexie-react-hooks';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useNavigate } from 'react-router';
 import { getStoredDevice } from '../../db/session.ts';
@@ -8,6 +8,7 @@ import { useCurrentStaff } from '../../staff/currentStaff.ts';
 import { useCategories, usePriceLabel, useShopProducts } from '../catalogue/catalogueData.ts';
 import { CategoryTabs } from '../catalogue/CategoryTabs.tsx';
 import { ProductIcon } from '../catalogue/ProductIcon.tsx';
+import { DayClosedBanner } from '../closing/DayClosedBanner.tsx';
 import { CustomerChip } from '../khata/CustomerChip.tsx';
 import { CartBar } from './CartBar.tsx';
 import { currentSeller, ownerApprovalNeeded } from './discountLimit.ts';
@@ -79,8 +80,9 @@ export function SalePage() {
     }
     void navigate('/sale/pay');
   }
-  // F2 = Charge (desktop counters); re-attached with the latest charge().
-  useEffect(() => {
+  // F2 = Charge (desktop counters); re-attached with the latest charge(). A layout effect, so the
+  // key works from the moment the screen is shown (a passive effect runs a moment later).
+  useLayoutEffect(() => {
     const onF2 = (e: KeyboardEvent) => {
       if (e.key !== 'F2') return;
       e.preventDefault();
@@ -118,6 +120,7 @@ export function SalePage() {
         )}
         <CustomerChip disabled={!canSell} />
       </div>
+      <DayClosedBanner />
 
       <input
         ref={search}

@@ -3,7 +3,7 @@
 import { uuidv7 } from './ids.ts';
 import { paisaToRupeesString, sumPaisa, type Paisa } from './money.ts';
 import type { PaymentRow } from './sale.ts';
-import { businessDate } from './sale.ts';
+import { businessDate, businessDateFor } from './sale.ts';
 import type { Role } from './tenancy.ts';
 
 export interface CustomerRow {
@@ -129,6 +129,8 @@ export interface KhataContext {
   deviceId: string | null;
   staffId: string;
   now: Date;
+  /** Closed business dates: new entries roll forward to the next open day. */
+  closedDates?: ReadonlySet<string> | undefined;
 }
 
 function entry(
@@ -139,7 +141,7 @@ function entry(
   return {
     id: uuidv7(),
     shop_id: ctx.shopId,
-    business_date: businessDate(ctx.now),
+    business_date: businessDateFor(ctx.now, ctx.closedDates),
     sale_id: null,
     payment_id: null,
     note: null,
@@ -177,7 +179,7 @@ export function buildKhataReceipt(
   const payment: PaymentRow = {
     id: uuidv7(),
     shop_id: ctx.shopId,
-    business_date: businessDate(ctx.now),
+    business_date: businessDateFor(ctx.now, ctx.closedDates),
     kind: 'khata_receipt',
     sale_id: null,
     customer_id: ctx.customerId,

@@ -27,9 +27,9 @@ Build in this order, not in ID order. "Sheet step" is the step number in the ori
 | 7 | Selling: cart, custom item, cash, wallets/split | US029, US030, US034, US035 | 14, 15, 16, 20 | Done (Steps 11–12) |
 | 8 | Stock, wastage, discounts, FOC | US024, US025, US032, US033 | 21–24 | Done (Steps 13–14) |
 | 9 | Customers and khata | US038, US039, US040, US041 | 25–28 | Done (Step 15) |
-| 10 | Shop profile and receipts | US014, US036 | 29, 30 | To do |
+| 10 | Shop profile and receipts | US014, US036 | 29, 30 | Done (Step 16; logo deferred) |
 | 11 | Expenses | US065, US046, US066 | 30a, 31, 31a | Done (Step 17) |
-| 12 | Daily closing | US044, US045, US067 | 32, 33, 33a | To do |
+| 12 | Daily closing | US044, US045, US067 | 32, 33, 33a | Done (Step 18) |
 | 13 | Admin portal | US010, US011, US012, US013 | 34, 35, 7, 36 | To do |
 | 14 | Reports | US047, US048, US049, US068 | 37, 38, 39, 39a | To do |
 | 15 | Urdu complete, backups | US009, US008 | 40, 41 | To do |
@@ -333,13 +333,13 @@ Build in this order, not in ID order. "Sheet step" is the step number in the ori
 
 ### F24 · Daily closing (R1)
 
-**US044** · Must · 8 · To do — As a shop owner, I want to close the day by counting cash against expected cash, so that I catch shortages.
+**US044** · Must · 8 · Done — As a shop owner, I want to close the day by counting cash against expected cash, so that I catch shortages.
 - Opening cash defaults to yesterday's counted cash (editable); expected cash from core `expectedCash()` (architecture §3 formula), same result in SQL (shared fixture)
 - Counted cash with a denomination helper; difference and note; `day_closes` row
 - After closing, no ledger writes for that `business_date` on the device or in `sync_push`
 - Tries to sync first; offline closing allowed with a warning recorded in the note (§7)
 
-**US045** · Must · 5 · To do — As a shop owner, I want a daily summary, so that I understand the day at a glance.
+**US045** · Must · 5 · Done — As a shop owner, I want a daily summary, so that I understand the day at a glance.
 - Sales by method, discounts, FOC value, khata given and received, expenses, wastage, cash difference
 - Share as WhatsApp text or printable/PDF view
 
@@ -351,7 +351,7 @@ Build in this order, not in ID order. "Sheet step" is the step number in the ori
 
 **US066** · Should · 3 · R1 · Done (EXP-3) — Reverse a wrong expense (owner only): reason, negative row with `reverses_expense_id`, once only, dated today if the original day is closed.
 
-**US067** · Must · 2 · R1 · To do (EXP-4) — Expenses in closing: expected cash subtracts cash expenses net of reversals and the owner withdrawal; closing lists expenses by category; WhatsApp summary includes total expenses.
+**US067** · Must · 2 · R1 · Done (EXP-4) — Expenses in closing: expected cash subtracts cash expenses net of reversals and the owner withdrawal; closing lists expenses by category; WhatsApp summary includes total expenses.
 
 **US068** · Should · 5 · R1 · To do (EXP-5) — Expense list with filters and total; monthly view by category vs last month; lines in the monthly P&L; CSV for owners; cashiers see only their own entries for today.
 

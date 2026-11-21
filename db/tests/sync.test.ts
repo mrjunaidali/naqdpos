@@ -388,13 +388,13 @@ describe('sync_push: append-only tables (throwaway ledger table)', () => {
     });
   });
 
-  it('rejects a closed business date (day_closed)', async () => {
+  it('accepts late rows for a closed business date', async () => {
     await withSetup(LEDGER_SETUP, f.ownerA, async (q) => {
       const closed = ledgerEntry({ business_date: '2026-11-19' });
       const open = ledgerEntry();
       const result = await push(q, f.deviceA, [closed, open]);
-      expect(result.errors).toEqual([{ id: closed.id, code: 'day_closed' }]);
-      expect(result.accepted).toEqual([open.id]);
+      expect(result.errors).toEqual([]);
+      expect(result.accepted).toEqual([closed.id, open.id]);
     });
   });
 

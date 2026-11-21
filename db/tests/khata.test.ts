@@ -263,7 +263,7 @@ describe('khata (US039–US041)', () => {
     });
   });
 
-  it('refuses a closed business date', async () => {
+  it('accepts a late row for a closed business date (flagged at closing, not rejected)', async () => {
     const client = await admin.connect();
     try {
       await client.query('begin');
@@ -276,13 +276,12 @@ describe('khata (US039–US041)', () => {
       const q: Query = (text, values) => client.query(text, values);
       const c = await customer();
       await push(q, [c.push]);
-      const old = khata(c.id, {
-        type: 'adjustment',
-        amount_paisa: 100,
-        note: 'x',
-        business_date: '2026-11-20',
-      });
-      expect(codes(await push(q, [old]))).toEqual(['day_closed']);
+      const old = khata(
+        c.id,
+        { type: 'adjustment', amount_paisa: 100, note: 'x', business_date: '2026-11-20' },
+        f.ownerStaffA,
+      );
+      expect((await push(q, [old])).errors).toEqual([]);
     } finally {
       await client.query('rollback');
       client.release();

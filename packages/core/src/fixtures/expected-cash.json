@@ -1,0 +1,20 @@
+{
+  "description": "Shared by packages/core (expectedCash) and db/tests (shop_expected_cash): the same day gives the same expected cash.",
+  "opening_paisa": 100000,
+  "withdrawal_paisa": 20000,
+  "payments": [
+    { "kind": "sale", "method_code": "cash", "amount_paisa": 21500 },
+    { "kind": "sale", "method_code": "jazzcash", "amount_paisa": 5000 },
+    { "kind": "khata_receipt", "method_code": "cash", "amount_paisa": 50000 },
+    { "kind": "refund", "method_code": "cash", "amount_paisa": 1000 },
+    { "kind": "rider_handover", "method_code": "cash", "amount_paisa": 3000 },
+    { "kind": "supplier_payment", "method_code": "cash", "amount_paisa": 2000 }
+  ],
+  "expenses": [
+    { "paid_method_code": "cash", "amount_paisa": 30000 },
+    { "paid_method_code": "cash", "amount_paisa": -30000, "reversal": true },
+    { "paid_method_code": "cash", "amount_paisa": 10000 },
+    { "paid_method_code": "jazzcash", "amount_paisa": 7000 }
+  ],
+  "expected_paisa": 141500
+}

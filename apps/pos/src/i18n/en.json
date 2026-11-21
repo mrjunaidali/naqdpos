@@ -21,7 +21,8 @@
     "newSale": "New sale",
     "todaysSales": "Today’s sales",
     "khata": "Khata",
-    "expense": "Expense"
+    "expense": "Expense",
+    "closeDay": "Close day"
   },
   "signIn": {
     "title": "Sign in",
@@ -773,5 +774,77 @@
     "errors": {
       "name": "Enter a name of 1 to 40 characters."
     }
+  },
+  "closing": {
+    "title": "Close day",
+    "titleFor": "Close day — {{date}}",
+    "syncing": "Getting the latest from other devices…",
+    "nothingToClose": "Nothing to close yet.",
+    "history": "Past closes",
+    "olderFirst": "{{count}} days are open: close the oldest first.",
+    "offlineWarning": "Closing offline — totals from other devices may be missing.",
+    "offlineNote": "Closing offline — totals from other devices may be missing",
+    "opening": "Opening cash (Rs)",
+    "openingHint": "Last count minus what the owner took home.",
+    "firstClose": "First close: enter the cash you started with.",
+    "cashSales": "Cash sales",
+    "cashKhata": "Cash khata received",
+    "cashExpenses": "Cash expenses",
+    "withdrawal": "Owner withdrawal (Rs)",
+    "withdrawalHint": "Cash you take home — not an expense.",
+    "expected": "Expected cash",
+    "counted": "Counted cash",
+    "mode": {
+      "total": "Total",
+      "notes": "Notes and coins"
+    },
+    "countedTotal": "Counted cash (Rs)",
+    "note": "{{amount}} note",
+    "coin": "{{amount}} coin",
+    "countOf": "Number of {{amount}}",
+    "short": "Short",
+    "over": "Over",
+    "exact": "Exact",
+    "noteLabel": "Note (optional)",
+    "closeDay": "Close day",
+    "confirm": "Close {{date}}? A closed day cannot be changed.",
+    "closeNow": "Yes, close the day",
+    "banner": "Day closed — new sales count for {{date}}",
+    "summaryTitle": "Day summary — {{date}}",
+    "gapAlert": "Not included at closing: {{amount}} (rows from other devices that synced later).",
+    "notFound": "This day is not closed.",
+    "noCloses": "No days closed yet.",
+    "errors": {
+      "forbidden": "Only the owner can close a day.",
+      "already_closed": "This day is already closed.",
+      "future": "A future day cannot be closed.",
+      "bad_amount": "Enter amounts of 0 or more.",
+      "note_too_long": "The note is too long.",
+      "no_device": "This device is not set up.",
+      "generic": "Something went wrong. Try again."
+    }
+  },
+  "summary": {
+    "title": "Day summary {{date}}",
+    "sales": "Sales ({{count}})",
+    "discounts": "Discounts",
+    "foc": "Free items (value)",
+    "khataGiven": "Khata given",
+    "khataReceived": "Khata received",
+    "expenses": "Expenses",
+    "wastage": "Wastage",
+    "wastageValue": "Wastage value",
+    "opening": "Opening cash",
+    "withdrawal": "Owner took home",
+    "expected": "Expected cash",
+    "counted": "Counted cash",
+    "short": "Short",
+    "over": "Over",
+    "exact": "Exact",
+    "expectedNow": "Expected cash now (all devices)",
+    "gap": "Not included at closing",
+    "waiting": "Waiting to sync — late rows can’t be checked yet",
+    "late": "Arrived after closing: {{count}}",
+    "closedAt": "Closed {{at}}"
   }
 }

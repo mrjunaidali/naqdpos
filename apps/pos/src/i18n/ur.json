@@ -21,7 +21,8 @@
     "newSale": "TODO-ur نئی سیل",
     "todaysSales": "TODO-ur آج کی سیل",
     "khata": "TODO-ur کھاتہ",
-    "expense": "TODO-ur خرچہ"
+    "expense": "TODO-ur خرچہ",
+    "closeDay": "TODO-ur دن بند کریں"
   },
   "signIn": {
     "title": "سائن ان",
@@ -773,5 +774,77 @@
     "errors": {
       "name": "TODO-ur 1 سے 40 حروف کا نام لکھیں۔"
     }
+  },
+  "closing": {
+    "title": "TODO-ur دن بند کریں",
+    "titleFor": "TODO-ur دن بند کریں — {{date}}",
+    "syncing": "TODO-ur دوسرے آلات سے تازہ ڈیٹا لا رہے ہیں…",
+    "nothingToClose": "TODO-ur ابھی بند کرنے کو کچھ نہیں۔",
+    "history": "TODO-ur پچھلے بند دن",
+    "olderFirst": "TODO-ur {{count}} دن کھلے ہیں: پہلے سب سے پرانا بند کریں۔",
+    "offlineWarning": "TODO-ur آف لائن بند ہو رہا ہے — دوسرے آلات کے ٹوٹل شاید شامل نہیں۔",
+    "offlineNote": "TODO-ur آف لائن بند — دوسرے آلات کے ٹوٹل شاید شامل نہیں",
+    "opening": "TODO-ur شروع کی نقدی (روپے)",
+    "openingHint": "TODO-ur پچھلی گنتی میں سے مالک کی لی گئی رقم کم۔",
+    "firstClose": "TODO-ur پہلی بار: جتنی نقدی سے شروع کیا وہ لکھیں۔",
+    "cashSales": "TODO-ur نقد سیل",
+    "cashKhata": "TODO-ur نقد کھاتہ وصولی",
+    "cashExpenses": "TODO-ur نقد خرچے",
+    "withdrawal": "TODO-ur مالک نے لیا (روپے)",
+    "withdrawalHint": "TODO-ur جو نقدی آپ گھر لے جائیں — یہ خرچہ نہیں۔",
+    "expected": "TODO-ur متوقع نقدی",
+    "counted": "TODO-ur گنی گئی نقدی",
+    "mode": {
+      "total": "TODO-ur کل",
+      "notes": "TODO-ur نوٹ اور سکے"
+    },
+    "countedTotal": "TODO-ur گنی گئی نقدی (روپے)",
+    "note": "TODO-ur {{amount}} کا نوٹ",
+    "coin": "TODO-ur {{amount}} کا سکہ",
+    "countOf": "TODO-ur {{amount}} کی تعداد",
+    "short": "TODO-ur کم",
+    "over": "TODO-ur زیادہ",
+    "exact": "TODO-ur برابر",
+    "noteLabel": "TODO-ur نوٹ (اختیاری)",
+    "closeDay": "TODO-ur دن بند کریں",
+    "confirm": "TODO-ur {{date}} بند کریں؟ بند دن بدلا نہیں جا سکتا۔",
+    "closeNow": "TODO-ur ہاں، دن بند کریں",
+    "banner": "TODO-ur دن بند ہو گیا — نئی سیل {{date}} میں شمار ہو گی",
+    "summaryTitle": "TODO-ur دن کا خلاصہ — {{date}}",
+    "gapAlert": "TODO-ur بند کرتے وقت شامل نہیں: {{amount}} (دوسرے آلات کا ڈیٹا بعد میں آیا)۔",
+    "notFound": "TODO-ur یہ دن بند نہیں۔",
+    "noCloses": "TODO-ur ابھی کوئی دن بند نہیں ہوا۔",
+    "errors": {
+      "forbidden": "TODO-ur صرف مالک دن بند کر سکتا ہے۔",
+      "already_closed": "TODO-ur یہ دن پہلے ہی بند ہے۔",
+      "future": "TODO-ur آنے والا دن بند نہیں ہو سکتا۔",
+      "bad_amount": "TODO-ur 0 یا زیادہ رقم لکھیں۔",
+      "note_too_long": "TODO-ur نوٹ بہت لمبا ہے۔",
+      "no_device": "TODO-ur یہ آلہ سیٹ اپ نہیں ہے۔",
+      "generic": "TODO-ur کچھ غلط ہو گیا۔ دوبارہ کوشش کریں۔"
+    }
+  },
+  "summary": {
+    "title": "TODO-ur دن کا خلاصہ {{date}}",
+    "sales": "TODO-ur سیل ({{count}})",
+    "discounts": "TODO-ur رعایتیں",
+    "foc": "TODO-ur مفت آئٹم (قیمت)",
+    "khataGiven": "TODO-ur کھاتے پر دیا",
+    "khataReceived": "TODO-ur کھاتہ وصولی",
+    "expenses": "TODO-ur خرچے",
+    "wastage": "TODO-ur ضائع",
+    "wastageValue": "TODO-ur ضائع کی قیمت",
+    "opening": "TODO-ur شروع کی نقدی",
+    "withdrawal": "TODO-ur مالک نے لیا",
+    "expected": "TODO-ur متوقع نقدی",
+    "counted": "TODO-ur گنی گئی نقدی",
+    "short": "TODO-ur کم",
+    "over": "TODO-ur زیادہ",
+    "exact": "TODO-ur برابر",
+    "expectedNow": "TODO-ur اب متوقع نقدی (تمام آلات)",
+    "gap": "TODO-ur بند کرتے وقت شامل نہیں",
+    "waiting": "TODO-ur سنک کا انتظار — دیر سے آنے والا ڈیٹا ابھی نہیں دیکھا جا سکتا",
+    "late": "TODO-ur بند ہونے کے بعد آیا: {{count}}",
+    "closedAt": "TODO-ur بند {{at}}"
   }
 }

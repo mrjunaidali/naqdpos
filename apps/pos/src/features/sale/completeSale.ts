@@ -16,6 +16,7 @@ import { localWriteMany, type LocalWrite } from '../../db/outbox.ts';
 import { db as defaultDb, type NaqdDb } from '../../db/schema.ts';
 import { getStoredDevice } from '../../db/session.ts';
 import { readCurrentStaffId } from '../../staff/currentStaff.ts';
+import { shopClosedDates } from '../closing/closedDates.ts';
 import { CART_KEY, cartSaved, useCartStore } from './cartStore.ts';
 
 export const RECEIPT_COUNTER_KEY = 'receipt_counter';
@@ -104,6 +105,8 @@ export async function completeSale(
   const limitPct = shop?.cashier_max_discount_pct ?? DEFAULT_CASHIER_MAX_DISCOUNT_PCT;
   // One instant for the sale and its stock movements (same business date).
   const now = options.now ?? new Date();
+  // After closing, the sale counts for the next open day (US044; it never blocks).
+  const closedDates = await shopClosedDates(database);
 
   const rows = await database.transaction(
     'rw',
@@ -131,6 +134,7 @@ export async function completeSale(
         khataPaisa: options.khataPaisa ?? 0,
         receiptNo: receiptNo(device.code, n),
         now,
+        closedDates,
       });
       if ('error' in built) throw new SaleNotCompleted(built.error);
 
@@ -147,6 +151,7 @@ export async function completeSale(
         deviceId: device.id,
         staffId,
         now,
+        closedDates,
       });
 
       // Sale first, then lines, payments and stock movements: the outbox pushes in this order

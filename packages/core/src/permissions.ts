@@ -35,6 +35,8 @@ export const ACTIONS = {
   add_expense: ['owner', 'cashier'],
   /** Expense categories, reversals and the cashier expense limit (expenses_check() on the actor). */
   manage_expenses: ['owner'],
+  /** Close a day and see daily summaries (day_closes_check() on the actor; RLS insert owner). */
+  close_day: ['owner'],
   /** Edit shop settings (RLS shops_update_owner, column grants; write_roles). */
   manage_shop_settings: ['owner'],
 } as const satisfies Record<string, readonly Role[]>;

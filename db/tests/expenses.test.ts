@@ -184,7 +184,7 @@ describe('expenses (US046)', () => {
     });
   });
 
-  it('refuses a closed business date', async () => {
+  it('accepts a late row for a closed business date (flagged at closing, not rejected)', async () => {
     const client = await admin.connect();
     try {
       await client.query('begin');
@@ -195,9 +195,7 @@ describe('expenses (US046)', () => {
       await client.query('set local role naqdpos_app');
       await client.query(`select set_config('app.user_id', $1, true)`, [f.cashierA]);
       const q: Query = (text, values) => client.query(text, values);
-      expect(codes(await push(q, [expense({ business_date: '2026-11-20' }).entry]))).toEqual([
-        'day_closed',
-      ]);
+      expect((await push(q, [expense({ business_date: '2026-11-20' }).entry])).errors).toEqual([]);
     } finally {
       await client.query('rollback');
       client.release();

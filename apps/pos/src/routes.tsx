@@ -20,6 +20,8 @@ import { SaleDonePage } from './features/sale/SaleDonePage.tsx';
 import { SalePage } from './features/sale/SalePage.tsx';
 import { SalesListPage, SaleViewPage } from './features/sale/SalesListPage.tsx';
 import { StockPage } from './features/stock/StockPage.tsx';
+import { ClosePage } from './features/closing/ClosePage.tsx';
+import { CloseHistoryPage, SummaryPage } from './features/closing/SummaryPage.tsx';
 import { AddExpensePage } from './features/expenses/AddExpensePage.tsx';
 import { ExpenseCategoriesPage } from './features/expenses/ExpenseCategoriesPage.tsx';
 import { ExpenseDetailPage, ExpensesPage } from './features/expenses/ExpensesPage.tsx';
@@ -122,6 +124,37 @@ export const routes: RouteObject[] = [
         element: (
           <Gate state="ready">
             <SaleViewPage />
+          </Gate>
+        ),
+      },
+      {
+        // Daily closing and summaries (US044, US045): owners only.
+        path: 'closing',
+        element: (
+          <Gate state="ready">
+            <OwnerPinGate>
+              <ClosePage />
+            </OwnerPinGate>
+          </Gate>
+        ),
+      },
+      {
+        path: 'closing/history',
+        element: (
+          <Gate state="ready">
+            <OwnerPinGate>
+              <CloseHistoryPage />
+            </OwnerPinGate>
+          </Gate>
+        ),
+      },
+      {
+        path: 'closing/:businessDate',
+        element: (
+          <Gate state="ready">
+            <OwnerPinGate>
+              <SummaryPage />
+            </OwnerPinGate>
           </Gate>
         ),
       },

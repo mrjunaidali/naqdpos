@@ -5,7 +5,7 @@ import type { ProductRow, ProductUnit } from './catalogue.ts';
 import { uuidv7 } from './ids.ts';
 import { formatQty, type QtyMilli } from './qty.ts';
 import type { SaleLineRow } from './sale.ts';
-import { businessDate } from './sale.ts';
+import { businessDateFor } from './sale.ts';
 import type { Role } from './tenancy.ts';
 
 export const STOCK_REASONS = [
@@ -88,6 +88,8 @@ export interface StockContext {
   deviceId: string | null;
   staffId: string;
   now: Date;
+  /** Closed business dates: new movements roll forward to the next open day. */
+  closedDates?: ReadonlySet<string> | undefined;
 }
 
 function movement(
@@ -102,7 +104,7 @@ function movement(
     id: uuidv7(),
     shop_id: ctx.shopId,
     product_id: productId,
-    business_date: businessDate(ctx.now),
+    business_date: businessDateFor(ctx.now, ctx.closedDates),
     qty_milli: qtyMilli,
     reason,
     ref_id: refId,

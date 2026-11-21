@@ -12,6 +12,7 @@ import {
 import { localWriteMany } from '../../db/outbox.ts';
 import { db as defaultDb, type NaqdDb } from '../../db/schema.ts';
 import { getStoredDevice } from '../../db/session.ts';
+import { shopClosedDates } from '../closing/closedDates.ts';
 
 export class StockNotRecorded extends Error {
   constructor(readonly reason: StockActionError | 'no_device' | 'no_staff') {
@@ -48,6 +49,8 @@ export async function recordStockAction(
   const staff = request.staff;
   if (!staff || !staff.active || staff.deleted_at !== null) throw new StockNotRecorded('no_staff');
 
+  // Read before the transaction (it only covers stock_movements and outbox).
+  const closedDates = await shopClosedDates(database);
   return database.transaction('rw', [database.stock_movements, database.outbox], async () => {
     const built = buildStockAction(
       {
@@ -67,6 +70,7 @@ export async function recordStockAction(
         deviceId: device.id,
         staffId: staff.id,
         now: options.now ?? new Date(),
+        closedDates,
       },
     );
     if (built === null) return null;

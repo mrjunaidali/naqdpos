@@ -4,11 +4,16 @@ import { useTranslation } from 'react-i18next';
 import { Link, useNavigate } from 'react-router';
 import { db } from '../db/schema.ts';
 import { getStoredDevice } from '../db/session.ts';
+import { can } from '@naqdpos/core';
+import { DayClosedBanner } from '../features/closing/DayClosedBanner.tsx';
 import { AFTER_SETUP_KEY } from '../features/onboarding/setup.ts';
+import { useCurrentStaff } from '../staff/currentStaff.ts';
 
 export function HomePage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const current = useCurrentStaff();
+  const canClose = current?.valid === true && can(current.staff.role, 'close_day');
   const info = useLiveQuery(async () => {
     const device = await getStoredDevice();
     const shop = device ? await db.shops.get(device.shop_id) : undefined;
@@ -26,6 +31,7 @@ export function HomePage() {
 
   return (
     <section className="space-y-2">
+      <DayClosedBanner />
       <h1 className="text-2xl font-bold">{t('home.welcome')}</h1>
       {info?.shopName && <p className="text-lg">{info.shopName}</p>}
       {info?.code && <p className="text-muted">{t('home.deviceCode', { code: info.code })}</p>}
@@ -54,6 +60,14 @@ export function HomePage() {
       >
         {t('home.expense')}
       </Link>
+      {canClose && (
+        <Link
+          to="/closing"
+          className="flex min-h-12 items-center justify-center rounded-2xl border border-border bg-surface font-semibold text-text"
+        >
+          {t('home.closeDay')}
+        </Link>
+      )}
     </section>
   );
 }

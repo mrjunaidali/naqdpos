@@ -71,12 +71,13 @@ describe('recording', () => {
     ).toBe(OWNER);
   });
 
-  it('refuses riders, zero amounts and closed days', () => {
+  it('refuses riders and zero amounts; rolls past a closed day', () => {
     expect(buildExpense(input(100), { ...ctx, role: 'rider' })).toEqual({ error: 'forbidden' });
     expect(buildExpense(input(0), ctx)).toEqual({ error: 'bad_amount' });
-    expect(buildExpense(input(100), { ...ctx, closedDates: new Set(['2026-11-22']) })).toEqual({
-      error: 'day_closed',
-    });
+    // After today is closed, a new expense counts for the next day (it never blocks).
+    expect(
+      row(buildExpense(input(100), { ...ctx, closedDates: new Set(['2026-11-22']) })).business_date,
+    ).toBe('2026-11-23');
   });
 });
 

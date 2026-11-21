@@ -63,6 +63,7 @@ As an owner, I see how expenses affected today's cash.
 - Expected cash subtracts today's **cash** expenses only (formula in architecture §3, pure function in `packages/core`, same result in SQL).
 - The closing screen lists today's expenses by category with the cash total.
 - The WhatsApp closing summary includes the day's total expenses.
+- Built in Step 18: the closing screen lists cash expenses by category with the total; the summary shows all expenses by category (reversals netted). A reversal made after its day is closed is dated the next open day.
 
 ### US068 (EXP-5) Expense list and monthly report
 As an owner, I see where money goes.

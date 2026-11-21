@@ -11,6 +11,7 @@ import {
   KhataEntryRowSchema,
   ExpenseCategoryRowSchema,
   ExpenseRowSchema,
+  DayCloseRowSchema,
   SaleLineRowSchema,
   SaleRowSchema,
   DeviceRowSchema,
@@ -135,6 +136,14 @@ export const SYNC_TABLES = {
     schema: ExpenseCategoryRowSchema,
   },
   expenses: { kind: 'append', key: 'id', pushable: true, scope: 'all', schema: ExpenseRowSchema },
+  // Daily closing (US044): append-only, owners write.
+  day_closes: {
+    kind: 'append',
+    key: 'id',
+    pushable: true,
+    scope: 'all',
+    schema: DayCloseRowSchema,
+  },
 } as const satisfies Record<string, SyncTableSpec>;
 
 export type SyncTableName = keyof typeof SYNC_TABLES;

@@ -1,4 +1,4 @@
-import { receiptText, type ReceiptDoc } from '@naqdpos/core';
+import { receiptText } from '@naqdpos/core';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useLocation, useParams } from 'react-router';
@@ -14,22 +14,10 @@ import {
   type SavedPrinter,
 } from './bluetooth.ts';
 import { receiptToEscpos } from './canvasReceipt.ts';
+import { printReceipt } from './printReceipt.ts';
 import { useSaleReceipt } from './receiptData.ts';
 import { ReceiptView } from './ReceiptView.tsx';
 import { shareReceipt } from './share.ts';
-
-/** Browser print at the paper width: a page-size rule only while printing. */
-function printReceipt(doc: ReceiptDoc) {
-  const style = document.createElement('style');
-  style.textContent = `@page { size: ${doc.paperWidthMm}mm auto; margin: 0; }`;
-  document.head.append(style);
-  const done = () => {
-    style.remove();
-    window.removeEventListener('afterprint', done);
-  };
-  window.addEventListener('afterprint', done);
-  window.print();
-}
 
 /**
  * Receipt (US036): preview in the shop's receipt language, WhatsApp share, browser print (58 / 80

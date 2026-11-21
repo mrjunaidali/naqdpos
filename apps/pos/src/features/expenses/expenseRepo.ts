@@ -13,6 +13,7 @@ import type { TFunction } from 'i18next';
 import { localWriteMany } from '../../db/outbox.ts';
 import { db } from '../../db/schema.ts';
 import { getStoredDevice } from '../../db/session.ts';
+import { shopClosedDates } from '../closing/closedDates.ts';
 
 export class ExpenseNotSaved extends Error {
   constructor(readonly reason: string) {
@@ -163,8 +164,7 @@ export async function addExpense(
     now: new Date(),
     limitPaisa,
     approvedByStaffId,
-    // day_closes (US044) adds the closed dates here.
-    closedDates: new Set<string>(),
+    closedDates: await shopClosedDates(),
   });
   if ('error' in built) throw new ExpenseNotSaved(built.error);
   await localWriteMany([{ table: 'expenses', op: 'insert', row: { ...built } }], db, {
@@ -182,7 +182,7 @@ export async function reverseExpense(original: ExpenseRow, reason: string, owner
     staffId: owner.id,
     role: owner.role,
     now: new Date(),
-    closedDates: new Set<string>(),
+    closedDates: await shopClosedDates(),
   });
   if ('error' in built) throw new ExpenseNotSaved(built.error);
   await localWriteMany([{ table: 'expenses', op: 'insert', row: { ...built } }], db, {
@@ -191,4 +191,5 @@ export async function reverseExpense(original: ExpenseRow, reason: string, owner
   return built;
 }
 
+/** The plain local date (for "today's" lists). */
 export const today = () => businessDate(new Date());

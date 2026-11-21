@@ -190,6 +190,26 @@ export function businessDate(instant: Date | number = Date.now(), timeZone = DEF
 }
 
 /** "A2-000001": device code + per-device counter, at least 6 digits. */
+export function nextDate(date: string): string {
+  const d = new Date(`${date}T00:00:00Z`);
+  d.setUTCDate(d.getUTCDate() + 1);
+  return d.toISOString().slice(0, 10);
+}
+
+/**
+ * The business date for a new ledger row: the shop's local date, rolled forward past closed
+ * days (selling after closing never blocks; rule 1).
+ */
+export function businessDateFor(
+  instant: Date,
+  closedDates: ReadonlySet<string> | readonly string[] = [],
+): string {
+  const closed = closedDates instanceof Set ? closedDates : new Set(closedDates);
+  let date = businessDate(instant);
+  while (closed.has(date)) date = nextDate(date);
+  return date;
+}
+
 export function receiptNo(deviceCode: string, n: number): string {
   if (!Number.isSafeInteger(n) || n < 1) throw new RangeError('receipt counter');
   return `${deviceCode}-${String(n).padStart(6, '0')}`;
@@ -219,6 +239,8 @@ export interface SaleContext {
   limitPct: number;
   /** An owner's PIN approval for a give-away above the limit; the caller checks it is an owner. */
   approval?: DiscountApproval | null | undefined;
+  /** The shop's closed business dates: a sale after closing counts for the next open day. */
+  closedDates?: ReadonlySet<string> | undefined;
   /** The customer attached to the sale (US038). */
   customerId?: string | null | undefined;
   /** The part of the total put on the customer's khata (US039); not a payments row. */
@@ -267,7 +289,7 @@ export function buildSale(
   if (left < 0) return { error: 'overpaid' };
 
   const created = ctx.now.toISOString();
-  const date = businessDate(ctx.now);
+  const date = businessDateFor(ctx.now, ctx.closedDates);
   const saleId = uuidv7();
   const sale: SaleRow = {
     id: saleId,
@@ -321,7 +343,13 @@ export function buildSale(
   const khata =
     khataPaisa > 0 && customerId
       ? creditSaleEntry(
-          { shopId: ctx.shopId, deviceId: ctx.deviceId, staffId: ctx.staffId, now: ctx.now },
+          {
+            shopId: ctx.shopId,
+            deviceId: ctx.deviceId,
+            staffId: ctx.staffId,
+            now: ctx.now,
+            closedDates: ctx.closedDates,
+          },
           customerId,
           saleId,
           khataPaisa,

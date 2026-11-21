@@ -191,7 +191,7 @@ describe('stock_movements (US024, US025)', () => {
     });
   });
 
-  it('refuses a closed business date', async () => {
+  it('accepts a late row for a closed business date (flagged at closing, not rejected)', async () => {
     const client = await admin.connect();
     try {
       await client.query('begin');
@@ -202,7 +202,7 @@ describe('stock_movements (US024, US025)', () => {
       await client.query('set local role naqdpos_app');
       await client.query(`select set_config('app.user_id', $1, true)`, [f.cashierA]);
       const q: Query = (text, values) => client.query(text, values);
-      expect(codes(await push(q, [movement({ date: '2026-11-20' })]))).toEqual(['day_closed']);
+      expect((await push(q, [movement({ date: '2026-11-20' })])).errors).toEqual([]);
     } finally {
       await client.query('rollback');
       client.release();

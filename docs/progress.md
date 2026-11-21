@@ -640,3 +640,33 @@ Expense categories per shop type, expenses offline with the cashier limit and ow
 **Follow-ups**
 - Closed-day check on the device and the shop-device pull filter: with `day_closes` (US044).
 - Expenses in closing (US067), expense report (US068), bill photos (US069, `expense_attachments`), recurring expenses and `payee_staff_id` (Release 2).
+
+## Step 18 — US044 daily closing, US045 daily summary, US067 expenses in closing (2026-11-23)
+
+The owner closes the day against a cash count; later rows are accepted and flagged; selling after closing rolls to the next day; a daily summary to share or print.
+
+**Built**
+- Migration `20261123090000_day_closes.sql`: `day_closes` (append-only, unique per date, `seen_through_seq`, difference check, owner-only trigger `day_closes_check()`, no future dates); RLS owners / cashiers read, owners insert, riders none; real `is_day_closed()`; `shop_expected_cash()`; `sync_push` without the `day_closed` rejection (late rows accepted); registry row.
+- `packages/core`: `closing.ts` (`DayCloseRow`, `expectedCash`, `openingDefault`, `closableDays`, `DENOMINATIONS` / `denominationTotal`, `buildDayClose`, `rowsNotSeenAtClosing`, `dailySummary` → receipt lines); `businessDateFor` / `nextDate` in `sale.ts`; every builder (sale, stock, khata, expense) takes `closedDates` and rolls forward (`buildExpense` no longer blocks); schema, registry, `ACTIONS.close_day` (owner); shared fixture `fixtures/expected-cash.json`.
+- `apps/pos`:
+  - Dexie **version 13** (`day_closes`); `closedDates.ts` feeds every write; `DayClosedBanner` on Home and the sale screen
+  - `/closing` (Home → Close day, owner PIN gate): sync first (8 s), offline warning recorded in the note, oldest unclosed day first, opening default, cash sales, cash khata received, cash expenses by category, owner withdrawal, expected cash, count by total or notes and coins, short / over / exact colours, confirm, write through the outbox with the pull cursor as `seen_through_seq`
+  - `/closing/:date` summary (WhatsApp text / copy, browser print through the receipt path) with the "Not included at closing" alert; `/closing/history`
+  - wastage value from `product_cost_history` only on owner devices (`costsAt`)
+  - `printReceipt` moved to `print/printReceipt.ts` (shared by receipts and summaries)
+  - F2 on the sale screen uses a layout effect (it missed a key press right after the screen appeared)
+  - en + ur strings (`closing.*`, `summary.*`)
+- DB tests for closed days now assert that late rows are accepted.
+
+**Tests**: DB 173 (+5 new, 5 changed: owner closes, `is_day_closed` true, one close per date; cashier actor / cashier session refused, future day refused, difference check; a late row from another device accepted and found by the seen-through rule; `shop_expected_cash` = shared fixture; append-only, riders none, push / pull). Core 345 (+12: expected cash = fixture; opening default; 21:30 sale after a 21:00 close → next day; oldest unclosed first, never future; denominations; owner-only, once, future, negative refusals; the 8 pm / 9 pm offline close / 10 pm push case flagged; own unsynced pre-close row not flagged and not waiting; waiting states; summary sections incl. FOC, discounts, khata, wastage value with costs only, gap and late rows; waiting text). Pos 277 (+8: closing owner-only; opening default, expected, notes and coins to exact; offline close with the note, summary waiting; oldest day first; sale and expense after the close go to the next day with the banner; 8 pm / 9 pm / 10 pm case on the device with the gap and late rows; wastage value on owner devices only, WhatsApp copy; history).
+
+**Decisions**
+- Late rows accepted and flagged with `seen_through_seq` (not rejected); `day_closed` code reserved.
+- New rows after closing roll to the next open day; banner shown.
+- Opening default = previous counted − withdrawal; one drawer per shop; owner-only closing and summary.
+- Expected cash is not re-checked by the server (the device may have been offline); only difference = counted − expected.
+
+**Follow-ups**
+- Close corrections (a later feature).
+- Refunds, rider handovers and supplier payments enter expected cash when those features exist (already in the formula).
+- Reports (US068 and the owner dashboard) can use `shop_expected_cash()` and the not-seen rule.
