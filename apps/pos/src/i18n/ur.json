@@ -22,7 +22,37 @@
     "todaysSales": "TODO-ur آج کی سیل",
     "khata": "TODO-ur کھاتہ",
     "expense": "TODO-ur خرچہ",
-    "closeDay": "TODO-ur دن بند کریں"
+    "closeDay": "TODO-ur دن بند کریں",
+    "greeting": {
+      "morning": "TODO-ur صبح بخیر",
+      "afternoon": "TODO-ur سہ پہر بخیر",
+      "evening": "TODO-ur شام بخیر"
+    },
+    "todaySales": "TODO-ur آج کی سیل",
+    "mySales": "TODO-ur آج میری سیل",
+    "salesFor": "TODO-ur {{date}} کی سیل",
+    "invoices_one": "TODO-ur {{count}} بل",
+    "invoices_other": "TODO-ur {{count}} بل",
+    "split": {
+      "cash": "TODO-ur نقد",
+      "other": "TODO-ur والیٹ / بینک",
+      "khata": "TODO-ur کھاتے پر"
+    },
+    "trend": "TODO-ur پچھلے 7 دن کی سیل",
+    "khataOwed": "TODO-ur کھاتہ بقایا",
+    "lowStock": "TODO-ur کم اسٹاک",
+    "tile": {
+      "product": "TODO-ur پروڈکٹ",
+      "customer": "TODO-ur گاہک",
+      "stockIn": "TODO-ur اسٹاک آیا",
+      "wastage": "TODO-ur ضائع",
+      "expense": "TODO-ur خرچہ"
+    },
+    "recent": "TODO-ur حالیہ",
+    "seeAll": "TODO-ur سب دیکھیں",
+    "nothingYet": "TODO-ur آج ابھی کچھ نہیں۔",
+    "storageNotice": "TODO-ur یہ براؤزر فون میں جگہ کم ہونے پر ایپ کا ڈیٹا مٹا سکتا ہے۔ ایپ انسٹال کرنے سے یہ خطرہ بہت کم ہو جاتا ہے۔",
+    "gotIt": "TODO-ur ٹھیک ہے"
   },
   "signIn": {
     "title": "سائن ان",
@@ -219,7 +249,20 @@
     "signOutBlocked_other": "TODO-ur {{count}} تبدیلیاں ابھی سنک نہیں ہوئیں۔ سائن آؤٹ سے پہلے سنک کریں۔"
   },
   "nav": {
-    "home": "ہوم"
+    "home": "TODO-ur ہوم",
+    "main": "TODO-ur مین",
+    "side": "TODO-ur مینو",
+    "sales": "TODO-ur سیلز",
+    "sale": "TODO-ur سیل",
+    "products": "TODO-ur پروڈکٹس",
+    "khata": "TODO-ur کھاتہ",
+    "more": "TODO-ur مزید",
+    "stock": "TODO-ur اسٹاک",
+    "expenses": "TODO-ur خرچے",
+    "closeDay": "TODO-ur دن بند",
+    "staff": "TODO-ur عملہ",
+    "sync": "TODO-ur سنک",
+    "settings": "TODO-ur سیٹنگز"
   },
   "unit": {
     "kg": "کلو",
@@ -855,5 +898,14 @@
     "waiting": "TODO-ur سنک کا انتظار — دیر سے آنے والا ڈیٹا ابھی نہیں دیکھا جا سکتا",
     "late": "TODO-ur بند ہونے کے بعد آیا: {{count}}",
     "closedAt": "TODO-ur بند {{at}}"
+  },
+  "install": {
+    "title": "TODO-ur NaqdPOS انسٹال کریں",
+    "button": "TODO-ur ایپ انسٹال کریں",
+    "notNow": "TODO-ur ابھی نہیں",
+    "prompt": "TODO-ur ایپ کی طرح پوری سکرین پر کھولیں، انٹرنیٹ کے بغیر بھی۔",
+    "ios": "TODO-ur شیئر دبائیں، پھر “Add to Home Screen”۔",
+    "mac_safari": "TODO-ur سفاری میں File → Add to Dock چنیں۔",
+    "firefox_desktop": "TODO-ur فائر فاکس ایپ انسٹال نہیں کرتا۔ انسٹال کے لیے کروم یا ایج میں کھولیں۔"
   }
 }

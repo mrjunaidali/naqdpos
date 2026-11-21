@@ -3,13 +3,13 @@ import {
   formatPkMobile,
   isOverdue,
   khataBalance,
-  sumPaisa,
+  receivableTotal,
   telLink,
   waLink,
 } from '@naqdpos/core';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Link, useNavigate } from 'react-router';
+import { Link, useNavigate, useSearchParams } from 'react-router';
 import { Button } from '../../ui/Button.tsx';
 import { CustomerPicker } from './CustomerPicker.tsx';
 import { useRs } from '../sale/saleFormat.ts';
@@ -29,7 +29,8 @@ export function KhataListPage() {
   const customers = useCustomers();
   const balances = useBalances();
   const navigate = useNavigate();
-  const [adding, setAdding] = useState(false);
+  const [params] = useSearchParams();
+  const [adding, setAdding] = useState(params.get('add') === '1');
   const [query, setQuery] = useState('');
   const [overdueOnly, setOverdueOnly] = useState(false);
   const [daysText, setDaysText] = useState(String(DEFAULT_OVERDUE_DAYS));
@@ -47,7 +48,8 @@ export function KhataListPage() {
       };
     })
     .filter((r) => r.balance !== 0);
-  const receivable = sumPaisa(rows.filter((r) => r.balance > 0).map((r) => r.balance));
+  // Same as Home's "Khata owed" card.
+  const receivable = receivableTotal([...balances.values()].flat());
   const matched = new Set(matchCustomers(customers, query).map((c) => c.id));
   const shown = rows
     .filter((r) => matched.has(r.customer.id) && (!overdueOnly || r.overdue))

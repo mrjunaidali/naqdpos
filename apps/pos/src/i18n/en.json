@@ -22,7 +22,37 @@
     "todaysSales": "Today’s sales",
     "khata": "Khata",
     "expense": "Expense",
-    "closeDay": "Close day"
+    "closeDay": "Close day",
+    "greeting": {
+      "morning": "Good morning",
+      "afternoon": "Good afternoon",
+      "evening": "Good evening"
+    },
+    "todaySales": "Today's sales",
+    "mySales": "My sales today",
+    "salesFor": "Sales for {{date}}",
+    "invoices_one": "{{count}} invoice",
+    "invoices_other": "{{count}} invoices",
+    "split": {
+      "cash": "Cash",
+      "other": "Wallet / bank",
+      "khata": "On khata"
+    },
+    "trend": "Sales over the last 7 days",
+    "khataOwed": "Khata owed",
+    "lowStock": "Low stock",
+    "tile": {
+      "product": "Product",
+      "customer": "Customer",
+      "stockIn": "Stock in",
+      "wastage": "Wastage",
+      "expense": "Expense"
+    },
+    "recent": "Recent",
+    "seeAll": "See all",
+    "nothingYet": "Nothing yet today.",
+    "storageNotice": "This browser may clear the app’s data when the phone runs low on space. Installing the app makes that much less likely.",
+    "gotIt": "Got it"
   },
   "signIn": {
     "title": "Sign in",
@@ -219,7 +249,20 @@
     "signOutBlocked_other": "{{count}} changes are not synced yet. Sync before signing out."
   },
   "nav": {
-    "home": "Home"
+    "home": "Home",
+    "main": "Main",
+    "side": "Menu",
+    "sales": "Sales",
+    "sale": "Sale",
+    "products": "Products",
+    "khata": "Khata",
+    "more": "More",
+    "stock": "Stock",
+    "expenses": "Expenses",
+    "closeDay": "Close day",
+    "staff": "Staff",
+    "sync": "Sync",
+    "settings": "Settings"
   },
   "unit": {
     "kg": "kg",
@@ -855,5 +898,14 @@
     "waiting": "Waiting to sync — late rows can’t be checked yet",
     "late": "Arrived after closing: {{count}}",
     "closedAt": "Closed {{at}}"
+  },
+  "install": {
+    "title": "Install NaqdPOS",
+    "button": "Install app",
+    "notNow": "Not now",
+    "prompt": "Open it like an app, full screen, even without internet.",
+    "ios": "Tap Share, then “Add to Home Screen”.",
+    "mac_safari": "In Safari choose File → Add to Dock.",
+    "firefox_desktop": "Firefox cannot install apps. Open NaqdPOS in Chrome or Edge to install it."
   }
 }

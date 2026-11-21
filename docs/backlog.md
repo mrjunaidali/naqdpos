@@ -50,7 +50,7 @@ Build in this order, not in ID order. "Sheet step" is the step number in the ori
 
 ### F01 · PWA app shell
 
-**US001** · Must · 3 · Partly done — As a shop owner, I want to install NaqdPOS on my phone's home screen or shop PC and open it like an app, so that I don't need the Play Store or a browser tab.
+**US001** · Must · 3 · Done (Step 20; load time to be measured on a real device) — As a shop owner, I want to install NaqdPOS on my phone's home screen or shop PC and open it like an app, so that I don't need the Play Store or a browser tab.
 - Installable PWA (manifest, icons, splash) per architecture §6 — *done (Step 0)*
 - Opens full-screen/standalone from the home screen or desktop — *done*
 - Our own "Install app" button (`beforeinstallprompt`), iOS "Share → Add to Home Screen" guide, macOS Safari "Add to Dock" guide, Firefox desktop recommends Chrome/Edge
@@ -58,7 +58,7 @@ Build in this order, not in ID order. "Sheet step" is the step number in the ori
 - Urdu font precached; app opens and completes a sale on first launch after install with the network off
 - Loads in under 3 s on a mid-range Android after first visit
 
-**US002** · Must · 5 · Partly done — As a cashier, I want screens that fit both a small phone and a desktop, so that I can sell on whatever device the shop has.
+**US002** · Must · 5 · Done (Step 20) — As a cashier, I want screens that fit both a small phone and a desktop, so that I can sell on whatever device the shop has.
 - Layouts work at 360px, 768px and 1280px widths; touch targets ≥ 44px
 - Header with shop name, sync status slot and staff switch slot; bottom/floating nav on phones, side nav from 768px (look per `docs/design-theme.md`)
 - Desktop keyboard shortcuts: `/` focuses search, F2 opens pay

@@ -12,6 +12,8 @@ import { routes } from './routes.tsx';
 import { useCartStore } from './features/sale/cartStore.ts';
 import { reconcileReceiptCounter } from './features/sale/completeSale.ts';
 import { syncEngine } from './sync/index.ts';
+import { listenForInstallPrompt } from './app/install.ts';
+import { ensurePersistentStorage } from './app/storage.ts';
 
 const router = createBrowserRouter(routes);
 
@@ -22,6 +24,10 @@ void syncEngine.start();
 void useCartStore.getState().hydrate();
 // Receipt numbers never repeat: bring the counter up to the sales already on the device.
 void reconcileReceiptCounter();
+// Install (US001): keep the browser's install prompt for our own button.
+listenForInstallPrompt();
+// Storage (US001, architecture §6): ask for persistent storage until it is granted.
+void ensurePersistentStorage();
 
 const rootElement = document.getElementById('root');
 if (!rootElement) throw new Error('Missing #root element');

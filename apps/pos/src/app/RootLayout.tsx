@@ -1,11 +1,12 @@
 import { useTranslation } from 'react-i18next';
-import { Link, Outlet } from 'react-router';
+import { Link, Outlet, useLocation } from 'react-router';
 import { StaffChip } from '../features/pin/StaffChip.tsx';
 import { otherLanguage } from '../i18n/index.ts';
 import { SyncChip } from '../sync/SyncChip.tsx';
 import { UpdateRequiredBanner } from '../sync/UpdateRequiredBanner.tsx';
 import { BrandMark } from '../ui/BrandMark.tsx';
 import { Toaster } from '../ui/Toaster.tsx';
+import { Nav } from '../features/home/Nav.tsx';
 import { useAppState } from './appState.ts';
 import { useSessionCheck } from './sessionCheck.ts';
 import { useLiveQuery } from 'dexie-react-hooks';
@@ -34,6 +35,7 @@ export function RootLayout() {
   const { t, i18n } = useTranslation();
   useSessionCheck();
   const ready = useAppState() === 'ready';
+  const { pathname } = useLocation();
   const shopName = useLiveQuery(async () => {
     const device = await getStoredDevice();
     return device ? ((await db.shops.get(device.shop_id))?.name ?? null) : null;
@@ -55,7 +57,8 @@ export function RootLayout() {
         {ready ? (
           <>
             <StaffChip />
-            <SyncChip />
+            {/* Home shows it in the hero card. */}
+            {pathname !== '/' && <SyncChip />}
             <Link
               to="/settings"
               aria-label={t('settings.title')}
@@ -76,9 +79,12 @@ export function RootLayout() {
         )}
       </header>
       {ready && <UpdateRequiredBanner />}
-      <main className="flex-1 p-4">
-        <Outlet />
-      </main>
+      <div className="flex flex-1">
+        {ready && <Nav />}
+        <main className="min-w-0 flex-1 p-4">
+          <Outlet />
+        </main>
+      </div>
       <Toaster />
     </div>
   );

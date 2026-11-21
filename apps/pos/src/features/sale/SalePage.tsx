@@ -10,6 +10,7 @@ import { CategoryTabs } from '../catalogue/CategoryTabs.tsx';
 import { ProductIcon } from '../catalogue/ProductIcon.tsx';
 import { DayClosedBanner } from '../closing/DayClosedBanner.tsx';
 import { CustomerChip } from '../khata/CustomerChip.tsx';
+import { useWide } from '../../app/useWide.ts';
 import { CartBar } from './CartBar.tsx';
 import { currentSeller, ownerApprovalNeeded } from './discountLimit.ts';
 import { FocSuggestions } from './FocSuggestions.tsx';
@@ -48,6 +49,7 @@ export function SalePage() {
   const [open, setOpen] = useState<Open>(null);
   const search = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
+  const wide = useWide();
   const [askOwner, setAskOwner] = useState(false);
 
   useEffect(() => {
@@ -146,24 +148,62 @@ export function SalePage() {
         </button>
       </div>
 
-      {products && visible.length === 0 ? (
-        <p className="text-muted">{query ? t('sale.noMatch') : t('sale.noProducts')}</p>
-      ) : (
-        <ul className="grid grid-cols-3 gap-2 sm:grid-cols-4 lg:grid-cols-6">
-          {visible.map((p) => (
-            <SaleTile
-              key={p.id}
-              product={p}
-              line={lineOf(p.id)}
-              disabled={!canSell}
-              onTap={() => setOpen({ kind: 'product', product: p, line: lineOf(p.id) })}
+      <div className="md:flex md:items-start md:gap-4">
+        <div className="min-w-0 flex-1">
+          {products && visible.length === 0 ? (
+            <p className="text-muted">{query ? t('sale.noMatch') : t('sale.noProducts')}</p>
+          ) : (
+            <ul className="grid grid-cols-3 gap-2 sm:grid-cols-4 lg:grid-cols-6">
+              {visible.map((p) => (
+                <SaleTile
+                  key={p.id}
+                  product={p}
+                  line={lineOf(p.id)}
+                  disabled={!canSell}
+                  onTap={() => setOpen({ kind: 'product', product: p, line: lineOf(p.id) })}
+                />
+              ))}
+            </ul>
+          )}
+        </div>
+        {/* From 768px the cart sits beside the grid (the cart bar is hidden there). */}
+        {wide && lines.length > 0 && (
+          <aside className="sticky top-4 w-80 shrink-0 space-y-2">
+            <CartSheet
+              inline
+              onClose={() => undefined}
+              onEdit={(line) =>
+                setOpen(
+                  line.product_id === null
+                    ? { kind: 'custom', line }
+                    : {
+                        kind: 'product',
+                        product: {
+                          id: line.product_id,
+                          name: line.name,
+                          name_ur: line.name_ur,
+                          unit: line.unit,
+                          sale_price_paisa: line.unit_price_paisa,
+                          icon: line.icon,
+                        },
+                        line,
+                      },
+                )
+              }
             />
-          ))}
-        </ul>
-      )}
+            <button
+              type="button"
+              onClick={() => void charge()}
+              className="min-h-12 w-full rounded-xl bg-primary text-lg font-bold text-primary-fg"
+            >
+              {t('sale.charge')}
+            </button>
+          </aside>
+        )}
+      </div>
 
       {canSell && products && <FocSuggestions products={products} />}
-      <CartBar onOpen={() => setOpen({ kind: 'cart' })} onCharge={() => void charge()} />
+      {!wide && <CartBar onOpen={() => setOpen({ kind: 'cart' })} onCharge={() => void charge()} />}
       {askOwner && (
         <OwnerPinDialog
           message={t('discount.ownerNeeded')}

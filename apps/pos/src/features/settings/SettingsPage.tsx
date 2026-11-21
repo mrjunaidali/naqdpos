@@ -1,4 +1,5 @@
 import { can } from '@naqdpos/core';
+import { InstallCard } from '../../app/InstallCard.tsx';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -32,6 +33,7 @@ export function SettingsPage() {
   return (
     <section className="mx-auto max-w-md space-y-4">
       <h1 className="text-2xl font-bold">{t('settings.title')}</h1>
+      <InstallCard dismissible={false} />
       <nav className="space-y-2">
         {/* Hidden by role (US018); the staff screens also ask for an owner PIN. */}
         {can(role, 'manage_staff') && (

@@ -19,12 +19,12 @@ Decided: 19–20 Nov 2026 (Junaid). Professional, pleasant, corporate look in **
 ## Screens (approved direction, 20 Nov 2026)
 
 ### Home
-- Header: brand mark (`<BrandMark />`), greeting + shop name, bell button.
+- Header: brand mark (`<BrandMark />`), greeting + shop name, staff chip, settings. **No bell button until there are notifications** (decided 23 Nov 2026). On Home the sync chip sits in the hero card.
 - **Hero card** (near-black): today's sales total, invoice count, cash / wallet split, 7-day bar trend (today highlighted), sync chip (green dot "Synced", amber "N pending", red "Needs review"). Cashiers see only their own shift sales here.
 - Two small stat cards: khata owed, low stock (owner only).
 - Row of four action tiles: Product, Customer, Purchase, Expense (tiles hidden when the role can't use them).
 - "Recent" card: last few sales and khata entries, "See all".
-- **Floating nav bar** (near-black, rounded) with Home, Sales, white **Sale** pill in the centre, Products, More.
+- **Floating nav bar** (near-black, rounded) with Home, Sales, white **Sale** pill in the centre, Products (owner) or Khata (cashier), More (a sheet with Khata, Stock, Expenses, Close day, Staff, Sync, Settings as the role allows). **From 768px** a left side nav with every item instead; the sale screen then shows the cart beside the product grid. No nav in the sale flow (sale, pay, done). "Purchase" is the **Stock in** tile until purchases exist (R2; Wastage for cashiers); "Low stock" = tracked products with stock ≤ 0 until minimum quantities (R2). "Today" on Home is the current business date (after a close, "Sales for <date>").
 
 ### Sale (new sale)
 - Header: back, "New sale", cashier name + device code (e.g. `Ali · A1`), **Customer** chip (attach khata customer).

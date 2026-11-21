@@ -122,7 +122,9 @@ describe('onboarding form', () => {
     fillValidForm();
     fireEvent.click(screen.getByRole('button', { name: 'Create shop' }));
 
-    expect(await screen.findByRole('heading', { name: 'Welcome' })).toBeInTheDocument();
+    expect(
+      await screen.findByRole('heading', { name: /^Good (morning|afternoon|evening)$/ }),
+    ).toBeInTheDocument();
     // Setup navigates home twice (Gate redirect + onDone), so check inside waitFor.
     await waitFor(() => expect(screen.getByText('This device: A1')).toBeInTheDocument());
 
@@ -166,7 +168,9 @@ describe('onboarding form', () => {
     expect(screen.getByLabelText('Name for this device')).toHaveValue('Owner phone');
     fillValidForm();
     fireEvent.click(screen.getByRole('button', { name: 'Create shop' }));
-    expect(await screen.findByRole('heading', { name: 'Welcome' })).toBeInTheDocument();
+    expect(
+      await screen.findByRole('heading', { name: /^Good (morning|afternoon|evening)$/ }),
+    ).toBeInTheDocument();
     expect(mocked.registerDevice.mock.calls[0]![0]).toMatchObject({
       mode: 'owner',
       name: 'Owner phone',
@@ -191,7 +195,9 @@ describe('onboarding form', () => {
     expect(await getStoredDevice()).toBeUndefined();
 
     fireEvent.click(screen.getByRole('button', { name: 'Create shop' }));
-    expect(await screen.findByRole('heading', { name: 'Welcome' })).toBeInTheDocument();
+    expect(
+      await screen.findByRole('heading', { name: /^Good (morning|afternoon|evening)$/ }),
+    ).toBeInTheDocument();
     const [first, second] = mocked.createShop.mock.calls.map((c) => c[0]);
     expect(second?.shop_id).toBe(first?.shop_id);
     expect(second?.owner_staff_id).toBe(first?.owner_staff_id);
@@ -296,7 +302,9 @@ describe('after onboarding (US072)', () => {
     const router = await onboard('grocery');
     await waitFor(() => expect(router.state.location.pathname).toBe('/'));
     await waitFor(() =>
-      expect(screen.getByRole('heading', { name: 'Welcome' })).toBeInTheDocument(),
+      expect(
+        screen.getByRole('heading', { name: /^Good (morning|afternoon|evening)$/ }),
+      ).toBeInTheDocument(),
     );
     expect(await db.meta.get('after_setup')).toBeUndefined();
   });

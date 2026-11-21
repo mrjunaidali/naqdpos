@@ -688,3 +688,29 @@ The owner closes the day against a cash count; later rows are accepted and flagg
 
 **Follow-ups**
 - Opening balances where the customer is owed money (advance) are not offered; use Adjust balance.
+
+## Step 20 — Home screen, navigation, install and storage persistence (US001, US002) (2026-11-23)
+
+The approved Home (hero card, stat cards, action tiles, Recent) and the navigation (floating bar on phones, side nav from 768px), the install button and guides, and persistent storage. All from Dexie, offline.
+
+**Built**
+- `packages/core`: `home.ts` — `todayTotals` (cash, wallet / bank, on khata; optional one staff member), `sevenDayTrend` (business dates), `receivableTotal` (positive balances; the khata list uses it too), `lowStockCount`, `recentActivity`.
+- `apps/pos`:
+  - Home: greeting by Karachi time, shop name, device code; hero card with the current **business date** ("Sales for <date>" and the closed-day line after a close), total, invoices, the three-way split, 7-day CSS bar trend (today highlighted, owners only), sync chip; owner stat cards (Khata owed → Khata, Low stock → Stock); tiles by role (Product, Customer → add customer, Stock in / Wastage, Expense); Recent (last 5 sales and khata entries, See all); install card; owner storage notice. Cashiers see their own sales today, no trend or stat cards. Home waits for the current staff member before showing numbers.
+  - `features/home/Nav.tsx` + `navItems.ts`: floating near-black bar with the white Sale pill and a More sheet on phones; side nav from 768px (`app/useWide.ts`, `matchMedia`, one layout rendered at a time); hidden in the sale flow; logical order (mirrors in Urdu). The header sync chip is not shown on Home (the hero has it).
+  - Sale screen from 768px: the cart beside the grid (`CartSheet inline`) with Charge; the cart bar on narrow screens only.
+  - `app/install.ts` (`installState` per platform, the captured `beforeinstallprompt`, `appinstalled`), `InstallCard` (Home, dismissible; Settings, always). The Home card after onboarding is the "offered once" step.
+  - `app/storage.ts` (`ensurePersistentStorage` on each start until granted, `meta.storage_persisted`); the 30-minute estimate was already in `useSyncStatus`.
+  - `scripts/check-precache.ts` (`pnpm check:precache`) and the manual offline check in deployment §3.
+  - Khata list: `?add=1` opens Add customer.
+  - en + ur strings (`home.*`, `nav.*`, `install.*`).
+- Fix found by the tests: Home queried payments by `shop_id`, which is not a Dexie index (filtered in memory now).
+
+**Tests**: Core 352 (+7: three-way split for the business date, a cashier's own totals, a 21:30 sale after a 21:00 close on the next date; trend days, gaps, today; receivable positive only; low stock rules; recent order and limit). Pos 294 (+12: owner Home with split, trend, stat cards, tiles, Recent; next-date label after a close; Customer tile opens the add form; cashier Home; nav items by role, hidden in the sale flow; phone bar and More sheet; side nav from 768px; install states per platform; install prompt and dismiss, Settings keeps it; persistence asked until granted; owner notice once). Old "Welcome" heading checks now look for the greeting.
+
+**Manual checks to do on devices**
+- Layout at 360, 768 and 1280 px (phone, tablet, PC) in English and Urdu.
+- Install on Android Chrome, iOS Safari guide, desktop Chrome / Edge; the offline first launch in deployment §3; load time on a mid-range Android.
+
+**Follow-ups**
+- Owner dashboard from the server (US048) with the reports prompt; notifications (then the bell).

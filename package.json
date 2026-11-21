@@ -19,7 +19,8 @@
     "db:up": "node db/scripts/db.ts up",
     "db:new": "node db/scripts/db.ts new",
     "db:reset": "node db/scripts/db.ts reset",
-    "db:test": "node db/scripts/db.ts test"
+    "db:test": "node db/scripts/db.ts test",
+    "check:precache": "pnpm --filter @naqdpos/pos build && node scripts/check-precache.ts"
   },
   "devDependencies": {
     "@eslint/js": "10.0.1",

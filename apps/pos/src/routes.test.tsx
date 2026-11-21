@@ -29,7 +29,9 @@ describe('routes and app state', () => {
     await seedReady();
     vi.spyOn(navigator, 'onLine', 'get').mockReturnValue(false);
     const { router } = renderAt('/');
-    expect(await screen.findByRole('heading', { name: 'Welcome' })).toBeInTheDocument();
+    expect(
+      await screen.findByRole('heading', { name: /^Good (morning|afternoon|evening)$/ }),
+    ).toBeInTheDocument();
     expect(await screen.findByText('Ali Fruit')).toBeInTheDocument();
     expect(await screen.findByText('This device: A1')).toBeInTheDocument();
     expect(router.state.location.pathname).toBe('/');
@@ -54,7 +56,9 @@ describe('routes and app state', () => {
   it('keeps a signed-in user away from the sign-in page', async () => {
     await seedReady();
     const { router } = renderAt('/sign-in');
-    expect(await screen.findByRole('heading', { name: 'Welcome' })).toBeInTheDocument();
+    expect(
+      await screen.findByRole('heading', { name: /^Good (morning|afternoon|evening)$/ }),
+    ).toBeInTheDocument();
     expect(router.state.location.pathname).toBe('/');
   });
 
@@ -71,7 +75,7 @@ describe('routes and app state', () => {
       button.click();
       await Promise.resolve();
     });
-    expect(await screen.findByRole('heading', { name: 'خوش آمدید' })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: /بخیر/ })).toBeInTheDocument();
     expect(document.documentElement.dir).toBe('rtl');
   });
 });
