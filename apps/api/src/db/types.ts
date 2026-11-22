@@ -22,6 +22,8 @@ export interface ShopsTable {
   cashier_max_discount_pct: Generated<number>;
   receipt_language: Generated<'en' | 'ur' | 'both'>;
   paper_width_mm: Generated<58 | 80>;
+  suspended_at: Date | string | null;
+  city: string | null;
   created_at: Timestamp;
   updated_at: Timestamp;
   deleted_at: Date | null;

@@ -10,6 +10,7 @@ import {
   type PaymentRow,
   type StaffRow,
 } from '@naqdpos/core';
+import { isShopSuspended } from '../../app/suspension.ts';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { localWriteMany } from '../../db/outbox.ts';
 import { db } from '../../db/schema.ts';
@@ -142,6 +143,7 @@ export async function receiveKhataPayment(
   staff: StaffRow,
 ): Promise<{ payment: PaymentRow; entry: KhataEntryRow; balance_paisa: number }> {
   const device = await shopDevice();
+  if (await isShopSuspended()) throw new KhataNotSaved('shop_suspended');
   const built = buildKhataReceipt(
     {
       shopId: device.shop_id,
@@ -196,6 +198,7 @@ export async function adjustKhata(
   owner: StaffRow,
 ): Promise<KhataEntryRow> {
   const device = await shopDevice();
+  if (await isShopSuspended()) throw new KhataNotSaved('shop_suspended');
   const built = buildKhataAdjustment(
     {
       shopId: device.shop_id,

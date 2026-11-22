@@ -14,6 +14,8 @@ export const MAX_RECEIPT_FOOTER = 200;
 export interface ShopProfileInput {
   name: string;
   address: string;
+  /** Optional (also used by self-registration). */
+  city?: string;
   phone: string;
   receiptFooter: string;
   receiptLanguage: string;
@@ -25,6 +27,7 @@ export interface ShopProfileInput {
 export interface ShopProfileValue {
   name: string;
   address: string | null;
+  city: string | null;
   phone: string | null;
   receipt_footer: string | null;
   receipt_language: ReceiptLanguage;
@@ -49,6 +52,8 @@ export function validateShopProfile(input: ShopProfileInput): {
   else if (chars(name) > MAX_SHOP_NAME) errors.name = 'too_long';
   const address = input.address.trim();
   if (chars(address) > MAX_SHOP_ADDRESS) errors.address = 'too_long';
+  const city = (input.city ?? '').trim();
+  if (chars(city) > 60) errors.city = 'too_long';
   const phone = input.phone.trim();
   if (phone && !PHONE_PATTERN.test(phone)) errors.phone = 'invalid';
   // Lines kept as typed (trailing spaces trimmed); the limit counts every character.
@@ -77,6 +82,7 @@ export function validateShopProfile(input: ShopProfileInput): {
     value: {
       name,
       address: address || null,
+      city: city || null,
       phone: phone || null,
       receipt_footer: footer || null,
       receipt_language: language,

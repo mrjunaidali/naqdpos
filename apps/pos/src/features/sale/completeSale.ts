@@ -12,6 +12,7 @@ import {
   type SaleError,
   type SaleRows,
 } from '@naqdpos/core';
+import { isShopSuspended } from '../../app/suspension.ts';
 import { localWriteMany, type LocalWrite } from '../../db/outbox.ts';
 import { db as defaultDb, type NaqdDb } from '../../db/schema.ts';
 import { getStoredDevice } from '../../db/session.ts';
@@ -28,7 +29,7 @@ interface StoredCounter {
 }
 
 export class SaleNotCompleted extends Error {
-  constructor(readonly reason: SaleError | 'no_device' | 'no_staff') {
+  constructor(readonly reason: SaleError | 'no_device' | 'no_staff' | 'shop_suspended') {
     super(`Sale not completed: ${reason}`);
     this.name = 'SaleNotCompleted';
   }
@@ -76,6 +77,8 @@ export async function completeSale(
   const database = options.database ?? defaultDb;
   const device = await getStoredDevice();
   if (!device) throw new SaleNotCompleted('no_device');
+  // A suspended shop sells nothing new (US011); viewing still works.
+  if (await isShopSuspended(database)) throw new SaleNotCompleted('shop_suspended');
   const staffId = await readCurrentStaffId(database);
   const staff = staffId ? await database.staff.get(staffId) : undefined;
   if (!staffId || !staff?.active || staff.deleted_at !== null)

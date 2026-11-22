@@ -11,6 +11,7 @@ import { deviceRoutes } from './routes/devices.ts';
 import { healthRoutes } from './routes/health.ts';
 import { meRoutes } from './routes/me.ts';
 import { pinRoutes } from './routes/pins.ts';
+import { adminRoutes } from './routes/admin.ts';
 import { shopRoutes } from './routes/shops.ts';
 import { syncRoutes } from './routes/sync.ts';
 
@@ -85,6 +86,7 @@ export function createApp(deps: AppDeps) {
   app.route('/', deviceRoutes(deps));
   app.route('/', syncRoutes(deps));
   app.route('/', pinRoutes(deps));
+  app.route('/', adminRoutes(deps));
   app.doc31('/openapi.json', {
     openapi: '3.1.0',
     info: { title: 'NaqdPOS API', version: '0.0.0' },

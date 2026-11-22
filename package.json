@@ -20,7 +20,9 @@
     "db:new": "node db/scripts/db.ts new",
     "db:reset": "node db/scripts/db.ts reset",
     "db:test": "node db/scripts/db.ts test",
-    "check:precache": "pnpm --filter @naqdpos/pos build && node scripts/check-precache.ts"
+    "check:precache": "pnpm --filter @naqdpos/pos build && node scripts/check-precache.ts",
+    "admin:grant": "node db/scripts/admin.ts grant",
+    "admin:revoke": "node db/scripts/admin.ts revoke"
   },
   "devDependencies": {
     "@eslint/js": "10.0.1",

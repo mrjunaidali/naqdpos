@@ -8,6 +8,7 @@ import {
   type ExpenseRow,
   type StaffRow,
 } from '@naqdpos/core';
+import { isShopSuspended } from '../../app/suspension.ts';
 import { useLiveQuery } from 'dexie-react-hooks';
 import type { TFunction } from 'i18next';
 import { localWriteMany } from '../../db/outbox.ts';
@@ -156,6 +157,7 @@ export async function addExpense(
   approvedByStaffId: string | null,
 ): Promise<ExpenseRow> {
   const { device, limitPaisa } = await shopContext();
+  if (await isShopSuspended()) throw new ExpenseNotSaved('shop_suspended');
   const built = buildExpense(input, {
     shopId: device.shop_id,
     deviceId: device.id,
@@ -175,6 +177,7 @@ export async function addExpense(
 
 export async function reverseExpense(original: ExpenseRow, reason: string, owner: StaffRow) {
   const { device } = await shopContext();
+  if (await isShopSuspended()) throw new ExpenseNotSaved('shop_suspended');
   const all = await db.expenses.where('shop_id').equals(device.shop_id).toArray();
   const built = buildReversal(original, all, reason, {
     shopId: device.shop_id,

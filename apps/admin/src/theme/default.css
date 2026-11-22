@@ -1,0 +1,30 @@
+/*
+ * Default NaqdPOS theme (docs/design-theme.md). The only place colour values live.
+ * Components use the token names (bg-primary, text-muted, border-border, …), never raw colours or
+ * palette classes. Tailwind 4 turns each --color-* below into utilities and a CSS variable on
+ * :root, so shop branding can later override a variable at runtime without touching components.
+ */
+@theme {
+  --color-bg: #f4f4f5; /* page background (zinc-100) */
+  --color-surface: #ffffff; /* cards */
+  --color-border: #e4e4e7; /* thin card borders (zinc-200) */
+  --color-text: #18181b; /* titles, numbers (zinc-900) */
+  --color-muted: #71717a; /* labels, secondary text (zinc-500) */
+
+  --color-primary: #18181b; /* main buttons, nav bar, active state */
+  --color-primary-fg: #ffffff;
+  --color-hero: #18181b; /* hero card */
+  --color-hero-fg: #ffffff;
+  --color-hero-muted: #a1a1aa;
+
+  /* Colour only where it carries meaning: synced / pending / needs review. */
+  --color-success: #16a34a;
+  --color-success-soft: #dcfce7;
+  --color-success-fg: #14532d;
+  --color-warning: #d97706;
+  --color-warning-soft: #fef3c7;
+  --color-warning-fg: #78350f;
+  --color-danger: #dc2626;
+  --color-danger-soft: #fee2e2;
+  --color-danger-fg: #7f1d1d;
+}

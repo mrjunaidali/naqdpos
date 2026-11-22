@@ -9,13 +9,14 @@ import {
   type StockActionError,
   type StockMovementRow,
 } from '@naqdpos/core';
+import { isShopSuspended } from '../../app/suspension.ts';
 import { localWriteMany } from '../../db/outbox.ts';
 import { db as defaultDb, type NaqdDb } from '../../db/schema.ts';
 import { getStoredDevice } from '../../db/session.ts';
 import { shopClosedDates } from '../closing/closedDates.ts';
 
 export class StockNotRecorded extends Error {
-  constructor(readonly reason: StockActionError | 'no_device' | 'no_staff') {
+  constructor(readonly reason: StockActionError | 'no_device' | 'no_staff' | 'shop_suspended') {
     super(`Stock not recorded: ${reason}`);
     this.name = 'StockNotRecorded';
   }
@@ -46,6 +47,7 @@ export async function recordStockAction(
   const database = options.database ?? defaultDb;
   const device = await getStoredDevice();
   if (!device) throw new StockNotRecorded('no_device');
+  if (await isShopSuspended(database)) throw new StockNotRecorded('shop_suspended');
   const staff = request.staff;
   if (!staff || !staff.active || staff.deleted_at !== null) throw new StockNotRecorded('no_staff');
 

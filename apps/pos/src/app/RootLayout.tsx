@@ -7,6 +7,7 @@ import { UpdateRequiredBanner } from '../sync/UpdateRequiredBanner.tsx';
 import { BrandMark } from '../ui/BrandMark.tsx';
 import { Toaster } from '../ui/Toaster.tsx';
 import { Nav } from '../features/home/Nav.tsx';
+import { SuspendedBanner } from './SuspendedBanner.tsx';
 import { useAppState } from './appState.ts';
 import { useSessionCheck } from './sessionCheck.ts';
 import { useLiveQuery } from 'dexie-react-hooks';
@@ -78,6 +79,7 @@ export function RootLayout() {
           </button>
         )}
       </header>
+      {ready && <SuspendedBanner />}
       {ready && <UpdateRequiredBanner />}
       <div className="flex flex-1">
         {ready && <Nav />}

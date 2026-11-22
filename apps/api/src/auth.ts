@@ -44,6 +44,17 @@ export interface AuthService {
   handleOAuthCallback(request: Request): Promise<Response>;
   /** The signed-in user from the session token, or null. */
   getUser(headers: Headers): Promise<AuthUser | null>;
+  /** The session behind the token (admin checks: which session, when it started). */
+  getSessionInfo(headers: Headers): Promise<{ user: AuthUser; sessionId: string } | null>;
+  /** Starts TOTP enrolment for the signed-in user (passwordless): link, secret, backup codes. */
+  enrollTwoFactor(headers: Headers): Promise<{ totpURI: string; backupCodes: string[] }>;
+  /**
+   * Checks a TOTP code for the current session. The first good code turns 2FA on, and Better
+   * Auth then replaces the session: `newToken` is the replacement.
+   */
+  verifyTotp(headers: Headers, code: string): Promise<{ ok: boolean; newToken?: string }>;
+  /** Checks (and uses up) a backup code for the current session. */
+  verifyBackupCode(headers: Headers, code: string): Promise<boolean>;
   /** Mints a single-use, short-lived token for a session (server side only). */
   createOneTimeToken(sessionToken: string): Promise<string>;
   /** Emails a fresh PIN reset code (email-verification OTP) to this address. */
@@ -177,7 +188,10 @@ export function authOptions(env: Env, deps: AuthDeps) {
         otpLength: 6,
         sendVerificationOTP: ({ email, otp, type }) => sendOtp(email, otp, type),
       }),
-      twoFactor({ issuer: 'NaqdPOS', schema: twoFactorSchema }),
+      // Admins sign in with Google or an email code (no password): enrolment is passwordless.
+      // The plugin's own sign-in step only covers password sign-in, so /admin/* also checks
+      // admin_session_2fa (architecture §5).
+      twoFactor({ issuer: 'NaqdPOS', schema: twoFactorSchema, allowPasswordless: true }),
       bearer(),
       oneTimeToken({
         expiresIn: deps.oneTimeTokenMinutes ?? ONE_TIME_TOKEN_MINUTES,
@@ -253,6 +267,36 @@ export function createAuth(env: Env, deps: AuthDeps): AuthService {
       if (!session) return null;
       const { id, email, name } = session.user;
       return { id, email, name };
+    },
+    async getSessionInfo(headers) {
+      const session = await auth.api.getSession({ headers });
+      if (!session) return null;
+      const { id, email, name } = session.user;
+      return { user: { id, email, name }, sessionId: session.session.id };
+    },
+    async enrollTwoFactor(headers) {
+      const result = await auth.api.enableTwoFactor({ headers, body: {} });
+      if (!('totpURI' in result)) throw new Error('TOTP enrolment did not return a secret');
+      return { totpURI: result.totpURI, backupCodes: result.backupCodes };
+    },
+    async verifyTotp(headers, code) {
+      try {
+        const result = await auth.api.verifyTOTP({ headers, body: { code }, returnHeaders: true });
+        const newToken = result.headers.get('set-auth-token');
+        return newToken ? { ok: true, newToken } : { ok: true };
+      } catch (error) {
+        if (isAPIError(error)) return { ok: false };
+        throw error;
+      }
+    },
+    async verifyBackupCode(headers, code) {
+      try {
+        await auth.api.verifyBackupCode({ headers, body: { code } });
+        return true;
+      } catch (error) {
+        if (isAPIError(error)) return false;
+        throw error;
+      }
     },
     createOneTimeToken,
     async sendPinResetCode(email) {

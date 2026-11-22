@@ -240,6 +240,7 @@ describe('shop profile', () => {
     expect(validateShopProfile(ok).value).toEqual({
       name: 'Ali Fruit',
       address: null,
+      city: null,
       phone: '0300 1234567',
       receipt_footer: 'Thank you!\nShukriya',
       receipt_language: 'both',

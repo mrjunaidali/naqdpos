@@ -15,6 +15,7 @@ export function toShopRow(r: Selectable<ShopsTable>): ShopRow {
     created_at: iso(r.created_at),
     updated_at: iso(r.updated_at),
     deleted_at: isoOrNull(r.deleted_at),
+    suspended_at: isoOrNull(r.suspended_at),
     server_seq: Number(r.server_seq),
   };
 }

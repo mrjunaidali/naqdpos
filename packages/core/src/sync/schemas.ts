@@ -48,6 +48,7 @@ export const SYNC_ERROR_CODES = [
   'invalid',
   // A foreign-key parent is not on the server yet (a line before its sale): retried by the device.
   'missing_parent',
+  'shop_suspended',
 ] as const;
 export type SyncErrorCode = (typeof SYNC_ERROR_CODES)[number];
 

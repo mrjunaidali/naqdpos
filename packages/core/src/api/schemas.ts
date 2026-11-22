@@ -93,6 +93,8 @@ export const ShopRowSchema = z.object({
   cashier_max_discount_pct: z.number().int().min(0).max(100),
   receipt_language: z.enum(RECEIPT_LANGUAGES),
   paper_width_mm: z.union([z.literal(58), z.literal(80)]),
+  suspended_at: iso.nullable().optional(),
+  city: z.string().max(60).nullable().optional(),
   device_id: z.uuid().nullable(),
   created_at: iso,
   updated_at: iso,

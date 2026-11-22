@@ -1,7 +1,8 @@
 {
   "app": {
     "name": "NaqdPOS",
-    "tagline": "TODO-ur آف لائن چلنے والا پوائنٹ آف سیل"
+    "tagline": "TODO-ur آف لائن چلنے والا پوائنٹ آف سیل",
+    "suspended": "TODO-ur یہ دکان معطل ہے — NaqdPOS سپورٹ سے رابطہ کریں"
   },
   "common": {
     "wait": "براہ کرم انتظار کریں…",
@@ -476,7 +477,8 @@
       "no_device": "TODO-ur یہ ڈیوائس سیٹ اپ نہیں۔",
       "no_staff": "TODO-ur کوئی کام پر نہیں۔ پہلے عملہ تبدیل کریں۔",
       "over_limit": "TODO-ur کیشیئر کی رعایت کی حد سے زیادہ: مالک کی منظوری ضروری ہے۔",
-      "khata_needs_customer": "TODO-ur کھاتہ صرف گاہک کے ساتھ۔"
+      "khata_needs_customer": "TODO-ur کھاتہ صرف گاہک کے ساتھ۔",
+      "shop_suspended": "TODO-ur یہ دکان معطل ہے: نئی سیل، کھاتہ اور خرچے رکے ہوئے ہیں۔ NaqdPOS سپورٹ سے رابطہ کریں۔"
     },
     "khata": "TODO-ur کھاتہ / ادھار",
     "khataRow": "TODO-ur کھاتہ ({{name}})",
@@ -564,7 +566,8 @@
       "note_too_long": "TODO-ur نوٹ بہت لمبا ہے (زیادہ سے زیادہ 200 حروف)۔",
       "forbidden": "TODO-ur یہ صرف مالک کر سکتا ہے۔",
       "no_device": "TODO-ur یہ آلہ سیٹ اپ نہیں ہے۔",
-      "no_staff": "TODO-ur پہلے کسی اسٹاف ممبر پر سوئچ کریں۔"
+      "no_staff": "TODO-ur پہلے کسی اسٹاف ممبر پر سوئچ کریں۔",
+      "shop_suspended": "TODO-ur یہ دکان معطل ہے: نئی سیل، کھاتہ اور خرچے رکے ہوئے ہیں۔ NaqdPOS سپورٹ سے رابطہ کریں۔"
     }
   },
   "discount": {
@@ -682,7 +685,8 @@
       "note_required": "TODO-ur نوٹ ضروری ہے۔",
       "note_too_long": "TODO-ur نوٹ بہت لمبا ہے (زیادہ سے زیادہ 200 حروف)۔",
       "no_device": "TODO-ur یہ آلہ سیٹ اپ نہیں ہے۔",
-      "has_entries": "TODO-ur اس گاہک کے اندراج پہلے سے ہیں: بقایا درست کریں استعمال کریں۔"
+      "has_entries": "TODO-ur اس گاہک کے اندراج پہلے سے ہیں: بقایا درست کریں استعمال کریں۔",
+      "shop_suspended": "TODO-ur یہ دکان معطل ہے: نئی سیل، کھاتہ اور خرچے رکے ہوئے ہیں۔ NaqdPOS سپورٹ سے رابطہ کریں۔"
     },
     "addCustomer": "TODO-ur گاہک شامل کریں",
     "opening": "TODO-ur پرانا بقایا",
@@ -749,7 +753,8 @@
       "invalid": "TODO-ur درست نہیں۔"
     },
     "expenseLimit": "TODO-ur کیشیئر خرچے کی حد (روپے)",
-    "expenseLimitHint": "TODO-ur اس سے زیادہ پر کیشیئر کو مالک کا PIN چاہیے۔ مالک کی کوئی حد نہیں۔"
+    "expenseLimitHint": "TODO-ur اس سے زیادہ پر کیشیئر کو مالک کا PIN چاہیے۔ مالک کی کوئی حد نہیں۔",
+    "city": "TODO-ur شہر"
   },
   "expense": {
     "cat": {
@@ -803,7 +808,8 @@
       "is_reversal": "TODO-ur واپسی کو واپس نہیں کیا جا سکتا۔",
       "already_reversed": "TODO-ur یہ خرچہ پہلے ہی واپس ہو چکا ہے۔",
       "no_device": "TODO-ur یہ آلہ سیٹ اپ نہیں ہے۔",
-      "generic": "TODO-ur کچھ غلط ہو گیا۔ دوبارہ کوشش کریں۔"
+      "generic": "TODO-ur کچھ غلط ہو گیا۔ دوبارہ کوشش کریں۔",
+      "shop_suspended": "TODO-ur یہ دکان معطل ہے: نئی سیل، کھاتہ اور خرچے رکے ہوئے ہیں۔ NaqdPOS سپورٹ سے رابطہ کریں۔"
     }
   },
   "expenseCategories": {

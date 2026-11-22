@@ -714,3 +714,24 @@ The approved Home (hero card, stat cards, action tiles, Recent) and the navigati
 
 **Follow-ups**
 - Owner dashboard from the server (US048) with the reports prompt; notifications (then the bell).
+
+## Step 21 — Admin portal part 1: sign-in with 2FA, US010 shop list, US011 suspend / reactivate (2026-11-22)
+
+**Built**
+- Migration `20261123120000_admin.sql`: `shops.suspended_at`, `shops.city` (approved; owner column grant, shop push column); `admin_session_2fa` (approved; FK to sessions on delete cascade, no grants); `admin_session_ok` (no session / not admin / older than 12 hours / 2FA not set up / not verified / ok), `admin_mark_session_verified` (also removes expired rows); `admin_list_shops` (search on name / phone / owner email, status / type / city filters, devices, last sync, last sale date, sales in 7 days, paging), `admin_get_shop` (profile, devices, staff without PIN data, 50 conflicts, 100 audit entries), `admin_set_shop_status` (reason required, `suspended_at`, audit `shop.suspend` / `shop.reactivate` with the reason); `admin_grant` / `admin_revoke` for the CLI only; `sync_push` refuses ledger rows created after `suspended_at` (`shop_suspended`).
+- `packages/core`: `api/admin.ts` (session state, enrol / verify, shop list / detail / status schemas) and client methods; `shop_suspended` sync code; shop `city` / `suspended_at`; city in the shop profile.
+- `apps/api`: Better Auth two-factor with `allowPasswordless`; auth service `getSessionInfo`, `enrollTwoFactor`, `verifyTotp` (returns the replacement token after the first code), `verifyBackupCode`; `routes/admin.ts` (`GET /admin/me`, `POST /admin/2fa/enroll`, `POST /admin/2fa/verify`, `GET /admin/shops`, `GET /admin/shops/:id`, `POST /admin/shops/:id/status`) with the session and admin checks.
+- `db/scripts/admin.ts`: `pnpm admin:grant` / `admin:revoke`.
+- `apps/admin` (English, online, theme tokens from the same `default.css`): sign-in (Google when enabled, email code), 2FA enrolment (QR drawn in the page with `uqr` 0.1.3 — added to apps/admin only, no network call —, key as text, backup codes with "I have saved them"), 2FA prompt (code or backup code), sign-out, token in sessionStorage, 401 → back to sign-in ("Your admin session ended"); shop list (search, status / type / city filters, columns incl. Plan "—", paging); shop detail (profile, devices, staff, conflicts, audit log; suspend / reactivate with a required reason and a confirm step). Test setup (jsdom, Testing Library — same versions as apps/pos).
+- `apps/pos`: red "This shop is suspended — contact NaqdPOS support" banner; `completeSale`, khata receipts / adjustments, expenses and stock actions refuse with `shop_suspended` and a clear message; City in Settings → Shop.
+
+**Tests**: DB 180 (+7: admin functions refuse non-admins incl. the shop owner; list search by owner email, type / city filters, paging; detail without PIN data; reason required, audit as admin with the reason, rows after `suspended_at` refused / before accepted, reactivate restores, admins see no tenant rows directly; per-session 2FA states, 12-hour limit, cascade on session delete, only the own session; CLI grant / revoke audit, unknown email, not callable by the app role; owner edits city). API DB 39 (+3: 401 / 403 for no session and a normal owner; enrol → first TOTP code (session replaced, new token) → a new session needs its own code → backup code → shops, suspend / reactivate, 404; sessions older than 12 hours → 401). Core 354 (+2). Pos 298 (+4: banner and blocked sale / khata / expense with data still viewable; the pay screen message; reactivate; city). Admin 6 (sign-in → 2FA prompt with a backup code → shops; enrolment with QR, key, backup codes and the replacement token; "Not an admin"; 401 → sign-in; list columns and filters; suspend needs a reason).
+
+**Decisions**
+- Admin 2FA per session in `admin_session_2fa`; 12-hour admin sessions; admin rights only via the CLI.
+- Admin access only through security-definer functions; no admin bypass in tenant RLS.
+- Suspension keeps all data; ledger rows after `suspended_at` refused; closing still allowed.
+
+**Follow-ups**
+- US012 / US013 (next prompt). App version per device is not stored yet (shown later in device lists).
+- Owner sessions keep 90 days; admin portal sessions are ended by the 12-hour check (Better Auth's own expiry stays 90 days for the shared config).

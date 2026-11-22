@@ -54,6 +54,9 @@ export interface ShopRow extends SyncedMutable {
   /** Receipts (US036): language and paper width. */
   receipt_language: ReceiptLanguage;
   paper_width_mm: PaperWidth;
+  /** Set while a system admin has suspended the shop (US011); null otherwise. */
+  suspended_at?: string | null | undefined;
+  city?: string | null | undefined;
   device_id: string | null;
 }
 

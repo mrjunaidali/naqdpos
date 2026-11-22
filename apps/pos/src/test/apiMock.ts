@@ -23,6 +23,12 @@ export const api = {
   resetOwnerPin: vi.fn(),
   syncPush: vi.fn(),
   syncPull: vi.fn(),
+  adminMe: vi.fn(),
+  adminEnrollTwoFactor: vi.fn(),
+  adminVerifyTwoFactor: vi.fn(),
+  adminListShops: vi.fn(),
+  adminGetShop: vi.fn(),
+  adminSetShopStatus: vi.fn(),
 } satisfies Record<keyof ApiClient, Mock>;
 
 /** apiWithToken(token) returns the same mocks; check which token was used via its calls. */

@@ -1,7 +1,8 @@
 {
   "app": {
     "name": "NaqdPOS",
-    "tagline": "Point of sale that works offline"
+    "tagline": "Point of sale that works offline",
+    "suspended": "This shop is suspended — contact NaqdPOS support"
   },
   "common": {
     "wait": "Please wait…",
@@ -476,7 +477,8 @@
       "no_device": "This device is not set up.",
       "no_staff": "Nobody is switched in. Switch staff first.",
       "over_limit": "Above the cashier discount limit: the owner must approve.",
-      "khata_needs_customer": "Put on khata only with a customer attached."
+      "khata_needs_customer": "Put on khata only with a customer attached.",
+      "shop_suspended": "This shop is suspended: new sales, khata and expenses are paused. Contact NaqdPOS support."
     },
     "khata": "Khata / Udhaar",
     "khataRow": "Khata ({{name}})",
@@ -564,7 +566,8 @@
       "note_too_long": "The note is too long (200 characters at most).",
       "forbidden": "Only the owner can do this.",
       "no_device": "This device is not set up.",
-      "no_staff": "Switch to a staff member first."
+      "no_staff": "Switch to a staff member first.",
+      "shop_suspended": "This shop is suspended: new sales, khata and expenses are paused. Contact NaqdPOS support."
     }
   },
   "discount": {
@@ -682,7 +685,8 @@
       "note_required": "A note is required.",
       "note_too_long": "The note is too long (200 characters at most).",
       "no_device": "This device is not set up.",
-      "has_entries": "This customer already has entries: use Adjust balance."
+      "has_entries": "This customer already has entries: use Adjust balance.",
+      "shop_suspended": "This shop is suspended: new sales, khata and expenses are paused. Contact NaqdPOS support."
     },
     "addCustomer": "Add customer",
     "opening": "Opening balance",
@@ -749,7 +753,8 @@
       "invalid": "Not valid."
     },
     "expenseLimit": "Cashier expense limit (Rs)",
-    "expenseLimitHint": "Above this a cashier needs the owner PIN. Owners have no limit."
+    "expenseLimitHint": "Above this a cashier needs the owner PIN. Owners have no limit.",
+    "city": "City"
   },
   "expense": {
     "cat": {
@@ -803,7 +808,8 @@
       "is_reversal": "A reversal cannot be reversed.",
       "already_reversed": "This expense is already reversed.",
       "no_device": "This device is not set up.",
-      "generic": "Something went wrong. Try again."
+      "generic": "Something went wrong. Try again.",
+      "shop_suspended": "This shop is suspended: new sales, khata and expenses are paused. Contact NaqdPOS support."
     }
   },
   "expenseCategories": {

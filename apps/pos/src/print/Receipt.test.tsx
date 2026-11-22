@@ -124,6 +124,7 @@ describe('receipt screen (US036)', () => {
       {
         name: shop.name,
         address: null,
+        city: null,
         phone: null,
         receipt_footer: 'Shukriya',
         receipt_language: 'ur',

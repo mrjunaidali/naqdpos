@@ -2,6 +2,17 @@
 // with the shared schemas, so a server change that breaks the contract fails loudly here.
 import { z } from 'zod';
 import {
+  AdminEnrollResponse,
+  AdminMeResponse,
+  AdminShopDetail,
+  AdminShopFilters,
+  AdminShopListResponse,
+  AdminVerifyRequest,
+  AdminVerifyResponse,
+  SetShopStatusRequest,
+  SetShopStatusResponse,
+} from './admin.ts';
+import {
   AuthErrorResponse,
   ConfigResponse,
   CreateShopRequest,
@@ -66,7 +77,7 @@ export class ApiError extends Error {
 
 export type ApiClient = ReturnType<typeof createApiClient>;
 
-const SuccessResponse = z.object({ success: z.boolean() });
+export const SuccessResponse = z.object({ success: z.boolean() });
 
 export function createApiClient(options: ApiClientOptions) {
   const baseUrl = options.baseUrl.replace(/\/+$/, '');
@@ -176,6 +187,30 @@ export function createApiClient(options: ApiClientOptions) {
         `/devices/${encodeURIComponent(deviceId)}/mode`,
         DeviceRowSchema,
         SetDeviceModeRequest.parse({ mode }),
+      ),
+
+    // --- Admin portal (US010, US011): 2FA on every session, 12-hour sessions ---
+    adminMe: () => request('GET', '/admin/me', AdminMeResponse),
+    adminEnrollTwoFactor: () => request('POST', '/admin/2fa/enroll', AdminEnrollResponse, {}),
+    adminVerifyTwoFactor: async (input: AdminVerifyRequest) =>
+      request('POST', '/admin/2fa/verify', AdminVerifyResponse, AdminVerifyRequest.parse(input)),
+    adminListShops: async (filters: AdminShopFilters) => {
+      const f = AdminShopFilters.parse(filters);
+      const params = new URLSearchParams({ page: String(f.page) });
+      for (const key of ['q', 'status', 'type', 'city'] as const) {
+        const value = f[key]?.trim();
+        if (value) params.set(key, value);
+      }
+      return request('GET', `/admin/shops?${params.toString()}`, AdminShopListResponse);
+    },
+    adminGetShop: async (shopId: string) =>
+      request('GET', `/admin/shops/${encodeURIComponent(shopId)}`, AdminShopDetail),
+    adminSetShopStatus: async (shopId: string, input: SetShopStatusRequest) =>
+      request(
+        'POST',
+        `/admin/shops/${encodeURIComponent(shopId)}/status`,
+        SetShopStatusResponse,
+        SetShopStatusRequest.parse(input),
       ),
 
     /** Sends up to 200 outbox entries (architecture §4). */

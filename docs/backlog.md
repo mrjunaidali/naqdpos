@@ -121,12 +121,12 @@ Build in this order, not in ID order. "Sheet step" is the step number in the ori
 
 ### F06 · Admin dashboard
 
-**US010** · Must · 5 · To do — As system admin, I want a list of all shops with plan, status and last sync, so that I can support and manage them.
+**US010** · Must · 5 · Done (Step 21) — As system admin, I want a list of all shops with plan, status and last sync, so that I can support and manage them.
 - `apps/admin` sign-in: Google + required TOTP 2FA; only `platform_admins`; `/admin/*` routes require a 2FA session
 - Searchable list; filters: plan, status, city, shop type; shows last activity and last sync (from `devices`)
 - Sync conflicts list (from US006)
 
-**US011** · Should · 3 · To do — As system admin, I want to suspend or reactivate a shop, so that I can control access (e.g. unpaid plan).
+**US011** · Should · 3 · Done (Step 21) — As system admin, I want to suspend or reactivate a shop, so that I can control access (e.g. unpaid plan).
 - Suspended shop sees a notice and can view data but not sell; `sync_push` rejects new sales for suspended shops
 - Action written to `audit_log` with `acting_as_admin = true`
 

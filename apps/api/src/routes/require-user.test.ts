@@ -13,6 +13,10 @@ const auth: AuthService = {
   handleOAuthCallback: () => Promise.resolve(new Response()),
   getUser: (h) => Promise.resolve(h.get('authorization') === 'Bearer good' ? USER : null),
   createOneTimeToken: () => Promise.resolve('ott'),
+  getSessionInfo: () => Promise.resolve(null),
+  enrollTwoFactor: () => Promise.resolve({ totpURI: '', backupCodes: [] }),
+  verifyTotp: () => Promise.resolve({ ok: false }),
+  verifyBackupCode: () => Promise.resolve(false),
   sendPinResetCode: () => Promise.resolve(),
   verifyPinResetCode: () => Promise.resolve('invalid' as const),
 };

@@ -43,6 +43,7 @@ function ShopProfileForm({ shop }: { shop: ShopRow }) {
   const [values, setValues] = useState<ShopProfileInput>({
     name: shop.name,
     address: shop.address ?? '',
+    city: shop.city ?? '',
     phone: shop.phone ?? '',
     receiptFooter: shop.receipt_footer ?? '',
     receiptLanguage: shop.receipt_language ?? 'en',
@@ -52,7 +53,8 @@ function ShopProfileForm({ shop }: { shop: ShopRow }) {
   const [errors, setErrors] = useState<ReturnType<typeof validateShopProfile>['errors']>({});
   const [failed, setFailed] = useState(false);
   const set =
-    (key: 'name' | 'address' | 'phone' | 'expenseLimit') => (e: { target: { value: string } }) =>
+    (key: 'name' | 'address' | 'city' | 'phone' | 'expenseLimit') =>
+    (e: { target: { value: string } }) =>
       setValues((v) => ({ ...v, [key]: e.target.value }));
   const errorText = (key: keyof ShopProfileInput) =>
     errors[key] ? t(ERRORS[errors[key]] ?? 'errors.generic') : undefined;
@@ -93,6 +95,13 @@ function ShopProfileForm({ shop }: { shop: ShopRow }) {
         onChange={set('address')}
         error={errorText('address')}
         maxLength={200}
+      />
+      <Field
+        label={t('shopProfile.city')}
+        value={values.city}
+        onChange={set('city')}
+        error={errorText('city')}
+        maxLength={60}
       />
       <Field
         label={t('shopProfile.phone')}
