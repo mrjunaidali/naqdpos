@@ -9,6 +9,7 @@ import {
 } from '@naqdpos/core';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useDates } from '../../i18n/format.ts';
 import { Link, useNavigate } from 'react-router';
 import { db } from '../../db/schema.ts';
 import { syncEngine } from '../../sync/index.ts';
@@ -34,6 +35,7 @@ import {
  */
 export function ClosePage() {
   const { t, i18n } = useTranslation();
+  const dates = useDates();
   const navigate = useNavigate();
   const rs = useRs();
   const actor = useActingOwnerId();
@@ -139,7 +141,7 @@ export function ClosePage() {
 
   return (
     <section className="mx-auto max-w-md space-y-4 pb-8">
-      <h1 className="text-2xl font-bold">{t('closing.titleFor', { date })}</h1>
+      <h1 className="text-2xl font-bold">{t('closing.titleFor', { date: dates.date(date) })}</h1>
       {days.length > 1 && (
         <Alert tone="info">{t('closing.olderFirst', { count: days.length })}</Alert>
       )}
@@ -247,7 +249,7 @@ export function ClosePage() {
       {error && <Alert>{error}</Alert>}
       {confirming ? (
         <div className="space-y-2 rounded-xl border border-warning bg-warning-soft p-3 text-warning-fg">
-          <p className="font-semibold">{t('closing.confirm', { date })}</p>
+          <p className="font-semibold">{t('closing.confirm', { date: dates.date(date) })}</p>
           <div className="flex gap-2">
             <Button variant="secondary" onClick={() => setConfirming(false)}>
               {t('common.cancel')}

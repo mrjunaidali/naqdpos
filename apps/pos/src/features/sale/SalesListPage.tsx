@@ -6,6 +6,7 @@ import { db } from '../../db/schema.ts';
 import { getStoredDevice } from '../../db/session.ts';
 import { SaleDetail } from './SaleDetail.tsx';
 import { useSaleBundle } from './saleData.ts';
+import { intlLocale } from '../../i18n/format.ts';
 import { useRs } from './saleFormat.ts';
 import { useViewer, visibleTo } from './saleVisibility.ts';
 
@@ -25,7 +26,7 @@ export function SalesListPage() {
   }, [today]);
   if (!sales || !viewer.ready) return null;
   const mine = sales.filter((s) => visibleTo(s, viewer.staffId, viewer.isOwner));
-  const time = new Intl.DateTimeFormat(i18n.language, { timeStyle: 'short' });
+  const time = new Intl.DateTimeFormat(intlLocale(i18n.language), { timeStyle: 'short' });
 
   return (
     <section className="mx-auto max-w-xl space-y-4">

@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   displayName,
+  otherName,
   isProductIcon,
   PRODUCT_ICON_CHOICES,
   parseRupees,
@@ -123,6 +124,15 @@ describe('helpers', () => {
     expect(displayName({ name: 'Potato', name_ur: 'آلو' }, 'ur')).toBe('آلو');
     expect(displayName({ name: 'Potato', name_ur: null }, 'ur')).toBe('Potato');
     expect(displayName({ name: 'Potato', name_ur: 'آلو' }, 'en')).toBe('Potato');
+    expect(displayName({ name: 'Potato', name_ur: '  ' }, 'ur')).toBe('Potato');
+  });
+
+  it('gives the other-language name only when it adds something (US009)', () => {
+    expect(otherName({ name: 'Potato', name_ur: 'آلو' }, 'ur')).toBe('Potato');
+    expect(otherName({ name: 'Potato', name_ur: 'آلو' }, 'en')).toBe('آلو');
+    // No Urdu name: Urdu mode already shows "Potato", so nothing under it.
+    expect(otherName({ name: 'Potato', name_ur: null }, 'ur')).toBeNull();
+    expect(otherName({ name: 'Potato', name_ur: null }, 'en')).toBeNull();
   });
 
   it('checks category names', () => {

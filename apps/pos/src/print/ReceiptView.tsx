@@ -9,6 +9,7 @@ export function ReceiptView({ doc }: { doc: ReceiptDoc }) {
     <div
       className="receipt"
       data-paper={doc.paperWidthMm}
+      data-language={doc.language}
       dir={doc.dir}
       lang={doc.language === 'ur' ? 'ur' : 'en'}
     >

@@ -8,6 +8,7 @@ import { getStoredDevice } from '../db/session.ts';
 import { greetingKey, useHomeData, type HomeData } from '../features/home/homeData.ts';
 import { AFTER_SETUP_KEY } from '../features/onboarding/setup.ts';
 import { useRs } from '../features/sale/saleFormat.ts';
+import { useDates } from '../i18n/format.ts';
 import { useCurrentStaff } from '../staff/currentStaff.ts';
 import { SyncChip } from '../sync/SyncChip.tsx';
 import { Button } from '../ui/Button.tsx';
@@ -66,6 +67,7 @@ export function HomePage() {
 
 function Hero({ data, owner }: { data: HomeData; owner: boolean }) {
   const { t } = useTranslation();
+  const dates = useDates();
   const rs = useRs();
   const { totals, trend } = data;
   const max = trend.max_paisa || 1;
@@ -74,7 +76,7 @@ function Hero({ data, owner }: { data: HomeData; owner: boolean }) {
       <div className="flex items-start justify-between gap-2">
         <p className="text-sm text-hero-muted">
           {data.rolled
-            ? t('home.salesFor', { date: data.date })
+            ? t('home.salesFor', { date: dates.date(data.date) })
             : owner
               ? t('home.todaySales')
               : t('home.mySales')}
@@ -101,7 +103,9 @@ function Hero({ data, owner }: { data: HomeData; owner: boolean }) {
           </div>
         ))}
       </dl>
-      {data.rolled && <p className="text-sm">{t('closing.banner', { date: data.date })}</p>}
+      {data.rolled && (
+        <p className="text-sm">{t('closing.banner', { date: dates.date(data.date) })}</p>
+      )}
       {owner && (
         <div
           aria-label={t('home.trend')}
@@ -112,7 +116,7 @@ function Hero({ data, owner }: { data: HomeData; owner: boolean }) {
           {trend.days.map((d) => (
             <span
               key={d.date}
-              title={`${d.date}: ${rs(d.total_paisa)}`}
+              title={`${dates.date(d.date)}: ${rs(d.total_paisa)}`}
               data-today={d.isToday || undefined}
               className={`flex-1 rounded-t ${d.isToday ? 'bg-hero-fg' : 'bg-hero-fg/30'}`}
               style={{ height: `${Math.max(4, Math.round((d.total_paisa / max) * 100))}%` }}

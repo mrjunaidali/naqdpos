@@ -1,4 +1,4 @@
-import { rangePreset, type ProductUnit } from '@naqdpos/core';
+import { displayName, rangePreset, type ProductUnit } from '@naqdpos/core';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router';
@@ -15,7 +15,7 @@ export function DashboardPage() {
 }
 
 function Dashboard({ today }: { today: string }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const rs = useRs();
   const qty = useQtyText();
   const names = useReportNames();
@@ -96,7 +96,7 @@ function Dashboard({ today }: { today: string }) {
                 {rows.slice(0, 5).map((p) => (
                   <li key={p.key} className="flex justify-between gap-3 py-2">
                     <span>
-                      {p.name}
+                      {displayName(p, i18n.language)}
                       {p.custom && (
                         <span className="ms-2 text-sm text-muted">{t('reports.custom')}</span>
                       )}

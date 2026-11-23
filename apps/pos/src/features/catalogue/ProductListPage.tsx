@@ -1,5 +1,6 @@
 import {
   displayName,
+  otherName,
   needsStockCheck,
   parseRupees,
   searchItems,
@@ -105,7 +106,7 @@ function ProductCard({ product, stock }: { product: ProductRow; stock: number })
   const [editing, setEditing] = useState(false);
   const [price, setPrice] = useState('');
   const [error, setError] = useState(false);
-  const other = i18n.language === 'ur' ? product.name : product.name_ur;
+  const other = otherName(product, i18n.language);
 
   async function save() {
     const parsed = parseRupees(price, true);
@@ -157,7 +158,7 @@ function ProductCard({ product, stock }: { product: ProductRow; stock: number })
             inputMode="decimal"
             dir="ltr"
             value={price}
-            aria-label={t('products.newPriceFor', { name: product.name })}
+            aria-label={t('products.newPriceFor', { name: displayName(product, i18n.language) })}
             aria-invalid={error || undefined}
             onChange={(e) => {
               setPrice(e.target.value);
@@ -180,7 +181,7 @@ function ProductCard({ product, stock }: { product: ProductRow; stock: number })
             setPrice(rupeesInput(product.sale_price_paisa));
             setEditing(true);
           }}
-          aria-label={t('products.editPriceFor', { name: product.name })}
+          aria-label={t('products.editPriceFor', { name: displayName(product, i18n.language) })}
           className="mt-1 min-h-11 rounded-md bg-bg px-2 text-start text-sm font-medium"
         >
           {priceLabel(product)}

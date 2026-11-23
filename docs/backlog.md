@@ -32,7 +32,7 @@ Build in this order, not in ID order. "Sheet step" is the step number in the ori
 | 12 | Daily closing | US044, US045, US067 | 32, 33, 33a | Done (Step 18) |
 | 13 | Admin portal | US010, US011, US012, US013 | 34, 35, 7, 36 | Done (Steps 21–22) |
 | 14 | Reports | US047, US048, US049, US068 | 37, 38, 39, 39a | Done (Step 23) |
-| 15 | Urdu complete, backups | US009, US008 | 40, 41 | To do |
+| 15 | Urdu complete, backups | US009, US008 | 40, 41 | US009 done (Step 24); US008 to do |
 | 16 | Self-registration and trial | US073–US077 | — | Proposed (see `docs/features/self-registration.md`) |
 | — | **R1 pilot** | | | |
 | 17 | Suppliers, purchases, payables | US050, US051, US052 | 42–44 | To do (R2) |
@@ -109,11 +109,11 @@ Build in this order, not in ID order. "Sheet step" is the step number in the ori
 
 ### F05 · Urdu/English language
 
-**US009** · Should · 5 · To do — As a shopkeeper who reads Urdu better than English, I want to switch the app to Urdu, so that I can use it confidently.
-- Language toggle in settings, saved on the device
-- Every label from `en.json` / `ur.json`; all `TODO-ur` strings resolved (Junaid reviews Urdu)
-- RTL layout checked on every screen; Rs amounts and numbers in Latin digits
-- Product/category names show `name_ur` in Urdu, falling back to `name`
+**US009** · Should · 5 · Done (Step 24; Junaid's review of the Urdu pending via `docs/urdu-review.csv`) — As a shopkeeper who reads Urdu better than English, I want to switch the app to Urdu, so that I can use it confidently.
+- Language toggle in settings (and on the sign-in screen), saved on the device, applied before the first render — *done*
+- Every label from `en.json` / `ur.json`; all `TODO-ur` strings resolved (Junaid reviews Urdu) — *done*; review sheet `docs/urdu-review.csv`, `pnpm i18n:import-review` applies corrections
+- RTL layout checked on every screen; Rs amounts and numbers in Latin digits — *done* (Rs 1,250; dates "23 نومبر 2026")
+- Product/category names show `name_ur` in Urdu, falling back to `name` — *done*
 
 ---
 

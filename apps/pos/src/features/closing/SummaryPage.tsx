@@ -1,4 +1,4 @@
-import { dailySummary, receiptText, type DaySummary } from '@naqdpos/core';
+import { dailySummary, displayName, receiptText, type DaySummary } from '@naqdpos/core';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { useTranslation } from 'react-i18next';
 import { Link, useParams } from 'react-router';
@@ -10,6 +10,7 @@ import { shareReceipt } from '../../print/share.ts';
 import { Alert, Button } from '../../ui/Button.tsx';
 import { showToast } from '../../ui/toastStore.ts';
 import { categoryName } from '../expenses/expenseRepo.ts';
+import { useDates } from '../../i18n/format.ts';
 import { useRs } from '../sale/saleFormat.ts';
 import { methodName } from '../settings/paymentMethods.ts';
 import { costsAt, dayRows, useDayCloses } from './closingData.ts';
@@ -18,6 +19,7 @@ import { costsAt, dayRows, useDayCloses } from './closingData.ts';
 export function SummaryPage() {
   const { businessDate } = useParams();
   const { t, i18n } = useTranslation();
+  const dates = useDates();
   const rs = useRs();
   const summary = useLiveQuery(async (): Promise<DaySummary | null> => {
     const device = await getStoredDevice();
@@ -37,7 +39,9 @@ export function SummaryPage() {
     return dailySummary({
       close,
       ...rows,
-      products: new Map(products.map((p) => [p.id, { name: p.name, unit: p.unit }])),
+      products: new Map(
+        products.map((p) => [p.id, { name: displayName(p, i18n.language), unit: p.unit }]),
+      ),
       costs,
       categoryName: (id) => {
         const c = categories.find((x) => x.id === id);
@@ -46,6 +50,7 @@ export function SummaryPage() {
       methodName: (code) =>
         methodName(methods.find((m) => m.code === code) ?? { code, label: code }, t),
       label: (key, vars) => t(key, vars ?? {}),
+      formatDate: (iso) => dates.date(iso),
       shopName: shop?.name ?? '',
       paperWidthMm: shop?.paper_width_mm ?? 58,
       rtl: i18n.language === 'ur',
@@ -62,7 +67,9 @@ export function SummaryPage() {
 
   return (
     <section className="mx-auto max-w-md space-y-4 pb-8">
-      <h1 className="text-2xl font-bold">{t('closing.summaryTitle', { date: businessDate })}</h1>
+      <h1 className="text-2xl font-bold">
+        {t('closing.summaryTitle', { date: dates.date(businessDate!) })}
+      </h1>
       {summary.gapPaisa !== 0 && (
         <Alert>{t('closing.gapAlert', { amount: rs(summary.gapPaisa) })}</Alert>
       )}
@@ -83,6 +90,7 @@ export function SummaryPage() {
 /** Past closes, newest first. */
 export function CloseHistoryPage() {
   const { t } = useTranslation();
+  const dates = useDates();
   const rs = useRs();
   const closes = useDayCloses();
   if (!closes) return null;
@@ -99,9 +107,7 @@ export function CloseHistoryPage() {
                 to={`/closing/${c.business_date}`}
                 className="flex min-h-12 items-center gap-2 px-3 py-2"
               >
-                <span className="flex-1" dir="ltr">
-                  {c.business_date}
-                </span>
+                <span className="flex-1">{dates.date(c.business_date)}</span>
                 <span
                   className={
                     c.difference_paisa < 0

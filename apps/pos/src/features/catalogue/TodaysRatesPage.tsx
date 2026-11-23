@@ -104,12 +104,18 @@ function RatesForm(props: {
                 {t('rates.perUnit', { unit: t(`unit.${p.unit}`) })}
               </span>
             </span>
-            {input(p.id, t('rates.saleFor', { name: p.name }), sale.get(p.id) ?? '', (v) =>
-              setSale((m) => new Map(m).set(p.id, v)),
+            {input(
+              p.id,
+              t('rates.saleFor', { name: displayName(p, i18n.language) }),
+              sale.get(p.id) ?? '',
+              (v) => setSale((m) => new Map(m).set(p.id, v)),
             )}
             {props.costsHere &&
-              input(p.id, t('rates.costFor', { name: p.name }), cost.get(p.id) ?? '', (v) =>
-                setCost((m) => new Map(m).set(p.id, v)),
+              input(
+                p.id,
+                t('rates.costFor', { name: displayName(p, i18n.language) }),
+                cost.get(p.id) ?? '',
+                (v) => setCost((m) => new Map(m).set(p.id, v)),
               )}
           </li>
         ))}

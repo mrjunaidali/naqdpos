@@ -26,7 +26,7 @@ export function ReceivePaymentSheet(props: {
   staff: StaffRow;
   onClose: () => void;
 }) {
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   const rs = useRs();
   const methods = usePaymentMethods();
   const shopName = useLiveQuery(async () => {
@@ -69,7 +69,12 @@ export function ReceivePaymentSheet(props: {
   }
 
   if (done) {
-    const text = khataReceiptText(i18n.language, done.amount, done.balance, shopName ?? '');
+    const text = khataReceiptText(
+      (key, vars) => t(key, vars),
+      done.amount,
+      done.balance,
+      shopName ?? '',
+    );
     return (
       <Sheet title={t('khata.receivedTitle')} onClose={props.onClose}>
         <p className="text-lg">{t('khata.received', { amount: rs(done.amount) })}</p>

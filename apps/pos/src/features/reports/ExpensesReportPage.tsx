@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '../../ui/Button.tsx';
 import { useCurrentBusinessDate } from '../closing/closedDates.ts';
+import { useDates } from '../../i18n/format.ts';
 import { useRs } from '../sale/saleFormat.ts';
 import { downloadCsv } from './download.ts';
 import { useReport, type ReportFilters } from './reportsData.ts';
@@ -42,6 +43,7 @@ export function ExpensesReportPage() {
 function ExpenseList({ today }: { today: string }) {
   const { t, i18n } = useTranslation();
   const rs = useRs();
+  const dates = useDates();
   const names = useReportNames();
   const [range, setRange] = useState<Range>(rangePreset('this_month', today));
   const [filters, setFilters] = useState<ReportFilters>({});
@@ -127,7 +129,7 @@ function ExpenseList({ today }: { today: string }) {
                         <span className="ms-2 text-sm text-muted">{t('reports.reversal')}</span>
                       )}
                       <span className="block text-sm text-muted">
-                        {e.business_date} · {methodLabel(names, e.paid_method_code, t)}
+                        {dates.date(e.business_date)} · {methodLabel(names, e.paid_method_code, t)}
                         {e.staff_name && ` · ${e.staff_name}`}
                         {e.note && ` · ${e.note}`}
                       </span>

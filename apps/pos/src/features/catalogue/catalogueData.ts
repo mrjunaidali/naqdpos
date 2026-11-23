@@ -1,5 +1,11 @@
 // Live catalogue reads for the screens (Dexie only; the UI never asks the server).
-import { paisaToRupeesString, type CategoryRow, type Paisa, type ProductRow } from '@naqdpos/core';
+import {
+  paisaToRupeesString,
+  rupeesText,
+  type CategoryRow,
+  type Paisa,
+  type ProductRow,
+} from '@naqdpos/core';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { useTranslation } from 'react-i18next';
 import { db } from '../../db/schema.ts';
@@ -47,7 +53,7 @@ export function usePriceLabel() {
     product.sale_price_paisa === 0
       ? t('products.noRate')
       : t('products.pricePerUnit', {
-          amount: rupeesInput(product.sale_price_paisa),
+          amount: rupeesText(product.sale_price_paisa),
           unit: t(`unit.${product.unit}`),
         });
 }

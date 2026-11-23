@@ -152,6 +152,15 @@ export function displayName(row: { name: string; name_ur: string | null }, langu
   return row.name.trim() || row.name_ur || '';
 }
 
+/**
+ * The name in the other language, shown smaller under `displayName` on tiles; null when there is
+ * none, so a product without an Urdu name doesn't show its English name twice in Urdu mode.
+ */
+export function otherName(row: { name: string; name_ur: string | null }, language: string) {
+  const other = (language === 'ur' ? row.name : row.name_ur)?.trim();
+  return other && other !== displayName(row, language) ? other : null;
+}
+
 /** "aloo, aalu ,, Aaloo" → ['aloo', 'aalu', 'Aaloo']: trimmed, no blanks or repeats. */
 export function parseSearchTerms(input: string): string[] {
   const seen = new Set<string>();

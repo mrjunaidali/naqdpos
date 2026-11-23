@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Alert, Button } from '../../ui/Button.tsx';
 import { useCurrentBusinessDate } from '../closing/closedDates.ts';
+import { useDates } from '../../i18n/format.ts';
 import { useRs } from '../sale/saleFormat.ts';
 import { UncostedNote } from './DashboardPage.tsx';
 import { downloadCsv } from './download.ts';
@@ -21,6 +22,7 @@ const STRONG = new Set<PnlLine['key']>(['net_sales', 'gross_profit', 'expenses_t
 function Monthly({ today }: { today: string }) {
   const { t, i18n } = useTranslation();
   const rs = useRs();
+  const dates = useDates();
   const names = useReportNames();
   const [month, setMonth] = useState(today.slice(0, 7));
   const from = `${month}-01`;
@@ -52,12 +54,12 @@ function Monthly({ today }: { today: string }) {
             <>
               {s.unclosed_days.length > 0 && (
                 <Alert tone="info">
-                  {t('reports.unclosedDays', { days: s.unclosed_days.join(', ') })}
+                  {t('reports.unclosedDays', { days: s.unclosed_days.map(dates.date).join(', ') })}
                 </Alert>
               )}
               {s.today_open && <p className="text-muted">{t('reports.todayOpen')}</p>}
               <div className="report-print space-y-4">
-                <Card title={t('reports.pnlTitle', { month })}>
+                <Card title={t('reports.pnlTitle', { month: dates.month(month) })}>
                   {lines.map((l, i) => (
                     <div
                       key={`${l.key}-${i}`}

@@ -8,6 +8,7 @@ import { Button } from '../../ui/Button.tsx';
 import { Field } from '../../ui/Field.tsx';
 import { ownerHereNow } from '../pin/ownerHereNow.ts';
 import { OwnerPinDialog } from '../sale/OwnerPinDialog.tsx';
+import { useDates } from '../../i18n/format.ts';
 import { useRs } from '../sale/saleFormat.ts';
 import { AdjustSheet } from './AdjustSheet.tsx';
 import { updateCustomer, useCustomer, useKhataEntries } from './khataRepo.ts';
@@ -22,6 +23,7 @@ export function CustomerPage() {
   const { customerId } = useParams();
   const { t } = useTranslation();
   const rs = useRs();
+  const dates = useDates();
   const customer = useCustomer(customerId);
   const entries = useKhataEntries(customerId);
   const current = useCurrentStaff();
@@ -148,9 +150,7 @@ export function CustomerPage() {
                     t(`khata.type.${e.type}`)
                   )}
                 </span>
-                <span className="block text-sm text-muted" dir="ltr">
-                  {e.business_date}
-                </span>
+                <span className="block text-sm text-muted">{dates.date(e.business_date)}</span>
                 {e.note && <span className="block text-sm text-muted">{e.note}</span>}
               </span>
               <span className="text-end">

@@ -1,0 +1,959 @@
+﻿key,english,urdu,junaid_correction,note
+app.name,NaqdPOS,NaqdPOS,,
+app.tagline,Point of sale that works offline,انٹرنیٹ کے بغیر بھی چلنے والا POS,,
+app.suspended,This shop is suspended — contact NaqdPOS support,یہ دکان معطل ہے — NaqdPOS سپورٹ سے رابطہ کریں,,
+common.wait,Please wait…,براہ کرم انتظار کریں…,,
+common.loading,Loading…,لوڈ ہو رہا ہے…,,
+common.retry,Try again,دوبارہ کوشش کریں,,
+common.close,Close,بند کریں,,
+common.cancel,Cancel,منسوخ کریں,,
+errors.offline,No internet connection. Connect and try again.,انٹرنیٹ کنکشن نہیں ہے۔ کنیکٹ کر کے دوبارہ کوشش کریں۔,,
+errors.tooManyAttempts,Too many attempts. Wait a minute and try again.,بہت زیادہ کوششیں۔ ایک منٹ رک کر دوبارہ کوشش کریں۔,,
+errors.generic,Something went wrong. Please try again.,کچھ غلط ہو گیا۔ براہ کرم دوبارہ کوشش کریں۔,,
+home.welcome,Welcome,خوش آمدید,,
+home.deviceCode,This device: {{code}},یہ ڈیوائس: {{code}},,Keep {{code}} exactly.
+home.newSale,New sale,نئی سیل,,
+home.todaysSales,Today’s sales,آج کی سیل,,
+home.khata,Khata,کھاتہ,,
+home.expense,Expense,خرچہ,,
+home.closeDay,Close day,دن بند کریں,,
+home.greeting.morning,Good morning,صبح بخیر,,
+home.greeting.afternoon,Good afternoon,السلام علیکم,,
+home.greeting.evening,Good evening,شام بخیر,,
+home.todaySales,Today's sales,آج کی سیل,,
+home.mySales,My sales today,آج میری سیل,,
+home.salesFor,Sales for {{date}},{{date}} کی سیل,,Keep {{date}} exactly.
+home.invoices_one,{{count}} invoice,{{count}} بل,,Plural form for exactly 1. Keep {{count}} exactly.
+home.invoices_other,{{count}} invoices,{{count}} بل,,Plural form for any other number. Keep {{count}} exactly.
+home.split.cash,Cash,نقد,,
+home.split.other,Wallet / bank,والٹ / بینک,,
+home.split.khata,On khata,کھاتے پر,,
+home.trend,Sales over the last 7 days,پچھلے 7 دن کی سیل,,
+home.khataOwed,Khata owed,کھاتہ بقایا,,
+home.lowStock,Low stock,کم اسٹاک,,
+home.tile.product,Product,چیز,,
+home.tile.customer,Customer,گاہک,,
+home.tile.stockIn,Stock in,مال آیا,,
+home.tile.wastage,Wastage,ضائع,,
+home.tile.expense,Expense,خرچہ,,
+home.recent,Recent,حالیہ,,
+home.seeAll,See all,سب دیکھیں,,
+home.nothingYet,Nothing yet today.,آج ابھی کچھ نہیں۔,,
+home.storageNotice,This browser may clear the app’s data when the phone runs low on space. Installing the app makes that much less likely.,یہ براؤزر فون میں جگہ کم ہونے پر ایپ کا ڈیٹا مٹا سکتا ہے۔ ایپ انسٹال کرنے سے یہ خطرہ بہت کم ہو جاتا ہے۔,,
+home.gotIt,Got it,ٹھیک ہے,,
+signIn.title,Sign in,سائن ان,,
+signIn.offline,"You are offline. Connect to the internet to sign in. Once signed in, the app works offline.",آپ آف لائن ہیں۔ سائن ان کے لیے انٹرنیٹ سے جڑیں۔ سائن ان کے بعد ایپ آف لائن چلتی ہے۔,,
+signIn.email,Email,ای میل,,
+signIn.invalidEmail,Enter a valid email address.,درست ای میل ایڈریس لکھیں۔,,
+signIn.sendCode,Send code,کوڈ بھیجیں,,
+signIn.codeSent,We sent a 6-digit code to {{email}}.,ہم نے {{email}} پر 6 ہندسوں کا کوڈ بھیجا ہے۔,,Keep {{email}} exactly.
+signIn.code,6-digit code,6 ہندسوں کا کوڈ,,
+signIn.invalidCode,Enter the 6 digits from the email.,ای میل والے 6 ہندسے لکھیں۔,,
+signIn.signIn,Sign in,سائن ان,,
+signIn.resend,Resend code,کوڈ دوبارہ بھیجیں,,
+signIn.changeEmail,Change email,ای میل تبدیل کریں,,
+signIn.wrongCode,That code is not right. Check the email and try again.,یہ کوڈ درست نہیں۔ ای میل دیکھ کر دوبارہ کوشش کریں۔,,
+signIn.codeExpired,That code has expired. Send a new one.,اس کوڈ کی مدت ختم ہو گئی۔ نیا کوڈ منگوائیں۔,,
+signIn.or,or,یا,,
+signIn.google,Sign in with Google,Google سے سائن ان کریں,,
+signIn.googleFailed,"Google sign-in did not finish. Try again, or use your email.",Google سائن ان مکمل نہیں ہوا۔ دوبارہ کوشش کریں یا ای میل استعمال کریں۔,,
+signIn.finishing,Finishing sign-in…,سائن ان مکمل ہو رہا ہے…,,
+signIn.backToSignIn,Back to sign-in,سائن ان پر واپس جائیں,,
+signIn.unsyncedOther,This device has changes not yet synced. Sign in as {{email}} to sync them first.,اس ڈیوائس پر کچھ تبدیلیاں ابھی سنک نہیں ہوئیں۔ پہلے {{email}} سے سائن ان کر کے انہیں سنک کریں۔,,Keep {{email}} exactly.
+signIn.unsyncedOtherUnknown,This device has changes not yet synced. Sign in with the previous account to sync them first.,اس ڈیوائس پر کچھ تبدیلیاں ابھی سنک نہیں ہوئیں۔ پہلے پچھلے اکاؤنٹ سے سائن ان کر کے انہیں سنک کریں۔,,
+signIn.otherShop,This device belongs to {{shop}}. Sign in with an account of that shop.,یہ ڈیوائس {{shop}} کی ہے۔ اسی دکان کے اکاؤنٹ سے سائن ان کریں۔,,Keep {{shop}} exactly.
+signIn.notOwner,Only the shop owner can sign in on this device,اس ڈیوائس پر صرف دکان کا مالک سائن ان کر سکتا ہے,,
+onboarding.title,Set up your shop,اپنی دکان سیٹ اپ کریں,,
+onboarding.intro,A few details and you can start selling.,تھوڑی سی معلومات دیں، پھر سیل شروع کریں۔,,
+onboarding.shopName,Shop name,دکان کا نام,,
+onboarding.shopType,Shop type,دکان کی قسم,,
+onboarding.ownerName,Your name,آپ کا نام,,
+onboarding.mobile,Your mobile number,آپ کا موبائل نمبر,,
+onboarding.mobileHint,"Pakistani mobile, e.g. 0300 1234567",پاکستانی موبائل نمبر، مثلاً 0300 1234567,,
+onboarding.invalidMobile,"Enter a Pakistani mobile number, e.g. 0300 1234567.",پاکستانی موبائل نمبر لکھیں، مثلاً 0300 1234567۔,,
+onboarding.pin,Your 4-digit PIN,آپ کا 4 ہندسوں کا PIN,,
+onboarding.pinHint,You will use this PIN to open the till and approve actions.,یہ PIN ایپ کھولنے اور کاموں کی منظوری کے لیے استعمال ہوگا۔,,
+onboarding.pinConfirm,Enter the PIN again,PIN دوبارہ لکھیں,,
+onboarding.invalidPin,The PIN must be exactly 4 digits.,PIN بالکل 4 ہندسوں کا ہونا چاہیے۔,,
+onboarding.pinMismatch,The two PINs do not match.,دونوں PIN ایک جیسے نہیں ہیں۔,,
+onboarding.required,This is required.,یہ ضروری ہے۔,,
+onboarding.submit,Create shop,دکان بنائیں,,
+shopType.fruit_veg,Fruit & vegetables,پھل اور سبزی,,
+shopType.grocery,Grocery,کریانہ,,
+shopType.meat,Meat,گوشت,,
+shopType.general,General store,جنرل اسٹور,,
+device.name,Name for this device,اس ڈیوائس کا نام,,
+device.nameHint,So you can tell your phones and computers apart.,تاکہ آپ اپنے فون اور کمپیوٹر الگ پہچان سکیں۔,,
+device.defaultName,Owner phone,مالک کا فون,,
+device.registerTitle,Add this device,یہ ڈیوائس شامل کریں,,
+device.registerIntro,You are signed in to {{shop}}. Add this device to use it in the shop.,آپ {{shop}} میں سائن ان ہیں۔ دکان میں استعمال کے لیے یہ ڈیوائس شامل کریں۔,,Keep {{shop}} exactly.
+device.register,Add device,ڈیوائس شامل کریں,,
+device.modeQuestion,Who uses this device?,یہ ڈیوائس کون استعمال کرتا ہے؟,,
+device.modeOwner,My own phone (owner),میرا اپنا فون (مالک),,
+device.modeOwnerHint,"Gets everything, including salaries and cost prices.",سب کچھ نظر آتا ہے، تنخواہیں اور قیمتِ خرید بھی۔,,
+device.modeShop,Shop counter (staff use it),دکان کا کاؤنٹر (عملہ استعمال کرتا ہے),,
+device.modeShopHint,Staff switch with their PIN. Owner-only data never comes to this device.,عملہ اپنے PIN سے کام شروع کرتا ہے۔ مالک کا خاص ڈیٹا اس ڈیوائس پر کبھی نہیں آتا۔,,
+device.defaultNameShop,Shop counter,دکان کا کاؤنٹر,,
+setup.notOwner,Only the shop owner can set up a new device. Ask the owner to sign in here.,نئی ڈیوائس صرف دکان کا مالک سیٹ اپ کر سکتا ہے۔ مالک سے کہیں کہ یہاں سائن ان کرے۔,,
+setup.signOut,Sign out,سائن آؤٹ,,
+setup.whichShop,Which shop is this device for?,یہ ڈیوائس کس دکان کے لیے ہے؟,,
+setup.setPinTitle,Set your PIN,اپنا PIN بنائیں,,
+setup.setPinIntro,You use this 4-digit PIN to open the app on shop devices. Only you know it.,دکان کی ڈیوائسز پر ایپ کھولنے کے لیے یہ 4 ہندسوں کا PIN استعمال ہوگا۔ یہ صرف آپ کو معلوم ہو۔,,
+setup.savePin,Save PIN and continue,PIN محفوظ کر کے آگے بڑھیں,,
+language.switchLabel,Change language,زبان تبدیل کریں,,
+language.other,اردو,English,,"Button that switches to the OTHER language: in Urdu mode it shows ""English""."
+pwa.updateAvailable,New version available,نیا ورژن دستیاب ہے,,
+pwa.reload,Reload,دوبارہ لوڈ کریں,,
+pwa.later,Later,بعد میں,,
+notFound.title,Page not found,صفحہ نہیں ملا,,
+notFound.goHome,Go to home,ہوم پر جائیں,,
+sync.synced,Synced,سنک ہو گیا,,
+sync.pending_one,{{count}} pending,{{count}} باقی,,Plural form for exactly 1. Keep {{count}} exactly.
+sync.pending_other,{{count}} pending,{{count}} باقی,,Plural form for any other number. Keep {{count}} exactly.
+sync.paused,Sync paused,سنک رکا ہوا ہے,,
+sync.needsReview,Needs review,دیکھنا ضروری ہے,,
+sync.openSync,Sync status: {{status}}. Open sync,سنک کی حالت: {{status}}۔ سنک کھولیں,,Keep {{status}} exactly.
+sync.title,Sync,سنک,,
+sync.syncNow,Sync now,ابھی سنک کریں,,
+sync.syncing,Syncing…,سنک ہو رہا ہے…,,
+sync.lastSync,Last synced: {{time}},آخری سنک: {{time}},,Keep {{time}} exactly.
+sync.neverSynced,Not synced yet,ابھی سنک نہیں ہوا,,
+sync.waiting_one,{{count}} change waiting to sync,{{count}} تبدیلی سنک کی منتظر,,Plural form for exactly 1. Keep {{count}} exactly.
+sync.waiting_other,{{count}} changes waiting to sync,{{count}} تبدیلیاں سنک کی منتظر,,Plural form for any other number. Keep {{count}} exactly.
+sync.allSynced,Everything is synced.,سب کچھ سنک ہو گیا۔,,
+sync.offline,You are offline. Sales are saved on this device and sync when you are back online.,آپ آف لائن ہیں۔ سیل اس ڈیوائس پر محفوظ ہو رہی ہے اور انٹرنیٹ آنے پر سنک ہو جائے گی۔,,
+sync.updateRequired,Update required to sync,سنک کے لیے اپڈیٹ ضروری ہے,,
+sync.reload,Reload,دوبارہ لوڈ کریں,,
+sync.finishSaleToReload,"Finish the sale, then reload.",پہلے سیل مکمل کریں، پھر دوبارہ لوڈ کریں۔,,
+sync.authRequired,Sign in again to sync,سنک کے لیے دوبارہ سائن ان کریں,,
+sync.deviceUnlinked,This device is no longer linked to the shop,یہ ڈیوائس اب دکان سے منسلک نہیں,,
+sync.clockAhead,Phone date/time is wrong — fix it and tap Sync now,"فون کی تاریخ/وقت غلط ہے — درست کر کے ""ابھی سنک کریں"" دبائیں",,
+sync.rejectedTitle,Needs review,دیکھنا ضروری ہے,,
+sync.rejectedIntro,The server did not accept these changes. They are kept on this device.,سرور نے یہ تبدیلیاں قبول نہیں کیں۔ یہ اس ڈیوائس پر محفوظ ہیں۔,,
+sync.table.shops,Shop settings,دکان کی سیٹنگز,,
+sync.table.staff,Staff,عملہ,,
+sync.table.staff_salaries,Salary,تنخواہ,,
+sync.table.devices,Device,ڈیوائس,,
+sync.error.forbidden,Not allowed for this user or device.,اس صارف یا ڈیوائس کو اجازت نہیں۔,,
+sync.error.other_shop,This belongs to another shop.,یہ کسی اور دکان کا ہے۔,,
+sync.error.day_closed,That day is already closed.,وہ دن بند ہو چکا ہے۔,,
+sync.error.invalid,The data was not valid.,ڈیٹا درست نہیں تھا۔,,
+sync.error.unknown_table,The server does not support this from this app version.,سرور اس ایپ ورژن سے یہ قبول نہیں کرتا۔,,
+sync.error.not_pushable,The server does not support this from this app version.,سرور اس ایپ ورژن سے یہ قبول نہیں کرتا۔,,
+sync.error.generic,The server did not accept this change.,سرور نے یہ تبدیلی قبول نہیں کی۔,,
+sync.reason.pending,Changes are waiting to sync.,تبدیلیاں سنک کی منتظر ہیں۔,,
+sync.reason.sales_reminder,Many sales are not synced yet. Connect to the internet and tap Sync now.,"کئی سیلز سنک نہیں ہوئیں۔ انٹرنیٹ سے جڑیں اور ""ابھی سنک کریں"" دبائیں۔",,
+sync.reason.age_2h,Some changes have not synced for over 2 hours.,کچھ تبدیلیاں 2 گھنٹے سے سنک نہیں ہوئیں۔,,
+sync.reason.age_12h,Some changes have not synced for over 12 hours.,کچھ تبدیلیاں 12 گھنٹے سے سنک نہیں ہوئیں۔,,
+sync.reason.age_24h,Some changes have not synced for over a day. Connect to the internet now.,کچھ تبدیلیاں ایک دن سے سنک نہیں ہوئیں۔ ابھی انٹرنیٹ سے جڑیں۔,,
+sync.reason.sales_100,More than 100 sales are not synced.,100 سے زیادہ سیلز سنک نہیں ہوئیں۔,,
+sync.reason.storage_not_persisted,This browser may delete unsynced data. Install the app to keep it safe.,براؤزر غیر سنک ڈیٹا مٹا سکتا ہے۔ محفوظ رکھنے کے لیے ایپ انسٹال کریں۔,,
+sync.reason.storage_80,Device storage is almost full.,ڈیوائس کی اسٹوریج تقریباً بھر گئی ہے۔,,
+sync.reason.storage_95,Device storage is full. Sync now and free up space.,ڈیوائس کی اسٹوریج بھر گئی ہے۔ ابھی سنک کریں اور جگہ خالی کریں۔,,
+sync.reason.update_required,Update required to sync,سنک کے لیے اپڈیٹ ضروری ہے,,
+sync.reason.auth_required,Sign in again to sync,سنک کے لیے دوبارہ سائن ان کریں,,
+sync.reason.device_unlinked,This device is no longer linked to the shop,یہ ڈیوائس اب دکان سے منسلک نہیں,,
+sync.reason.rejected_entries,Some changes were not accepted. See below.,کچھ تبدیلیاں قبول نہیں ہوئیں۔ نیچے دیکھیں۔,,
+sync.signInAgain,Sign in again,دوبارہ سائن ان کریں,,
+sync.reminderToast_one,{{count}} change not synced. Connect to internet and tap Sync now.,"{{count}} تبدیلی سنک نہیں ہوئی۔ انٹرنیٹ سے جڑیں اور ""ابھی سنک کریں"" دبائیں۔",,Plural form for exactly 1. Keep {{count}} exactly.
+sync.reminderToast_other,{{count}} changes not synced. Connect to internet and tap Sync now.,"{{count}} تبدیلیاں سنک نہیں ہوئیں۔ انٹرنیٹ سے جڑیں اور ""ابھی سنک کریں"" دبائیں۔",,Plural form for any other number. Keep {{count}} exactly.
+sync.syncedRecords_one,Synced {{count}} record,{{count}} ریکارڈ سنک ہوا,,Plural form for exactly 1. Keep {{count}} exactly.
+sync.syncedRecords_other,Synced {{count}} records,{{count}} ریکارڈ سنک ہوئے,,Plural form for any other number. Keep {{count}} exactly.
+role.owner,Owner,مالک,,
+role.cashier,Cashier,کیشیئر,,
+role.rider,Rider,رائیڈر,,
+staff.title,Staff,عملہ,,
+staff.add,Add staff,عملہ شامل کریں,,
+staff.addTitle,Add staff,عملہ شامل کریں,,
+staff.editTitle,Edit staff,عملے میں ترمیم,,
+staff.name,Name,نام,,
+staff.phone,Mobile number (optional),موبائل نمبر (اختیاری),,
+staff.phoneHint,"Pakistani mobile, e.g. 0300 1234567",پاکستانی موبائل، مثلاً 0300 1234567,,
+staff.role,Role,عہدہ,,
+staff.pin,4-digit PIN,4 ہندسوں کا PIN,,
+staff.pinHint,They use this PIN to switch in on the shop device.,دکان کی ڈیوائس پر کام شروع کرنے کے لیے یہ PIN استعمال ہوگا۔,,
+staff.pinKeepHint,Leave blank to keep the current PIN.,موجودہ PIN رکھنے کے لیے خالی چھوڑ دیں۔,,
+staff.pinConfirm,Enter the PIN again,PIN دوبارہ لکھیں,,
+staff.save,Save,محفوظ کریں,,
+staff.deactivate,Deactivate,غیر فعال کریں,,
+staff.reactivate,Reactivate,دوبارہ فعال کریں,,
+staff.inactive,Inactive,غیر فعال,,
+staff.inactiveNotice,This person is deactivated and cannot switch in.,یہ شخص غیر فعال ہے اور ڈیوائس پر کام شروع نہیں کر سکتا۔,,
+staff.errors.required,This is required.,یہ ضروری ہے۔,,
+staff.errors.tooLong,Use at most 100 characters.,زیادہ سے زیادہ 100 حروف۔,,
+staff.errors.role,Choose a role.,عہدہ منتخب کریں۔,,
+staff.errors.lastOwner,The shop needs at least one active owner.,دکان کے لیے کم از کم ایک فعال مالک ضروری ہے۔,,
+pin.switchTitle,Switch staff,عملہ تبدیل کریں,,
+pin.whoIsWorking,Who is working?,کون کام کر رہا ہے؟,,
+pin.switchLabel,Working now: {{name}}. Switch staff,ابھی کام پر: {{name}}۔ عملہ تبدیل کریں,,Keep {{name}} exactly.
+pin.enterFor,PIN for {{name}},{{name}} کا PIN,,Keep {{name}} exactly.
+pin.entered_one,{{count}} digit entered,{{count}} ہندسہ لکھا گیا,,Plural form for exactly 1. Keep {{count}} exactly.
+pin.entered_other,{{count}} digits entered,{{count}} ہندسے لکھے گئے,,Plural form for any other number. Keep {{count}} exactly.
+pin.wrong_one,Wrong PIN. {{count}} try left.,غلط PIN۔ {{count}} کوشش باقی۔,,Plural form for exactly 1. Keep {{count}} exactly.
+pin.wrong_other,Wrong PIN. {{count}} tries left.,غلط PIN۔ {{count}} کوششیں باقی۔,,Plural form for any other number. Keep {{count}} exactly.
+pin.locked,Too many wrong PINs. Try again in {{seconds}} s.,بہت زیادہ غلط PIN۔ {{seconds}} سیکنڈ بعد کوشش کریں۔,,Keep {{seconds}} exactly.
+pin.notAllowed,This person cannot switch in.,یہ شخص ڈیوائس پر کام شروع نہیں کر سکتا۔,,
+pin.backspace,Delete last digit,آخری ہندسہ مٹائیں,,
+pin.someoneElse,Someone else,کوئی اور,,
+pin.nobody,Nobody can switch in yet. The owner adds staff and PINs under Settings → Staff.,ابھی کوئی کام شروع نہیں کر سکتا۔ مالک سیٹنگز ← عملہ میں عملہ اور PIN شامل کرے۔,,
+pin.ownerTitle,Owner PIN needed,مالک کا PIN درکار ہے,,
+pin.ownerIntro,Only the owner can open this screen.,یہ اسکرین صرف مالک کھول سکتا ہے۔,,
+pin.lockedMinutes,Too many wrong PINs. Try again in {{minutes}} min.,بہت زیادہ غلط PIN۔ {{minutes}} منٹ بعد کوشش کریں۔,,Keep {{minutes}} exactly.
+settings.title,Settings,سیٹنگز,,
+settings.signOutTitle,Sign out,سائن آؤٹ,,
+settings.signOutIntro,Shop data stays on this device. Signing in again needs an account of this shop.,دکان کا ڈیٹا اس ڈیوائس پر رہتا ہے۔ دوبارہ سائن ان کے لیے اسی دکان کا اکاؤنٹ چاہیے۔,,
+settings.signOut,Sign out,سائن آؤٹ,,
+settings.signOutBlocked_one,{{count}} change is not synced yet. Sync before signing out.,{{count}} تبدیلی ابھی سنک نہیں ہوئی۔ سائن آؤٹ سے پہلے سنک کریں۔,,Plural form for exactly 1. Keep {{count}} exactly.
+settings.signOutBlocked_other,{{count}} changes are not synced yet. Sync before signing out.,{{count}} تبدیلیاں ابھی سنک نہیں ہوئیں۔ سائن آؤٹ سے پہلے سنک کریں۔,,Plural form for any other number. Keep {{count}} exactly.
+nav.home,Home,ہوم,,
+nav.main,Main,مین مینو,,Screen-reader label for the menu (not shown as text).
+nav.side,Menu,مینو,,Screen-reader label for the menu (not shown as text).
+nav.sales,Sales,سیلز,,
+nav.sale,Sale,سیل,,
+nav.products,Products,پروڈکٹس,,
+nav.khata,Khata,کھاتہ,,
+nav.more,More,مزید,,
+nav.stock,Stock,اسٹاک,,
+nav.expenses,Expenses,خرچے,,
+nav.closeDay,Close day,دن بند,,
+nav.staff,Staff,عملہ,,
+nav.sync,Sync,سنک,,
+nav.settings,Settings,سیٹنگز,,
+nav.reports,Reports,رپورٹس,,
+unit.kg,kg,کلو,,"Unit after a quantity, e.g. 1.5 kg."
+unit.g,g,گرام,,"Unit after a quantity, e.g. 1.5 kg."
+unit.dozen,dozen,درجن,,"Unit after a quantity, e.g. 1.5 kg."
+unit.piece,piece,عدد,,"Unit after a quantity, e.g. 1.5 kg."
+unit.bundle,bundle,گٹھی,,"Unit after a quantity, e.g. 1.5 kg."
+unit.litre,litre,لیٹر,,"Unit after a quantity, e.g. 1.5 kg."
+unit.ml,ml,ملی لیٹر,,"Unit after a quantity, e.g. 1.5 kg."
+products.title,Products,اشیاء,,
+products.add,Add product,چیز شامل کریں,,
+products.addTitle,Add product,چیز شامل کریں,,
+products.editTitle,Edit product,چیز میں ترمیم,,
+products.search,Search products,اشیاء تلاش کریں,,
+products.searchPlaceholder,"Search: aloo, آلو, potato","تلاش: aloo, آلو, potato",,
+products.showHidden,Show hidden products,چھپی ہوئی اشیاء دکھائیں,,
+products.empty,"No products yet. Add one, or pick from the ready-made list.",ابھی کوئی چیز نہیں۔ شامل کریں یا تیار فہرست سے چنیں۔,,
+products.noHidden,No hidden products.,کوئی چھپی ہوئی چیز نہیں۔,,
+products.hidden,Hidden,چھپی ہوئی,,
+products.hiddenNotice,This product is hidden and not shown for sale.,یہ چیز چھپی ہوئی ہے اور فروخت میں نظر نہیں آتی۔,,
+products.name,Name (English),نام (انگریزی),,
+products.nameUr,Name (Urdu),نام (اردو),,
+products.unit,Unit,اکائی,,
+products.category,Category,زمرہ,,
+products.noCategory,No category,کوئی زمرہ نہیں,,
+products.salePrice,Sale price (Rs),قیمتِ فروخت (روپے),,
+products.salePriceHint,Price per {{unit}}. 0 = ask for the rate at the first sale.,فی {{unit}} قیمت۔ 0 = پہلی فروخت پر ریٹ پوچھیں۔,,Keep {{unit}} exactly.
+products.costPrice,"Cost price (Rs, optional)",قیمتِ خرید (روپے، اختیاری),,
+products.costPriceHint,Only owners see this.,یہ صرف مالک دیکھتا ہے۔,,
+products.costElsewhere,Cost prices are set on an owner device (the owner’s own phone).,قیمتِ خرید مالک کی ڈیوائس (مالک کے اپنے فون) پر لکھی جاتی ہے۔,,
+products.searchTerms,Other names / spellings,دوسرے نام / ہجے,,
+products.searchTermsHint,"Comma separated, e.g. aloo, aalu. Helps the counter find it.","کاما سے الگ کریں، مثلاً aloo, aalu۔ کاؤنٹر پر تلاش آسان ہوتی ہے۔",,
+products.trackStock,Track stock for this product,اس چیز کا اسٹاک رکھیں,,
+products.save,Save,محفوظ کریں,,
+products.hide,Hide product,چیز چھپائیں,,
+products.show,Show product again,چیز دوبارہ دکھائیں,,
+products.noRate,No rate yet,ابھی ریٹ نہیں,,
+products.pricePerUnit,Rs {{amount}}/{{unit}},Rs {{amount}}/{{unit}},,"Money format. Digits stay Latin (Rs 1,250). Keep {{amount}} {{unit}} exactly."
+products.editPriceFor,Change price of {{name}},{{name}} کی قیمت بدلیں,,Keep {{name}} exactly.
+products.newPriceFor,New price of {{name}} in rupees,{{name}} کی نئی قیمت روپوں میں,,Keep {{name}} exactly.
+products.savePrice,Save price,قیمت محفوظ کریں,,
+products.errors.required,This is required.,یہ ضروری ہے۔,,
+products.errors.tooLong,This is too long.,یہ بہت لمبا ہے۔,,
+products.errors.unit,Choose a unit.,اکائی منتخب کریں۔,,
+products.errors.price,"Enter rupees, e.g. 120 or 120.50.",روپے لکھیں، مثلاً 120 یا 120.50۔,,
+products.errors.negative,The price cannot be negative.,قیمت منفی نہیں ہو سکتی۔,,
+products.errors.tooManyTerms,Use at most 20 names.,زیادہ سے زیادہ 20 نام۔,,
+products.errors.focQty,Enter a quantity above 0 that fits the unit.,اکائی کے مطابق 0 سے زیادہ مقدار لکھیں۔,,
+products.picture,Picture,تصویر,,
+products.pictureHint,Shown on the product tile so it is quick to find.,چیز کے خانے پر دکھائی جاتی ہے تاکہ جلدی مل جائے۔,,
+products.pictureNone,No picture,کوئی تصویر نہیں,,
+products.pictureOption,Picture {{icon}},تصویر {{icon}},,Keep {{icon}} exactly.
+categories.title,Categories,زمرے,,
+categories.all,All,سب,,
+categories.tabsLabel,Categories,زمرے,,
+categories.add,Add category,زمرہ شامل کریں,,
+categories.renameTitle,Rename category,زمرے کا نام بدلیں,,
+categories.renameLabel,Rename {{name}},{{name}} کا نام بدلیں,,Keep {{name}} exactly.
+categories.name,Name (English),نام (انگریزی),,
+categories.nameUr,Name (Urdu),نام (اردو),,
+categories.save,Save,محفوظ کریں,,
+categories.moveUp,Move {{name}} up,{{name}} اوپر کریں,,Keep {{name}} exactly.
+categories.moveDown,Move {{name}} down,{{name}} نیچے کریں,,Keep {{name}} exactly.
+presets.open,Add from list,فہرست سے شامل کریں,,
+presets.title,Pick your products,اپنی اشیاء چنیں,,
+presets.intro,Tick what you sell. Today’s rate is optional; without it the rate is asked at the first sale.,جو بیچتے ہیں اس پر نشان لگائیں۔ آج کا ریٹ اختیاری ہے؛ ورنہ پہلی فروخت پر پوچھا جائے گا۔,,
+presets.search,Search the list,فہرست میں تلاش کریں,,
+presets.searchPlaceholder,"Search: aalu, آلو, potato","تلاش: aalu, آلو, potato",,
+presets.added,Added,شامل ہے,,
+presets.hidden,Hidden,چھپی ہوئی,,
+presets.focHint,usually free,عموماً مفت,,
+presets.rateFor,Today’s rate for {{name}} in rupees,{{name}} کا آج کا ریٹ روپوں میں,,Keep {{name}} exactly.
+presets.ratePlaceholder,Today’s rate per {{unit}} (optional),آج کا ریٹ فی {{unit}} (اختیاری),,Keep {{unit}} exactly.
+presets.rateError,Check the rates marked in red.,سرخ نشان والے ریٹ دیکھیں۔,,
+presets.skip,Skip for now,ابھی نہیں,,
+presets.save_one,Add {{count}} product,{{count}} چیز شامل کریں,,Plural form for exactly 1. Keep {{count}} exactly.
+presets.save_other,Add {{count}} products,{{count}} اشیاء شامل کریں,,Plural form for any other number. Keep {{count}} exactly.
+presets.focFree,Give free with purchases?,خریداری کے ساتھ مفت دیں؟,,
+presets.focFreeFor,Give {{name}} free with purchases,{{name}} خریداری کے ساتھ مفت دیں,,Keep {{name}} exactly.
+rates.title,Today’s rates,آج کے ریٹ,,
+rates.introOwner,Sale price and cost per unit. Save all at once.,فی اکائی قیمتِ فروخت اور خرید۔ سب ایک ساتھ محفوظ کریں۔,,
+rates.perUnit,per {{unit}},فی {{unit}},,Keep {{unit}} exactly.
+rates.saleFor,Sale price of {{name}},{{name}} کی قیمتِ فروخت,,Keep {{name}} exactly.
+rates.costFor,Cost price of {{name}},{{name}} کی قیمتِ خرید,,Keep {{name}} exactly.
+rates.saveAll,Save all,سب محفوظ کریں,,
+rates.error,Check the prices marked in red.,سرخ نشان والی قیمتیں دیکھیں۔,,
+rates.saved_one,{{count}} product updated.,{{count}} چیز اپڈیٹ ہوئی۔,,Plural form for exactly 1. Keep {{count}} exactly.
+rates.saved_other,{{count}} products updated.,{{count}} اشیاء اپڈیٹ ہوئیں۔,,Plural form for any other number. Keep {{count}} exactly.
+deviceMode.title,Device mode,ڈیوائس کی قسم,,
+deviceMode.current,This device is now: {{mode}}.,یہ ڈیوائس ابھی: {{mode}}۔,,Keep {{mode}} exactly.
+deviceMode.change,Change mode,قسم بدلیں,,
+deviceMode.done,Mode changed. The device is syncing under the new mode.,قسم بدل گئی۔ ڈیوائس نئی قسم کے مطابق سنک ہو رہی ہے۔,,
+deviceMode.syncFirst_one,"{{count}} change is not synced yet. Sync first, then change the mode.",{{count}} تبدیلی ابھی سنک نہیں ہوئی۔ پہلے سنک کریں، پھر قسم بدلیں۔,,Plural form for exactly 1. Keep {{count}} exactly.
+deviceMode.syncFirst_other,"{{count}} changes are not synced yet. Sync first, then change the mode.",{{count}} تبدیلیاں ابھی سنک نہیں ہوئیں۔ پہلے سنک کریں، پھر قسم بدلیں۔,,Plural form for any other number. Keep {{count}} exactly.
+forgotPin.link,Forgot PIN?,PIN بھول گئے؟,,
+forgotPin.title,New PIN for {{name}},{{name}} کا نیا PIN,,Keep {{name}} exactly.
+forgotPin.intro,We will email a 6-digit code to {{email}}. Then you choose a new PIN.,ہم {{email}} پر 6 ہندسوں کا کوڈ بھیجیں گے۔ پھر آپ نیا PIN چنیں۔,,Keep {{email}} exactly.
+forgotPin.send,Email me a code,مجھے کوڈ ای میل کریں,,
+forgotPin.sent,We sent a 6-digit code to {{email}}.,ہم نے {{email}} پر 6 ہندسوں کا کوڈ بھیجا ہے۔,,Keep {{email}} exactly.
+forgotPin.newPin,New 4-digit PIN,نیا 4 ہندسوں کا PIN,,
+forgotPin.save,Save new PIN,نیا PIN محفوظ کریں,,
+forgotPin.back,Back,واپس,,
+forgotPin.offline,Connect to the internet to reset your PIN,PIN دوبارہ بنانے کے لیے انٹرنیٹ سے جڑیں,,
+forgotPin.wrongCode,That code is not right. Check the email and try again.,یہ کوڈ درست نہیں۔ ای میل دیکھ کر دوبارہ کوشش کریں۔,,
+forgotPin.expired,That code has expired. Ask for a new one.,اس کوڈ کی مدت ختم ہو گئی۔ نیا کوڈ منگوائیں۔,,
+forgotPin.tooManyAttempts,Too many wrong codes. Ask for a new code.,بہت زیادہ غلط کوڈ۔ نیا کوڈ منگوائیں۔,,
+forgotPin.cooldown,A code was just sent. Wait a minute before asking for another.,ابھی کوڈ بھیجا گیا ہے۔ دوسرا منگوانے سے پہلے ایک منٹ رکیں۔,,
+forgotPin.dailyCap,Too many codes today. Try again tomorrow.,آج بہت زیادہ کوڈ منگوائے گئے۔ کل دوبارہ کوشش کریں۔,,
+sale.title,New sale,نئی سیل,,
+sale.back,Back to home,ہوم پر واپس,,
+sale.customer,Customer,گاہک,,
+sale.customerLater,Customers come with khata,گاہک کھاتے کے ساتھ آئیں گے,,
+sale.search,Search products,اشیاء تلاش کریں,,
+sale.noMatch,Nothing matches. Add it as a custom item.,کچھ نہیں ملا۔ اسے الگ چیز کے طور پر شامل کریں۔,,
+sale.noProducts,No products yet. The owner adds them under Settings → Products.,ابھی کوئی چیز نہیں۔ مالک سیٹنگز ← اشیاء میں شامل کرتا ہے۔,,
+sale.customItem,Custom item,الگ چیز,,
+sale.rs,Rs {{amount}},Rs {{amount}},,"Money format. Digits stay Latin (Rs 1,250). Keep {{amount}} exactly."
+sale.qty,{{amount}} {{unit}},{{amount}} {{unit}},,Keep {{amount}} {{unit}} exactly.
+sale.decimalPoint,Decimal point,اعشاریہ,,
+sale.rateForSale,Rate for this sale (Rs per {{unit}}),اس سیل کا ریٹ (روپے فی {{unit}}),,Keep {{unit}} exactly.
+sale.saveAsTodaysRate,Also save as today’s rate,آج کے ریٹ کے طور پر بھی محفوظ کریں,,
+sale.ownerPinForRate,Saving today’s rate changes the product. The owner confirms with their PIN.,آج کا ریٹ محفوظ کرنے سے چیز کی قیمت بدل جاتی ہے۔ مالک اپنے PIN سے تصدیق کرے۔,,
+sale.continue,Continue,آگے بڑھیں,,
+sale.entryMode,How to enter,کیسے لکھیں,,
+sale.byQty,By quantity,مقدار سے,,
+sale.byAmount,By amount,رقم سے,,
+sale.qtyLabel,Quantity in {{unit}},مقدار {{unit}} میں,,Keep {{unit}} exactly.
+sale.amountLabel,Amount in rupees,رقم روپوں میں,,
+sale.approxFor,≈ {{qty}} for {{amount}},≈ {{qty}} — {{amount}},,Keep {{amount}} {{qty}} exactly.
+sale.lineTotal,{{qty}} × {{rate}} = {{total}},{{qty}} × {{rate}} = {{total}},,Keep {{qty}} {{rate}} {{total}} exactly.
+sale.add,Add to cart,ٹوکری میں ڈالیں,,
+sale.update,Update,اپڈیٹ کریں,,
+sale.remove,Remove from cart,ٹوکری سے نکالیں,,
+sale.cartTitle,Cart,ٹوکری,,
+sale.cartEmpty,The cart is empty.,ٹوکری خالی ہے۔,,
+sale.editLine,Change {{name}},{{name}} بدلیں,,Keep {{name}} exactly.
+sale.removeLine,Remove {{name}},{{name}} نکالیں,,Keep {{name}} exactly.
+sale.custom,Custom,الگ,,
+sale.lineQty,{{qty}} × {{rate}},{{qty}} × {{rate}},,Keep {{qty}} {{rate}} exactly.
+sale.lineByAmount,≈ {{qty}} (by amount),≈ {{qty}} (رقم سے),,Keep {{qty}} exactly.
+sale.total,Total,کل,,
+sale.clearCart,Clear cart,ٹوکری خالی کریں,,
+sale.clearConfirm,Remove every item from the cart?,ٹوکری سے سب کچھ نکال دیں؟,,
+sale.clearYes,"Yes, clear",ہاں، خالی کریں,,
+sale.items_one,{{count}} item,{{count}} چیز,,Plural form for exactly 1. Keep {{count}} exactly.
+sale.items_other,{{count}} items,{{count}} اشیاء,,Plural form for any other number. Keep {{count}} exactly.
+sale.openCart_one,"Open cart, {{count}} item",ٹوکری کھولیں، {{count}} چیز,,Plural form for exactly 1. Keep {{count}} exactly.
+sale.openCart_other,"Open cart, {{count}} items",ٹوکری کھولیں، {{count}} اشیاء,,Plural form for any other number. Keep {{count}} exactly.
+sale.charge,Charge,وصول کریں,,
+sale.customTitle,Custom item,الگ چیز,,
+sale.customName,Item name,چیز کا نام,,
+sale.customPrice,Price per unit (Rs),فی اکائی قیمت (روپے),,
+sale.customQty,Quantity,مقدار,,
+sale.errors.qty,Enter a quantity above 0.,0 سے زیادہ مقدار لکھیں۔,,
+sale.errors.decimals,Too many decimals for this unit.,اس اکائی کے لیے بہت زیادہ اعشاریہ۔,,
+sale.errors.tooLarge,"That is more than 9,999 per line.","ایک لائن میں 9,999 سے زیادہ نہیں۔",,
+sale.errors.rateNeeded,Set a rate first.,پہلے ریٹ لکھیں۔,,
+sale.errors.amountTooSmall,The amount is too small for this rate.,اس ریٹ پر رقم بہت کم ہے۔,,
+sale.errors.rate,Enter a rate above 0.,0 سے زیادہ ریٹ لکھیں۔,,
+sale.errors.price,Enter a price above 0.,0 سے زیادہ قیمت لکھیں۔,,
+payment.method.cash,Cash,نقد,,Default payment method name.
+payment.method.jazzcash,JazzCash,JazzCash,,Default payment method name.
+payment.method.easypaisa,Easypaisa,Easypaisa,,Default payment method name.
+payment.method.bank,Bank transfer,بینک ٹرانسفر,,Default payment method name.
+pay.title,Payment,ادائیگی,,
+pay.total,To pay,ادا کرنا ہے,,
+pay.rounding,"Bill {{subtotal}}, rounded {{sign}}{{amount}}",بل {{subtotal}}، راؤنڈ {{sign}}{{amount}},,Keep {{amount}} {{sign}} {{subtotal}} exactly.
+pay.remaining,Remaining {{amount}},باقی {{amount}},,Keep {{amount}} exactly.
+pay.method,Paid by,ادائیگی کا طریقہ,,
+pay.exact,Exact,پوری رقم,,
+pay.tendered,Cash received,نقد وصول,,
+pay.amount,Amount,رقم,,
+pay.change,Change: {{amount}},واپس کریں: {{amount}},,Change to give back to the customer (not khata balance). Keep {{amount}} exactly.
+pay.reference,Reference number (optional),حوالہ نمبر (اختیاری),,
+pay.addPayment,Add payment,ادائیگی شامل کریں,,
+pay.complete,Complete sale,سیل مکمل کریں,,
+pay.removePayment,Remove this payment,یہ ادائیگی نکالیں,,
+pay.backToCart,Back to cart,ٹوکری پر واپس,,
+pay.errors.zero,Enter an amount above 0.,0 سے زیادہ رقم لکھیں۔,,
+pay.errors.tooMuch,This method cannot pay more than what is left.,یہ طریقہ باقی رقم سے زیادہ ادا نہیں کر سکتا۔,,
+pay.errors.nothingDue,Nothing is left to pay.,کچھ باقی نہیں۔,,
+pay.errors.empty_cart,The cart is empty.,ٹوکری خالی ہے۔,,
+pay.errors.not_paid,The payments do not cover the bill yet.,ادائیگیاں ابھی بل پوری نہیں کرتیں۔,,
+pay.errors.overpaid,The payments are more than the bill.,ادائیگیاں بل سے زیادہ ہیں۔,,
+pay.errors.bad_payment,A payment amount is not valid.,ایک ادائیگی کی رقم درست نہیں۔,,
+pay.errors.no_device,This device is not set up.,یہ ڈیوائس سیٹ اپ نہیں۔,,
+pay.errors.no_staff,Nobody is switched in. Switch staff first.,کوئی کام پر نہیں۔ پہلے عملہ منتخب کریں۔,,
+pay.errors.over_limit,Above the cashier discount limit: the owner must approve.,کیشیئر کی رعایت کی حد سے زیادہ: مالک کی منظوری ضروری ہے۔,,
+pay.errors.khata_needs_customer,Put on khata only with a customer attached.,کھاتے پر ڈالنے کے لیے پہلے گاہک منتخب کریں۔,,
+pay.errors.shop_suspended,"This shop is suspended: new sales, khata and expenses are paused. Contact NaqdPOS support.",یہ دکان معطل ہے: نئی سیل، کھاتہ اور خرچے رکے ہوئے ہیں۔ NaqdPOS سپورٹ سے رابطہ کریں۔,,
+pay.khata,Khata / Udhaar,کھاتہ / ادھار,,
+pay.khataRow,Khata ({{name}}),کھاتہ ({{name}}),,Keep {{name}} exactly.
+pay.removeKhata,Remove khata,کھاتہ ہٹائیں,,
+pay.customer,Customer: {{name}},گاہک: {{name}},,Keep {{name}} exactly.
+done.title,Sale saved,سیل محفوظ ہو گئی,,
+done.savedOffline,Saved offline — will sync when online,آف لائن محفوظ — انٹرنیٹ آنے پر سنک ہو گی,,
+done.rounding,Rounding,راؤنڈ آف,,
+done.change,Change,واپس کیے,,Change to give back to the customer (not khata balance).
+done.newSale,New sale,نئی سیل,,
+done.receipt,Receipt,رسید,,
+done.onKhata,On khata: {{amount}},کھاتے پر: {{amount}},,Keep {{amount}} exactly.
+done.newBalance,New balance: {{amount}},نیا بقایا: {{amount}},,Keep {{amount}} exactly.
+done.noReceipt,No receipt,رسید نہیں,,
+sales.title,Today’s sales,آج کی سیل,,
+sales.allToday,All sales today.,آج کی تمام سیل۔,,
+sales.yoursToday,Your sales today.,آج آپ کی سیل۔,,
+sales.count_one,{{count}} sale,{{count}} سیل,,Plural form for exactly 1. Keep {{count}} exactly.
+sales.count_other,{{count}} sales,{{count}} سیلز,,Plural form for any other number. Keep {{count}} exactly.
+sales.none,No sales yet today.,آج ابھی کوئی سیل نہیں۔,,
+sales.notFound,This sale is not on this device.,یہ سیل اس ڈیوائس پر نہیں۔,,
+sales.back,Back to today’s sales,آج کی سیل پر واپس,,
+paymentMethods.title,Payment methods,ادائیگی کے طریقے,,
+paymentMethods.intro,Choose which methods the counter offers. Cash is always on.,کاؤنٹر پر کون سے طریقے ہوں، چنیں۔ نقد ہمیشہ آن ہے۔,,
+paymentMethods.on,On,آن,,
+paymentMethods.off,Off,آف,,
+paymentMethods.toggle,Switch {{name}} on or off,{{name}} آن یا آف کریں,,Keep {{name}} exactly.
+paymentMethods.cashAlwaysOn,Cash is always on,نقد ہمیشہ آن ہے,,
+paymentMethods.addTitle,Add a method,طریقہ شامل کریں,,
+paymentMethods.label,Name,نام,,
+paymentMethods.labelHint,"e.g. SadaPay, NayaPay, cheque",مثلاً SadaPay، NayaPay، چیک,,
+paymentMethods.add,Add method,طریقہ شامل کریں,,
+stock.title,Stock,اسٹاک,,
+stock.open,Stock,اسٹاک,,
+stock.search,Search stock,اسٹاک تلاش کریں,,
+stock.empty,No products track stock yet. Turn on “Track stock” on a product.,ابھی کسی چیز کا اسٹاک نہیں رکھا جا رہا۔ چیز میں “اس چیز کا اسٹاک رکھیں” آن کریں۔,,
+stock.noMatch,No products match.,کوئی چیز نہیں ملی۔,,
+stock.inStock,In stock: {{qty}},اسٹاک میں: {{qty}},,Keep {{qty}} exactly.
+stock.check,check stock,اسٹاک چیک کریں,,
+stock.cardQty,Stock {{qty}},اسٹاک {{qty}},,Keep {{qty}} exactly.
+stock.cardCheck,{{qty}} · check stock,{{qty}} · اسٹاک چیک کریں,,Keep {{qty}} exactly.
+stock.wastage,Wastage,ضائع,,
+stock.stockIn,Stock in,مال آیا,,
+stock.setStock,Set stock,اسٹاک گنیں,,
+stock.wastageFor,Wastage: {{name}},ضائع: {{name}},,Keep {{name}} exactly.
+stock.stockInFor,Stock in: {{name}},مال آیا: {{name}},,Keep {{name}} exactly.
+stock.setStockFor,Set stock: {{name}},اسٹاک گنیں: {{name}},,Keep {{name}} exactly.
+stock.titleFor.wastage,Wastage — {{name}},ضائع — {{name}},,Keep {{name}} exactly.
+stock.titleFor.stock_in,Stock in — {{name}},مال آیا — {{name}},,Keep {{name}} exactly.
+stock.titleFor.set_stock,Set stock (count) — {{name}},اسٹاک گنیں — {{name}},,Keep {{name}} exactly.
+stock.reasonLabel,Reason,وجہ,,
+stock.reason.wastage,Spoiled,گلا سڑا,,
+stock.reason.damaged,Damaged,ٹوٹا پھوٹا,,
+stock.quantity,Quantity,مقدار,,
+stock.counted,Counted,گنتی,,
+stock.typedQty,Typed quantity,لکھی گئی مقدار,,
+stock.difference,Difference: {{qty}},فرق: {{qty}},,Keep {{qty}} exactly.
+stock.sameAsStock,Same as the stock: nothing will change.,اسٹاک کے برابر: کچھ نہیں بدلے گا۔,,
+stock.note,Note (optional),نوٹ (اختیاری),,
+stock.save.wastage,Save wastage,ضائع محفوظ کریں,,
+stock.save.stock_in,Add stock,مال شامل کریں,,
+stock.save.set_stock,Save count,گنتی محفوظ کریں,,
+stock.saved,Stock saved,اسٹاک محفوظ ہو گیا,,
+stock.noChange,The count matches the stock: nothing changed.,گنتی اسٹاک کے برابر ہے: کچھ نہیں بدلا۔,,
+stock.syncing,Getting other devices’ sales…,دوسری ڈیوائسز کی سیل لا رہے ہیں…,,
+stock.syncWarning,Other devices’ sales may be missing — count anyway?,دوسری ڈیوائسز کی سیل شاید شامل نہیں — پھر بھی گنتی محفوظ کریں؟,,
+stock.countAnyway,Count anyway,پھر بھی محفوظ کریں,,
+stock.ownerPin,Stock in and Set stock need the owner.,"""مال آیا"" اور ""اسٹاک گنیں"" کے لیے مالک ضروری ہے۔",,
+stock.errors.bad_qty,Enter a quantity above 0.,0 سے زیادہ مقدار لکھیں۔,,
+stock.errors.note_too_long,The note is too long (200 characters at most).,نوٹ بہت لمبا ہے (زیادہ سے زیادہ 200 حروف)۔,,
+stock.errors.forbidden,Only the owner can do this.,یہ صرف مالک کر سکتا ہے۔,,
+stock.errors.no_device,This device is not set up.,یہ ڈیوائس سیٹ اپ نہیں ہے۔,,
+stock.errors.no_staff,Switch to a staff member first.,پہلے عملہ منتخب کریں۔,,
+stock.errors.shop_suspended,"This shop is suspended: new sales, khata and expenses are paused. Contact NaqdPOS support.",یہ دکان معطل ہے: نئی سیل، کھاتہ اور خرچے رکے ہوئے ہیں۔ NaqdPOS سپورٹ سے رابطہ کریں۔,,
+discount.button,Discount,رعایت,,
+discount.change,Change,بدلیں,,
+discount.apply,Apply discount,رعایت لگائیں,,
+discount.remove,Remove discount,رعایت ہٹائیں,,
+discount.kind,Discount in,رعایت کس میں,,
+discount.rs,Rs,روپے,,
+discount.pct,%,%,,
+discount.typed,Discount typed,لکھی گئی رعایت,,
+discount.preview,{{amount}} off {{of}},{{of}} میں سے {{amount}} کم,,Keep {{amount}} {{of}} exactly.
+discount.line,Discount,رعایت,,
+discount.linePct,Discount {{pct}}%,رعایت {{pct}}%,,Keep {{pct}} exactly.
+discount.lineAmount,Discount −{{amount}},رعایت −{{amount}},,Keep {{amount}} exactly.
+discount.lines,Item discounts,اشیاء پر رعایت,,
+discount.bill,Bill discount,بل رعایت,,
+discount.billPct,Bill discount {{pct}}%,بل رعایت {{pct}}%,,Keep {{pct}} exactly.
+discount.forLine,Discount on {{name}},{{name}} پر رعایت,,Keep {{name}} exactly.
+discount.lineTitle,Discount — {{name}},رعایت — {{name}},,Keep {{name}} exactly.
+discount.billTitle,Bill discount,بل رعایت,,
+discount.lockedByPayments,Remove the payments to change the bill discount.,بل رعایت بدلنے کے لیے ادائیگیاں ہٹائیں۔,,
+discount.ownerNeeded,Discounts and free items above the cashier limit need the owner.,کیشیئر کی حد سے زیادہ رعایت اور مفت اشیاء کے لیے مالک ضروری ہے۔,,
+discount.approvedBy,Discount approved by {{name}},رعایت کی منظوری: {{name}},,Keep {{name}} exactly.
+discount.errors.bad,"Enter an amount above 0, or a whole % from 1 to 100.",0 سے زیادہ رقم، یا 1 سے 100 تک پورا % لکھیں۔,,
+discount.errors.tooMuch,The discount is more than the amount.,رعایت رقم سے زیادہ ہے۔,,
+foc.label,FOC,مفت,,FOC = given free (e.g. dhania with vegetables).
+foc.toggle,Free,مفت,,FOC = given free (e.g. dhania with vegetables).
+foc.toggleFor,Free: {{name}},مفت: {{name}},,FOC = given free (e.g. dhania with vegetables). Keep {{name}} exactly.
+foc.value,{{amount}} value,{{amount}} مالیت,,FOC = given free (e.g. dhania with vegetables). Keep {{amount}} exactly.
+foc.total,Free items (value),مفت اشیاء (مالیت),,FOC = given free (e.g. dhania with vegetables).
+foc.addFree,Add free,مفت شامل کریں,,FOC = given free (e.g. dhania with vegetables).
+foc.suggest,Add free {{name}} ({{qty}})?,{{name}} ({{qty}}) مفت دیں؟,,FOC = given free (e.g. dhania with vegetables). Keep {{name}} {{qty}} exactly.
+foc.section,Free with purchase,خریداری کے ساتھ مفت,,FOC = given free (e.g. dhania with vegetables).
+foc.offer,Offer this free with bigger bills,بڑے بل پر یہ مفت دیں,,FOC = given free (e.g. dhania with vegetables).
+foc.minBill,From a bill of (Rs),بل کم از کم (روپے),,FOC = given free (e.g. dhania with vegetables).
+foc.qty,Free quantity ({{unit}}),مفت مقدار ({{unit}}),,FOC = given free (e.g. dhania with vegetables). Keep {{unit}} exactly.
+discountLimit.title,Cashier discount limit,کیشیئر رعایت کی حد,,
+discountLimit.intro,A cashier can give away (discounts and free items) up to this % of a bill. Above it the owner enters their PIN. Owners have no limit.,کیشیئر ایک بل کے اتنے % تک رعایت اور مفت اشیاء دے سکتا ہے۔ اس سے زیادہ پر مالک اپنا PIN لگائے۔ مالک کی کوئی حد نہیں۔,,
+discountLimit.label,Limit (%),حد (%),,
+discountLimit.save,Save limit,حد محفوظ کریں,,
+discountLimit.invalid,Enter a whole number from 0 to 100.,0 سے 100 تک پورا نمبر لکھیں۔,,
+customers.pickTitle,Customer,گاہک,,
+customers.search,Search customers,گاہک تلاش کریں,,
+customers.searchPlaceholder,Mobile or name,موبائل یا نام,,
+customers.noMatch,No customers found.,کوئی گاہک نہیں ملا۔,,
+customers.addNew,Add new customer,نیا گاہک شامل کریں,,
+customers.mobile,Mobile number,موبائل نمبر,,
+customers.nameOptional,Name (optional),نام (اختیاری),,
+customers.address,Address (optional),پتا (اختیاری),,
+customers.save,Save customer,گاہک محفوظ کریں,,
+customers.change,Change customer,گاہک بدلیں,,
+customers.remove,Remove customer,گاہک ہٹائیں,,
+customers.balanceShort,owes {{amount}},{{amount}} باقی,,Keep {{amount}} exactly.
+customers.edit,Edit details,تفصیل بدلیں,,
+customers.mobileFixed,The mobile number cannot be changed. A new number is a new customer.,موبائل نمبر نہیں بدل سکتا۔ نیا نمبر ہو تو نیا گاہک بنائیں۔,,
+customers.errors.mobile,"Enter a Pakistani mobile number, e.g. 0300 1234567.",پاکستانی موبائل نمبر لکھیں، جیسے 0300 1234567۔,,
+customers.openingBalance,Opening balance (from your paper khata),پرانا بقایا (کاغذی کھاتے سے),,
+customers.openingBalanceHint,What this customer already owes in your khata book. Owner only.,اس گاہک کا آپ کی کھاتہ کاپی میں پہلے سے بقایا۔ صرف مالک۔,,
+customers.ownerForOpening,An opening balance needs the owner.,پرانا بقایا لکھنے کے لیے مالک ضروری ہے۔,,
+khata.title,Khata,کھاتہ,,
+khata.receivable,Total receivable,کل ادھار,,
+khata.overdueOnly,Overdue only,صرف دیر والے,,
+khata.noPaymentFor,No payment for,ادائیگی نہیں,,
+khata.days,Days without payment,بغیر ادائیگی کے دن,,
+khata.daysUnit,days,دن,,
+khata.empty,No khata balances yet.,ابھی کوئی کھاتہ بقایا نہیں۔,,
+khata.noMatch,No customers match.,کوئی گاہک نہیں ملا۔,,
+khata.overdue,Overdue,دیر,,
+khata.call,Call {{name}},{{name}} کو کال,,Keep {{name}} exactly.
+khata.whatsapp,WhatsApp {{name}},{{name}} کو واٹس ایپ,,Keep {{name}} exactly.
+khata.balance,Balance,بقایا,,
+khata.receive,Receive payment,ادائیگی وصول کریں,,
+khata.adjust,Adjust balance,بقایا درست کریں,,
+khata.ledger,Ledger,کھاتے کی تفصیل,,
+khata.noEntries,No khata entries yet.,ابھی کوئی اندراج نہیں۔,,
+khata.after,Balance {{amount}},بقایا {{amount}},,Keep {{amount}} exactly.
+khata.notFound,Customer not found.,گاہک نہیں ملا۔,,
+khata.type.credit_sale,Sale on khata,کھاتے پر سیل,,
+khata.type.payment,Payment received,ادائیگی وصول,,
+khata.type.return_credit,Return,واپسی,,
+khata.type.adjustment,Adjustment,درستی,,
+khata.receiveTitle,Receive payment,ادائیگی وصول کریں,,
+khata.receivedTitle,Payment received,ادائیگی وصول ہو گئی,,
+khata.received,{{amount}} received.,{{amount}} وصول ہوئے۔,,Keep {{amount}} exactly.
+khata.shareWhatsapp,Share on WhatsApp,واٹس ایپ پر بھیجیں,,
+khata.amount,Amount (Rs),رقم (روپے),,
+khata.saveReceipt,Save payment,ادائیگی محفوظ کریں,,
+khata.adjustTitle,Adjust balance,بقایا درست کریں,,
+khata.direction,Change,تبدیلی,,
+khata.add,Add to balance,بقایا بڑھائیں,,
+khata.reduce,Reduce balance,بقایا کم کریں,,
+khata.note,Note (required),نوٹ (ضروری),,
+khata.saveAdjustment,Save adjustment,درستی محفوظ کریں,,
+khata.ownerPin,Adjusting a balance needs the owner.,بقایا درست کرنے کے لیے مالک ضروری ہے۔,,
+khata.errors.amount,Enter an amount above 0.,0 سے زیادہ رقم لکھیں۔,,
+khata.errors.noteRequired,A note is required.,نوٹ ضروری ہے۔,,
+khata.errors.bad_amount,Enter an amount above 0.,0 سے زیادہ رقم لکھیں۔,,
+khata.errors.forbidden,Only the owner can adjust a balance.,صرف مالک بقایا درست کر سکتا ہے۔,,
+khata.errors.note_required,A note is required.,نوٹ ضروری ہے۔,,
+khata.errors.note_too_long,The note is too long (200 characters at most).,نوٹ بہت لمبا ہے (زیادہ سے زیادہ 200 حروف)۔,,
+khata.errors.no_device,This device is not set up.,یہ ڈیوائس سیٹ اپ نہیں ہے۔,,
+khata.errors.has_entries,This customer already has entries: use Adjust balance.,"اس گاہک کے اندراج پہلے سے ہیں: ""بقایا درست کریں"" استعمال کریں۔",,
+khata.errors.shop_suspended,"This shop is suspended: new sales, khata and expenses are paused. Contact NaqdPOS support.",یہ دکان معطل ہے: نئی سیل، کھاتہ اور خرچے رکے ہوئے ہیں۔ NaqdPOS سپورٹ سے رابطہ کریں۔,,
+khata.addCustomer,Add customer,گاہک شامل کریں,,
+khata.opening,Opening balance,پرانا بقایا,,
+khata.openingTitle,Opening balance,پرانا بقایا,,
+khata.saveOpening,Save opening balance,پرانا بقایا محفوظ کریں,,
+khata.whatsappText,Rs {{amount}} received. New balance Rs {{balance}}. — {{shop}},{{amount}} روپے وصول ہو گئے۔ نیا بقایا {{balance}} روپے۔ — {{shop}},,WhatsApp message to the customer after a khata payment. Keep {{amount}} {{balance}} {{shop}} exactly.
+receipt.rs,Rs {{amount}},{{amount}} روپے,,"Money format. Digits stay Latin (Rs 1,250). Keep {{amount}} exactly."
+receipt.qtyRate,{{qty}} × {{rate}},{{qty}} × {{rate}},,Printed on the paper receipt and in the WhatsApp receipt. Keep {{qty}} {{rate}} exactly.
+receipt.receiptNo,Receipt,رسید,,Printed on the paper receipt and in the WhatsApp receipt.
+receipt.date,Date,تاریخ,,Printed on the paper receipt and in the WhatsApp receipt.
+receipt.cashier,Cashier,کیشیئر,,Printed on the paper receipt and in the WhatsApp receipt.
+receipt.customer,Customer,گاہک,,Printed on the paper receipt and in the WhatsApp receipt.
+receipt.foc,FOC,مفت,,Printed on the paper receipt and in the WhatsApp receipt.
+receipt.focValue,Free (value),مفت (قیمت),,Printed on the paper receipt and in the WhatsApp receipt.
+receipt.discount,Discount,رعایت,,Printed on the paper receipt and in the WhatsApp receipt.
+receipt.subtotal,Subtotal,کل رقم,,Printed on the paper receipt and in the WhatsApp receipt.
+receipt.itemDiscounts,Item discounts,آئٹم رعایت,,Printed on the paper receipt and in the WhatsApp receipt.
+receipt.billDiscount,Bill discount,بل رعایت,,Printed on the paper receipt and in the WhatsApp receipt.
+receipt.rounding,Rounding,راؤنڈنگ,,Printed on the paper receipt and in the WhatsApp receipt.
+receipt.total,Total,کل,,Printed on the paper receipt and in the WhatsApp receipt.
+receipt.change,Change,بقایا واپس,,Printed on the paper receipt and in the WhatsApp receipt.
+receipt.onKhata,On khata,کھاتے پر,,Printed on the paper receipt and in the WhatsApp receipt.
+receipt.khataBalance,Khata balance,کھاتہ بقایا,,Printed on the paper receipt and in the WhatsApp receipt.
+receipt.title,Receipt,رسید,,Printed on the paper receipt and in the WhatsApp receipt.
+receipt.shareWhatsapp,Share on WhatsApp,واٹس ایپ پر بھیجیں,,Printed on the paper receipt and in the WhatsApp receipt.
+receipt.print,Print,پرنٹ,,Printed on the paper receipt and in the WhatsApp receipt.
+receipt.bluetooth,Bluetooth printer,بلوٹوتھ پرنٹر,,Printed on the paper receipt and in the WhatsApp receipt.
+receipt.printing,Printing…,پرنٹ ہو رہا ہے…,,Printed on the paper receipt and in the WhatsApp receipt.
+receipt.printed,Sent to the printer,پرنٹر کو بھیج دیا,,Printed on the paper receipt and in the WhatsApp receipt.
+receipt.forgetPrinter,Forget printer {{name}},پرنٹر {{name}} ہٹائیں,,Printed on the paper receipt and in the WhatsApp receipt. Keep {{name}} exactly.
+receipt.done,Done,ٹھیک ہے,,Printed on the paper receipt and in the WhatsApp receipt.
+receipt.copied,Receipt copied,رسید کاپی ہو گئی,,Printed on the paper receipt and in the WhatsApp receipt.
+receipt.shareFailed,Could not share the receipt.,رسید نہیں بھیجی جا سکی۔,,Printed on the paper receipt and in the WhatsApp receipt.
+receipt.notFound,Receipt not found.,رسید نہیں ملی۔,,Printed on the paper receipt and in the WhatsApp receipt.
+receipt.errors.unsupported,This browser cannot use Bluetooth printers. Use Print.,یہ براؤزر بلوٹوتھ پرنٹر استعمال نہیں کر سکتا۔ پرنٹ استعمال کریں۔,,Printed on the paper receipt and in the WhatsApp receipt.
+receipt.errors.bluetooth_off,Turn on Bluetooth and try again.,بلوٹوتھ آن کریں اور دوبارہ کوشش کریں۔,,Printed on the paper receipt and in the WhatsApp receipt.
+receipt.errors.not_found,Printer not found. Turn it on and keep it close.,پرنٹر نہیں ملا۔ اسے آن کر کے قریب رکھیں۔,,Printed on the paper receipt and in the WhatsApp receipt.
+receipt.errors.not_printer,This device is not a supported receipt printer.,یہ ڈیوائس رسید والا پرنٹر نہیں ہے۔,,Printed on the paper receipt and in the WhatsApp receipt.
+receipt.errors.failed,Printing failed — try again.,پرنٹ نہیں ہوا — دوبارہ کوشش کریں۔,,Printed on the paper receipt and in the WhatsApp receipt.
+shopProfile.title,Shop,دکان,,
+shopProfile.name,Shop name,دکان کا نام,,
+shopProfile.address,Address,پتا,,
+shopProfile.phone,Phone on receipts,رسید پر فون,,
+shopProfile.footer,Receipt footer,رسید کے آخر میں لکھائی,,
+shopProfile.footerCount,{{count}} / {{max}} characters,{{count}} / {{max}} حروف,,Keep {{count}} {{max}} exactly.
+shopProfile.language,Receipt language,رسید کی زبان,,
+shopProfile.lang.en,English,انگریزی,,
+shopProfile.lang.ur,Urdu,اردو,,
+shopProfile.lang.both,Both,دونوں,,
+shopProfile.paper,Paper width,کاغذ کی چوڑائی,,
+shopProfile.mm,{{mm}} mm,{{mm}} ملی میٹر,,Keep {{mm}} exactly.
+shopProfile.save,Save,محفوظ کریں,,
+shopProfile.logoLater,Shop logo: coming soon.,دکان کا لوگو: جلد آ رہا ہے۔,,
+shopProfile.errors.required,Required.,ضروری ہے۔,,
+shopProfile.errors.tooLong,Too long.,بہت لمبا ہے۔,,
+shopProfile.errors.invalid,Not valid.,درست نہیں۔,,
+shopProfile.expenseLimit,Cashier expense limit (Rs),کیشیئر خرچے کی حد (روپے),,
+shopProfile.expenseLimitHint,Above this a cashier needs the owner PIN. Owners have no limit.,اس سے زیادہ پر کیشیئر کو مالک کا PIN چاہیے۔ مالک کی کوئی حد نہیں۔,,
+shopProfile.city,City,شہر,,
+expense.cat.mandi_transport,Mandi transport,منڈی کرایہ,,Default expense category name (owners can rename).
+expense.cat.rent,Rent,کرایہ,,Default expense category name (owners can rename).
+expense.cat.bijli_gas,Bijli/gas,بجلی/گیس,,Default expense category name (owners can rename).
+expense.cat.staff_salary,Staff salary,عملے کی تنخواہ,,Default expense category name (owners can rename).
+expense.cat.staff_advance,Staff advance,عملے کو ایڈوانس,,Default expense category name (owners can rename).
+expense.cat.petrol,Petrol,پیٹرول,,Default expense category name (owners can rename).
+expense.cat.shopping_bags,Shopping bags,شاپنگ بیگ,,Default expense category name (owners can rename).
+expense.cat.other,Other,دیگر,,Default expense category name (owners can rename).
+expenses.title,Expenses,خرچے,,
+expenses.todayTotal,Today's expenses,آج کے خرچے,,
+expenses.add,Add expense,خرچہ شامل کریں,,
+expenses.addTitle,Add expense,خرچہ شامل کریں,,
+expenses.empty,No expenses today.,آج کوئی خرچہ نہیں۔,,
+expenses.category,Category,قسم,,
+expenses.amount,Amount (Rs),رقم (روپے),,
+expenses.note,Note (optional),نوٹ (اختیاری),,
+expenses.payee,Paid to (optional),کس کو دیا (اختیاری),,
+expenses.save,Save expense,خرچہ محفوظ کریں,,
+expenses.saved,Expense saved,خرچہ محفوظ ہو گیا,,
+expenses.savedOffline,Saved offline — will sync when online,آف لائن محفوظ — انٹرنیٹ آنے پر سنک ہو جائے گا,,
+expenses.ownerNeeded,This amount is above the cashier limit: the owner must approve.,یہ رقم کیشیئر کی حد سے زیادہ ہے: مالک کی منظوری ضروری ہے۔,,
+expenses.reversal,Reversal,منسوخی,,Cancelling an expense entry (a new row that cancels it).
+expenses.reversed,Reversed,منسوخ,,Cancelling an expense entry (a new row that cancels it).
+expenses.reversedBy,Reversed: {{reason}},منسوخ: {{reason}},,Cancelling an expense entry (a new row that cancels it). Keep {{reason}} exactly.
+expenses.date,Date,تاریخ,,
+expenses.addedBy,Added by,کس نے لکھا,,
+expenses.approvedBy,Approved by,منظور کیا,,
+expenses.reason,Reason,وجہ,,
+expenses.original,See the original expense,اصل خرچہ دیکھیں,,
+expenses.reverse,Reverse,منسوخ کریں,,Cancelling an expense entry (a new row that cancels it).
+expenses.confirmReverse,Reverse {{amount}},{{amount}} منسوخ کریں,,Keep {{amount}} exactly.
+expenses.ownerToReverse,Reversing an expense needs the owner.,خرچہ منسوخ کرنے کے لیے مالک ضروری ہے۔,,
+expenses.back,Back to expenses,خرچوں پر واپس,,
+expenses.notFound,Expense not found.,خرچہ نہیں ملا۔,,
+expenses.errors.forbidden,Riders cannot add expenses.,رائیڈر خرچہ نہیں لکھ سکتے۔,,
+expenses.errors.bad_amount,Enter an amount above 0.,0 سے زیادہ رقم لکھیں۔,,
+expenses.errors.no_category,Pick a category.,قسم چنیں۔,,
+expenses.errors.no_method,Pick a payment method.,ادائیگی کا طریقہ چنیں۔,,
+expenses.errors.needs_owner,The owner must approve this amount.,اس رقم کے لیے مالک کی منظوری ضروری ہے۔,,
+expenses.errors.day_closed,Today is already closed: no more expenses can be added for it.,آج کا دن بند ہو چکا ہے: اب خرچہ نہیں لکھا جا سکتا۔,,
+expenses.errors.note_too_long,The note is too long.,نوٹ بہت لمبا ہے۔,,
+expenses.errors.payee_too_long,The name is too long.,نام بہت لمبا ہے۔,,
+expenses.errors.reason_required,A reason is required.,وجہ ضروری ہے۔,,
+expenses.errors.is_reversal,A reversal cannot be reversed.,منسوخی کو منسوخ نہیں کیا جا سکتا۔,,Cancelling an expense entry (a new row that cancels it).
+expenses.errors.already_reversed,This expense is already reversed.,یہ خرچہ پہلے ہی منسوخ ہو چکا ہے۔,,Cancelling an expense entry (a new row that cancels it).
+expenses.errors.no_device,This device is not set up.,یہ ڈیوائس سیٹ اپ نہیں ہے۔,,
+expenses.errors.generic,Something went wrong. Try again.,کچھ غلط ہو گیا۔ دوبارہ کوشش کریں۔,,
+expenses.errors.shop_suspended,"This shop is suspended: new sales, khata and expenses are paused. Contact NaqdPOS support.",یہ دکان معطل ہے: نئی سیل، کھاتہ اور خرچے رکے ہوئے ہیں۔ NaqdPOS سپورٹ سے رابطہ کریں۔,,
+expenseCategories.title,Expense categories,خرچوں کی اقسام,,
+expenseCategories.up,Move {{name}} up,{{name}} اوپر کریں,,Keep {{name}} exactly.
+expenseCategories.down,Move {{name}} down,{{name}} نیچے کریں,,Keep {{name}} exactly.
+expenseCategories.rename,Rename,نام بدلیں,,
+expenseCategories.renameFor,Rename {{name}},{{name}} کا نام بدلیں,,Keep {{name}} exactly.
+expenseCategories.archive,Archive,چھپائیں,,
+expenseCategories.archiveFor,Archive {{name}},{{name}} چھپائیں,,Keep {{name}} exactly.
+expenseCategories.unarchive,Restore,واپس لائیں,,
+expenseCategories.unarchiveFor,Restore {{name}},{{name}} واپس لائیں,,Keep {{name}} exactly.
+expenseCategories.archived,Archived (hidden for new expenses),چھپی ہوئی (نئے خرچوں میں نظر نہیں آتی),,
+expenseCategories.addTitle,Add a category,نئی قسم,,
+expenseCategories.renameTitle,Rename category,قسم کا نام بدلیں,,
+expenseCategories.name,Name (English),نام (انگریزی),,
+expenseCategories.nameUr,"Name (Urdu, optional)",نام (اردو، اختیاری),,
+expenseCategories.add,Add category,قسم شامل کریں,,
+expenseCategories.saveRename,Save name,نام محفوظ کریں,,
+expenseCategories.errors.name,Enter a name of 1 to 40 characters.,1 سے 40 حروف کا نام لکھیں۔,,
+closing.title,Close day,دن بند کریں,,
+closing.titleFor,Close day — {{date}},دن بند کریں — {{date}},,Keep {{date}} exactly.
+closing.syncing,Getting the latest from other devices…,دوسری ڈیوائسز سے تازہ ڈیٹا لا رہے ہیں…,,
+closing.nothingToClose,Nothing to close yet.,ابھی بند کرنے کو کچھ نہیں۔,,
+closing.history,Past closes,پچھلے بند دن,,
+closing.olderFirst,{{count}} days are open: close the oldest first.,{{count}} دن کھلے ہیں: پہلے سب سے پرانا بند کریں۔,,Keep {{count}} exactly.
+closing.offlineWarning,Closing offline — totals from other devices may be missing.,آف لائن بند ہو رہا ہے — دوسری ڈیوائسز کے ٹوٹل شاید شامل نہیں۔,,
+closing.offlineNote,Closing offline — totals from other devices may be missing,آف لائن بند — دوسری ڈیوائسز کے ٹوٹل شاید شامل نہیں,,
+closing.opening,Opening cash (Rs),شروع کی نقدی (روپے),,
+closing.openingHint,Last count minus what the owner took home.,پچھلی گنتی، مالک کی لی گئی رقم نکال کر۔,,
+closing.firstClose,First close: enter the cash you started with.,پہلی بار: جتنی نقدی سے دن شروع کیا وہ لکھیں۔,,
+closing.cashSales,Cash sales,نقد سیل,,
+closing.cashKhata,Cash khata received,کھاتے کی نقد وصولی,,
+closing.cashExpenses,Cash expenses,نقد خرچے,,
+closing.withdrawal,Owner withdrawal (Rs),مالک نے لیا (روپے),,
+closing.withdrawalHint,Cash you take home — not an expense.,جو نقدی آپ گھر لے جائیں — یہ خرچہ نہیں۔,,
+closing.expected,Expected cash,متوقع نقدی,,
+closing.counted,Counted cash,گنی گئی نقدی,,
+closing.mode.total,Total,کل,,
+closing.mode.notes,Notes and coins,نوٹ اور سکے,,
+closing.countedTotal,Counted cash (Rs),گنی گئی نقدی (روپے),,
+closing.note,{{amount}} note,{{amount}} کا نوٹ,,Keep {{amount}} exactly.
+closing.coin,{{amount}} coin,{{amount}} کا سکہ,,Keep {{amount}} exactly.
+closing.countOf,Number of {{amount}},{{amount}} کی تعداد,,Keep {{amount}} exactly.
+closing.short,Short,کم,,
+closing.over,Over,زیادہ,,
+closing.exact,Exact,برابر,,
+closing.noteLabel,Note (optional),نوٹ (اختیاری),,
+closing.closeDay,Close day,دن بند کریں,,
+closing.confirm,Close {{date}}? A closed day cannot be changed.,{{date}} بند کریں؟ بند دن بدلا نہیں جا سکتا۔,,Keep {{date}} exactly.
+closing.closeNow,"Yes, close the day",ہاں، دن بند کریں,,
+closing.banner,Day closed — new sales count for {{date}},دن بند ہو گیا — نئی سیل {{date}} میں شمار ہو گی,,Keep {{date}} exactly.
+closing.summaryTitle,Day summary — {{date}},دن کا خلاصہ — {{date}},,Keep {{date}} exactly.
+closing.gapAlert,Not included at closing: {{amount}} (rows from other devices that synced later).,بند کرتے وقت شامل نہیں: {{amount}} (دوسری ڈیوائسز کا ڈیٹا بعد میں سنک ہوا)۔,,Keep {{amount}} exactly.
+closing.notFound,This day is not closed.,یہ دن بند نہیں۔,,
+closing.noCloses,No days closed yet.,ابھی کوئی دن بند نہیں ہوا۔,,
+closing.errors.forbidden,Only the owner can close a day.,صرف مالک دن بند کر سکتا ہے۔,,
+closing.errors.already_closed,This day is already closed.,یہ دن پہلے ہی بند ہے۔,,
+closing.errors.future,A future day cannot be closed.,آنے والا دن بند نہیں ہو سکتا۔,,
+closing.errors.bad_amount,Enter amounts of 0 or more.,0 یا زیادہ رقم لکھیں۔,,
+closing.errors.note_too_long,The note is too long.,نوٹ بہت لمبا ہے۔,,
+closing.errors.no_device,This device is not set up.,یہ آلہ سیٹ اپ نہیں ہے۔,,
+closing.errors.generic,Something went wrong. Try again.,کچھ غلط ہو گیا۔ دوبارہ کوشش کریں۔,,
+summary.title,Day summary {{date}},دن کا خلاصہ {{date}},,Day summary: printed and shared on WhatsApp after closing the day. Keep {{date}} exactly.
+summary.sales,Sales ({{count}}),سیل ({{count}}),,Day summary: printed and shared on WhatsApp after closing the day. Keep {{count}} exactly.
+summary.discounts,Discounts,رعایتیں,,Day summary: printed and shared on WhatsApp after closing the day.
+summary.foc,Free items (value),مفت اشیاء (مالیت),,Day summary: printed and shared on WhatsApp after closing the day.
+summary.khataGiven,Khata given,کھاتے پر دیا,,Day summary: printed and shared on WhatsApp after closing the day.
+summary.khataReceived,Khata received,کھاتہ وصولی,,Day summary: printed and shared on WhatsApp after closing the day.
+summary.expenses,Expenses,خرچے,,Day summary: printed and shared on WhatsApp after closing the day.
+summary.wastage,Wastage,ضائع مال,,Day summary: printed and shared on WhatsApp after closing the day.
+summary.wastageValue,Wastage value,ضائع مال کی مالیت,,Day summary: printed and shared on WhatsApp after closing the day.
+summary.opening,Opening cash,شروع کی نقدی,,Day summary: printed and shared on WhatsApp after closing the day.
+summary.withdrawal,Owner took home,مالک نے لیا,,Day summary: printed and shared on WhatsApp after closing the day.
+summary.expected,Expected cash,متوقع نقدی,,Day summary: printed and shared on WhatsApp after closing the day.
+summary.counted,Counted cash,گنی گئی نقدی,,Day summary: printed and shared on WhatsApp after closing the day.
+summary.short,Short,کم,,Day summary: printed and shared on WhatsApp after closing the day.
+summary.over,Over,زیادہ,,Day summary: printed and shared on WhatsApp after closing the day.
+summary.exact,Exact,برابر,,Day summary: printed and shared on WhatsApp after closing the day.
+summary.expectedNow,Expected cash now (all devices),اب متوقع نقدی (تمام ڈیوائسز),,Day summary: printed and shared on WhatsApp after closing the day.
+summary.gap,Not included at closing,بند کرتے وقت شامل نہیں,,Day summary: printed and shared on WhatsApp after closing the day.
+summary.waiting,Waiting to sync — late rows can’t be checked yet,سنک کا انتظار — دیر سے آنے والا ڈیٹا ابھی نہیں دیکھا جا سکتا,,Day summary: printed and shared on WhatsApp after closing the day.
+summary.late,Arrived after closing: {{count}},بند ہونے کے بعد آیا: {{count}},,Day summary: printed and shared on WhatsApp after closing the day. Keep {{count}} exactly.
+summary.closedAt,Closed {{at}},{{at}} پر بند ہوا,,Day summary: printed and shared on WhatsApp after closing the day. Keep {{at}} exactly.
+install.title,Install NaqdPOS,NaqdPOS انسٹال کریں,,
+install.button,Install app,ایپ انسٹال کریں,,
+install.notNow,Not now,ابھی نہیں,,
+install.prompt,"Open it like an app, full screen, even without internet.",ایپ کی طرح پوری اسکرین پر کھولیں، انٹرنیٹ کے بغیر بھی۔,,
+install.ios,"Tap Share, then “Add to Home Screen”.",شیئر دبائیں، پھر “Add to Home Screen”۔,,
+install.mac_safari,In Safari choose File → Add to Dock.,سفاری میں File → Add to Dock چنیں۔,,
+install.firefox_desktop,Firefox cannot install apps. Open NaqdPOS in Chrome or Edge to install it.,فائر فاکس ایپ انسٹال نہیں کرتا۔ انسٹال کے لیے کروم یا ایج میں کھولیں۔,,
+reports.title,Reports,رپورٹس,,
+reports.range,Date range,تاریخیں,,
+reports.preset.today,Today,آج,,
+reports.preset.yesterday,Yesterday,گزشتہ روز,,"Not ""کل"": that also means ""total"" on the same screen."
+reports.preset.this_week,This week,اس ہفتے,,
+reports.preset.this_month,This month,اس مہینے,,
+reports.preset.last_month,Last month,پچھلے مہینے,,
+reports.preset.custom,Custom,اپنی تاریخیں,,
+reports.from,From,سے,,
+reports.to,To,تک,,
+reports.needsInternet,Reports need internet.,رپورٹس کے لیے انٹرنیٹ چاہیے۔,,
+reports.error,Could not load the report. Try again.,رپورٹ نہیں کھل سکی۔ دوبارہ کوشش کریں۔,,
+reports.asOfOffline,As of {{time}} — offline,{{time}} تک کی — آف لائن,,Keep {{time}} exactly.
+reports.empty,Nothing in this period.,اس مدت میں کچھ نہیں۔,,
+reports.tab.dashboard,Dashboard,خلاصہ,,
+reports.tab.monthly,Monthly,ماہانہ,,
+reports.tab.products,Products,اشیاء,,
+reports.tab.staff,Staff,عملہ,,
+reports.tab.expenses,Expenses,خرچے,,
+reports.netSales,Net sales,خالص سیل,,
+reports.todayOpen,Today (still open),آج (ابھی کھلا ہے),,
+reports.payments,Payments,ادائیگیاں,,
+reports.khataGiven,Given on khata,کھاتے پر دیا,,
+reports.profit,Profit,منافع,,
+reports.costedProfit,Profit on items with a cost price,قیمتِ خرید والی اشیاء پر منافع,,
+reports.costedSales,Sales of those items,ان اشیاء کی سیل,,
+reports.expensesAndWastage,Expenses and wastage,خرچے اور ضائع مال,,
+reports.expenses,Expenses,خرچے,,
+reports.wastage,Wastage value,ضائع مال کی مالیت,,
+reports.khataDue,Khata due,کھاتہ باقی,,
+reports.receivables,Customers owe,گاہکوں کے ذمے,,
+reports.receivableCustomers_one,{{count}} customer owes,{{count}} گاہک کے ذمے,,Plural form for exactly 1. Keep {{count}} exactly.
+reports.receivableCustomers_other,{{count}} customers owe,{{count}} گاہکوں کے ذمے,,Plural form for any other number. Keep {{count}} exactly.
+reports.khataReceived,Khata received,کھاتے کی وصولی,,
+reports.topProducts,Top 5 products,سب سے زیادہ بکنے والی 5 اشیاء,,
+reports.custom,custom item,الگ چیز,,
+reports.uncostedSales,Sales without a cost price,قیمتِ خرید کے بغیر سیل,,
+reports.uncostedCount,"{{lines}} lines, {{products}} products",{{lines}} اندراج، {{products}} اشیاء,,Keep {{lines}} {{products}} exactly.
+reports.addCostPrices,Add cost prices to see the full profit,پورا منافع دیکھنے کے لیے قیمتِ خرید ڈالیں,,
+reports.month,Month,مہینہ,,
+reports.unclosedDays,These days are not closed yet: {{days}}. Totals still show.,یہ دن ابھی بند نہیں ہوئے: {{days}}۔ ٹوٹل پھر بھی دکھائے گئے ہیں۔,,Keep {{days}} exactly.
+reports.pnlTitle,Profit and loss — {{month}},نفع و نقصان — {{month}},,Keep {{month}} exactly.
+reports.pnl.gross_sales,Sales,سیل,,
+reports.pnl.discounts,Discounts,رعایت,,
+reports.pnl.rounding,Rounding,راؤنڈنگ,,
+reports.pnl.net_sales,Net sales,خالص سیل,,
+reports.pnl.uncosted_sales,Sales without a cost price,قیمتِ خرید کے بغیر سیل,,
+reports.pnl.costed_sales,Sales with a cost price,قیمتِ خرید والی سیل,,
+reports.pnl.cost_of_goods,Cost of goods,مال کی لاگت,,
+reports.pnl.gross_profit,Gross profit (items with a cost price),مجموعی منافع (قیمتِ خرید والی اشیاء),,
+reports.pnl.expenses_total,Expenses total,کل خرچے,,
+reports.pnl.wastage,Wastage value,ضائع مال کی مالیت,,
+reports.pnl.net,Net,خالص,,
+reports.pnl.netExcluding,Net (excluding sales without a cost price),خالص (قیمتِ خرید کے بغیر سیل کے علاوہ),,
+reports.receivablesAtEnd,Customers owe at month end,مہینے کے آخر میں گاہکوں کے ذمے,,
+reports.print,Print,پرنٹ,,
+reports.csv,Download CSV,CSV ڈاؤن لوڈ,,
+reports.col.product,Product,چیز,,
+reports.col.qty,Qty,مقدار,,
+reports.col.sales,Sales,سیل,,
+reports.col.cost,Cost,لاگت,,
+reports.col.profit,Profit,منافع,,
+reports.col.uncosted,No cost price,قیمتِ خرید نہیں,,
+reports.col.staff,Staff,عملہ,,
+reports.col.salesCount,Bills,بل,,
+reports.col.discounts,Discounts,رعایت,,
+reports.col.foc,Free items,مفت اشیاء,,FOC = given free (e.g. dhania with vegetables).
+reports.expenseView,Expense view,خرچے کیسے دیکھیں,,
+reports.expenseViews.list,List,فہرست,,
+reports.expenseViews.month,By month,ماہانہ,,
+reports.all,All,سب,,
+reports.filter.category,Category,قسم,,
+reports.filter.method,Paid by,ادائیگی,,
+reports.filter.staff,Staff,عملہ,,
+reports.expenseTotal_one,Total ({{count}} entry),کل ({{count}} اندراج),,Plural form for exactly 1. Keep {{count}} exactly.
+reports.expenseTotal_other,Total ({{count}} entries),کل ({{count}} اندراجات),,Plural form for any other number. Keep {{count}} exactly.
+reports.reversal,reversal,منسوخی,,
+reports.byCategoryVsLast,"By category, against last month",قسم کے لحاظ سے، پچھلے مہینے کے مقابلے میں,,
+reports.thisMonth,This month,اس مہینے,,
+reports.lastMonth,Last month,پچھلے مہینے,,
+reports.change,Change,فرق,,
+date.day,{{day}} {{month}} {{year}},{{day}} {{month}} {{year}},,Date layout; keep the {{placeholders}}. Keep {{day}} {{month}} {{year}} exactly.
+date.monthYear,{{month}} {{year}},{{month}} {{year}},,Date layout; keep the {{placeholders}}. Keep {{month}} {{year}} exactly.
+date.month.m01,Jan,جنوری,,Month name in dates (23 نومبر 2026). Digits stay Latin.
+date.month.m02,Feb,فروری,,Month name in dates (23 نومبر 2026). Digits stay Latin.
+date.month.m03,Mar,مارچ,,Month name in dates (23 نومبر 2026). Digits stay Latin.
+date.month.m04,Apr,اپریل,,Month name in dates (23 نومبر 2026). Digits stay Latin.
+date.month.m05,May,مئی,,Month name in dates (23 نومبر 2026). Digits stay Latin.
+date.month.m06,Jun,جون,,Month name in dates (23 نومبر 2026). Digits stay Latin.
+date.month.m07,Jul,جولائی,,Month name in dates (23 نومبر 2026). Digits stay Latin.
+date.month.m08,Aug,اگست,,Month name in dates (23 نومبر 2026). Digits stay Latin.
+date.month.m09,Sep,ستمبر,,Month name in dates (23 نومبر 2026). Digits stay Latin.
+date.month.m10,Oct,اکتوبر,,Month name in dates (23 نومبر 2026). Digits stay Latin.
+date.month.m11,Nov,نومبر,,Month name in dates (23 نومبر 2026). Digits stay Latin.
+date.month.m12,Dec,دسمبر,,Month name in dates (23 نومبر 2026). Digits stay Latin.
+preset.potato,Potato,آلو,,Ready-made fresh produce list (Settings → Products → Add from list).
+preset.potato_red,Potato (red),لال آلو,,Ready-made fresh produce list (Settings → Products → Add from list).
+preset.onion_red,Onion (red),پیاز,,Ready-made fresh produce list (Settings → Products → Add from list).
+preset.onion_white,Onion (white),سفید پیاز,,Ready-made fresh produce list (Settings → Products → Add from list).
+preset.tomato,Tomato,ٹماٹر,,Ready-made fresh produce list (Settings → Products → Add from list).
+preset.garlic,Garlic,لہسن,,Ready-made fresh produce list (Settings → Products → Add from list).
+preset.ginger,Ginger,ادرک,,Ready-made fresh produce list (Settings → Products → Add from list).
+preset.green_chilli_small,Green chilli (small),ہری مرچ,,Ready-made fresh produce list (Settings → Products → Add from list).
+preset.green_chilli_big,Green chilli (big),موٹی ہری مرچ,,Ready-made fresh produce list (Settings → Products → Add from list).
+preset.red_chilli_fresh,Red chilli (fresh),لال مرچ,,Ready-made fresh produce list (Settings → Products → Add from list).
+preset.lemon,Lemon,لیموں,,Ready-made fresh produce list (Settings → Products → Add from list).
+preset.cucumber,Cucumber,کھیرا,,Ready-made fresh produce list (Settings → Products → Add from list).
+preset.carrot,Carrot,گاجر,,Ready-made fresh produce list (Settings → Products → Add from list).
+preset.radish,Radish,مولی,,Ready-made fresh produce list (Settings → Products → Add from list).
+preset.turnip,Turnip,شلجم,,Ready-made fresh produce list (Settings → Products → Add from list).
+preset.beetroot,Beetroot,چقندر,,Ready-made fresh produce list (Settings → Products → Add from list).
+preset.cauliflower,Cauliflower,پھول گوبھی,,Ready-made fresh produce list (Settings → Products → Add from list).
+preset.cabbage,Cabbage,بند گوبھی,,Ready-made fresh produce list (Settings → Products → Add from list).
+preset.okra,Okra,بھنڈی,,Ready-made fresh produce list (Settings → Products → Add from list).
+preset.brinjal,Brinjal,بینگن,,Ready-made fresh produce list (Settings → Products → Add from list).
+preset.bottle_gourd,Bottle gourd,لوکی,,Ready-made fresh produce list (Settings → Products → Add from list).
+preset.bitter_gourd,Bitter gourd,کریلا,,Ready-made fresh produce list (Settings → Products → Add from list).
+preset.sponge_gourd,Sponge gourd,توری,,Ready-made fresh produce list (Settings → Products → Add from list).
+preset.round_gourd,Round gourd,ٹینڈے,,Ready-made fresh produce list (Settings → Products → Add from list).
+preset.pumpkin,Pumpkin,حلوہ کدو,,Ready-made fresh produce list (Settings → Products → Add from list).
+preset.taro_root,Taro root,اروی,,Ready-made fresh produce list (Settings → Products → Add from list).
+preset.peas,Peas,مٹر,,Ready-made fresh produce list (Settings → Products → Add from list).
+preset.green_beans,Green beans,پھلیاں,,Ready-made fresh produce list (Settings → Products → Add from list).
+preset.capsicum_green,Capsicum (green),شملہ مرچ,,Ready-made fresh produce list (Settings → Products → Add from list).
+preset.capsicum_red,Capsicum (red),لال شملہ مرچ,,Ready-made fresh produce list (Settings → Products → Add from list).
+preset.capsicum_yellow,Capsicum (yellow),پیلی شملہ مرچ,,Ready-made fresh produce list (Settings → Products → Add from list).
+preset.sweet_potato,Sweet potato,شکرقندی,,Ready-made fresh produce list (Settings → Products → Add from list).
+preset.lotus_stem,Lotus stem,بھے,,Ready-made fresh produce list (Settings → Products → Add from list).
+preset.corn,Corn on the cob,چھلی,,Ready-made fresh produce list (Settings → Products → Add from list).
+preset.coriander,Coriander,دھنیا,,Ready-made fresh produce list (Settings → Products → Add from list).
+preset.mint,Mint,پودینہ,,Ready-made fresh produce list (Settings → Products → Add from list).
+preset.curry_leaves,Curry leaves,کڑی پتہ,,Ready-made fresh produce list (Settings → Products → Add from list).
+preset.spinach,Spinach,پالک,,Ready-made fresh produce list (Settings → Products → Add from list).
+preset.mustard_greens,Mustard greens,سرسوں کا ساگ,,Ready-made fresh produce list (Settings → Products → Add from list).
+preset.fenugreek,Fenugreek leaves,میتھی,,Ready-made fresh produce list (Settings → Products → Add from list).
+preset.dill,Dill,سویا,,Ready-made fresh produce list (Settings → Products → Add from list).
+preset.spring_onion,Spring onion,ہرا پیاز,,Ready-made fresh produce list (Settings → Products → Add from list).
+preset.lettuce,Lettuce,سلاد پتہ,,Ready-made fresh produce list (Settings → Products → Add from list).
+preset.banana,Banana,کیلا,,Ready-made fresh produce list (Settings → Products → Add from list).
+preset.apple_kala_kulu,Apple (Kala Kulu),سیب کالا کولو,,Ready-made fresh produce list (Settings → Products → Add from list).
+preset.apple_gala,Apple (Gala),سیب گالا,,Ready-made fresh produce list (Settings → Products → Add from list).
+preset.apple_golden,Apple (Golden),سیب گولڈن,,Ready-made fresh produce list (Settings → Products → Add from list).
+preset.apple_ambri,Apple (Ambri),سیب امبری,,Ready-made fresh produce list (Settings → Products → Add from list).
+preset.mango_sindhri,Mango (Sindhri),آم سندھڑی,,Ready-made fresh produce list (Settings → Products → Add from list).
+preset.mango_chaunsa,Mango (Chaunsa),آم چونسہ,,Ready-made fresh produce list (Settings → Products → Add from list).
+preset.mango_anwar_ratol,Mango (Anwar Ratol),آم انور رٹول,,Ready-made fresh produce list (Settings → Products → Add from list).
+preset.mango_langra,Mango (Langra),آم لنگڑا,,Ready-made fresh produce list (Settings → Products → Add from list).
+preset.mango_dusehri,Mango (Dusehri),آم دسہری,,Ready-made fresh produce list (Settings → Products → Add from list).
+preset.kinnow,Kinnow,کینو,,Ready-made fresh produce list (Settings → Products → Add from list).
+preset.malta,Orange (malta),مالٹا,,Ready-made fresh produce list (Settings → Products → Add from list).
+preset.sweet_lime,Sweet lime,موسمی,,Ready-made fresh produce list (Settings → Products → Add from list).
+preset.grapefruit,Grapefruit,چکوترا,,Ready-made fresh produce list (Settings → Products → Add from list).
+preset.guava,Guava,امرود,,Ready-made fresh produce list (Settings → Products → Add from list).
+preset.pomegranate,Pomegranate,انار,,Ready-made fresh produce list (Settings → Products → Add from list).
+preset.pomegranate_kandhari,Pomegranate (Kandhari),قندھاری انار,,Ready-made fresh produce list (Settings → Products → Add from list).
+preset.grapes_green,Grapes (green),سبز انگور,,Ready-made fresh produce list (Settings → Products → Add from list).
+preset.grapes_black,Grapes (black),کالے انگور,,Ready-made fresh produce list (Settings → Products → Add from list).
+preset.watermelon,Watermelon,تربوز,,Ready-made fresh produce list (Settings → Products → Add from list).
+preset.melon,Melon,خربوزہ,,Ready-made fresh produce list (Settings → Products → Add from list).
+preset.papaya,Papaya,پپیتا,,Ready-made fresh produce list (Settings → Products → Add from list).
+preset.pear,Pear,ناشپاتی,,Ready-made fresh produce list (Settings → Products → Add from list).
+preset.peach,Peach,آڑو,,Ready-made fresh produce list (Settings → Products → Add from list).
+preset.plum,Plum,آلو بخارا,,Ready-made fresh produce list (Settings → Products → Add from list).
+preset.apricot,Apricot,خوبانی,,Ready-made fresh produce list (Settings → Products → Add from list).
+preset.cherry,Cherry,چیری,,Ready-made fresh produce list (Settings → Products → Add from list).
+preset.lychee,Lychee,لیچی,,Ready-made fresh produce list (Settings → Products → Add from list).
+preset.strawberry,Strawberry,اسٹرابیری,,Ready-made fresh produce list (Settings → Products → Add from list).
+preset.persimmon,Persimmon,جاپانی پھل,,Ready-made fresh produce list (Settings → Products → Add from list).
+preset.chikoo,Chikoo,چیکو,,Ready-made fresh produce list (Settings → Products → Add from list).
+preset.custard_apple,Custard apple,شریفہ,,Ready-made fresh produce list (Settings → Products → Add from list).
+preset.jujube,Jujube (ber),بیر,,Ready-made fresh produce list (Settings → Products → Add from list).
+preset.falsa,Falsa,فالسہ,,Ready-made fresh produce list (Settings → Products → Add from list).
+preset.jamun,Jamun,جامن,,Ready-made fresh produce list (Settings → Products → Add from list).
+preset.loquat,Loquat,لوکاٹ,,Ready-made fresh produce list (Settings → Products → Add from list).
+preset.fig,Fig (fresh),انجیر,,Ready-made fresh produce list (Settings → Products → Add from list).
+preset.coconut,Coconut,ناریل,,Ready-made fresh produce list (Settings → Products → Add from list).
+preset.pineapple,Pineapple,انناس,,Ready-made fresh produce list (Settings → Products → Add from list).
+preset.kiwi,Kiwi,کیوی,,Ready-made fresh produce list (Settings → Products → Add from list).
+presetCategory.vegetables,Vegetables,سبزیاں,,"Default product category, created with the ready-made produce list."
+presetCategory.greens,Greens & herbs,ساگ اور ہرے مصالحے,,"Default product category, created with the ready-made produce list."
+presetCategory.fruits,Fruits,پھل,,"Default product category, created with the ready-made produce list."

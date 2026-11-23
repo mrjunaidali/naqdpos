@@ -16,6 +16,10 @@
   line-height: 1.45;
   padding: 2mm;
 }
+/* Receipts with Urdu ("ur" or "both") need the taller Naskh line height (US009). */
+.receipt:not([data-language='en']) {
+  line-height: 1.8;
+}
 .receipt[data-paper='58'] {
   width: 48mm;
 }
@@ -64,6 +68,19 @@
   .receipt {
     padding: 0;
     margin: 0;
+  }
+}
+
+/*
+ * Urdu line height (US009): Noto Naskh's marks reach well above and below Latin letters, so Urdu
+ * text needs at least 1.8 or it clips in buttons, chips and table cells. In the utilities layer
+ * with a higher specificity than leading-* / text-* utilities, so it wins over them; :lang(ur)
+ * follows each element's own lang, so an English receipt inside the Urdu app keeps its own.
+ * .keep-leading opts out fixed-height boxes (the product emoji).
+ */
+@layer utilities {
+  body :lang(ur):not(.keep-leading) {
+    line-height: 1.8;
   }
 }
 

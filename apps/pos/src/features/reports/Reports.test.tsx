@@ -84,7 +84,7 @@ describe('dashboard (US048)', () => {
   it('owner device: today from the server, cards, top products; results cached with their time', async () => {
     await seedShop('owner');
     renderAt('/reports');
-    expect(await screen.findByText('Rs 2383')).toBeInTheDocument(); // net sales
+    expect(await screen.findByText('Rs 2,383')).toBeInTheDocument(); // net sales
     expect(mocked.reportSummary).toHaveBeenCalledWith({ shop_id: SHOP_ID, from: TODAY, to: TODAY });
     expect(screen.getByText('Profit on items with a cost price')).toBeInTheDocument();
     expect(screen.getByText('Rs 359.32')).toBeInTheDocument();
@@ -118,7 +118,7 @@ describe('dashboard (US048)', () => {
     setOnline(false);
     renderAt('/reports');
     expect(await screen.findByText(/^As of .* — offline$/)).toBeInTheDocument();
-    expect(screen.getByText('Rs 2383')).toBeInTheDocument();
+    expect(screen.getByText('Rs 2,383')).toBeInTheDocument();
     expect(screen.getByText('Reports need internet.')).toBeInTheDocument(); // products: not cached
     expect(mocked.reportSummary).not.toHaveBeenCalled();
   });
@@ -141,7 +141,7 @@ describe('dashboard (US048)', () => {
     renderAt('/reports');
     expect(await screen.findByRole('heading', { name: 'Owner PIN needed' })).toBeInTheDocument();
     for (const d of '4821') fireEvent.click(await screen.findByRole('button', { name: d }));
-    expect(await screen.findByText('Rs 2383')).toBeInTheDocument();
+    expect(await screen.findByText('Rs 2,383')).toBeInTheDocument();
     expect(
       screen.getByRole('link', { name: 'Add cost prices to see the full profit' }),
     ).toHaveAttribute('href', '/products');
@@ -174,10 +174,10 @@ describe('monthly P&L (US047)', () => {
     );
     expect(await screen.findByText('Gross profit (items with a cost price)')).toBeInTheDocument();
     expect(screen.getByText('Net (excluding sales without a cost price)')).toBeInTheDocument();
-    expect(screen.getByText('Rs -25065.68')).toBeInTheDocument();
+    expect(screen.getByText('Rs -25,065.68')).toBeInTheDocument();
     expect(screen.getByText('Rent')).toBeInTheDocument();
     expect(
-      screen.getByText('These days are not closed yet: 2026-10-20. Totals still show.'),
+      screen.getByText('These days are not closed yet: 20 Oct 2026. Totals still show.'),
     ).toBeInTheDocument();
     expect(screen.getByText('Customers owe at month end')).toBeInTheDocument();
 

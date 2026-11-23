@@ -1,11 +1,13 @@
-import { qtyLabel, type ProductUnit } from '@naqdpos/core';
+import { qtyLabel, rupeesText, type ProductUnit } from '@naqdpos/core';
 import { useTranslation } from 'react-i18next';
-import { rupeesInput } from '../catalogue/catalogueData.ts';
 
-/** "Rs 214.50", "Rs 240" (paisa kept: bill rounding is decided with the payment story). */
+/**
+ * "Rs 214.50", "Rs 1,250": grouped Latin digits in both languages (US009). Paisa are kept;
+ * input fields use `rupeesInput` (no separators) instead.
+ */
 export function useRs() {
   const { t } = useTranslation();
-  return (paisa: number) => t('sale.rs', { amount: rupeesInput(paisa) });
+  return (paisa: number) => t('sale.rs', { amount: rupeesText(paisa) });
 }
 
 /** "250 g", "1.5 kg", "½ dozen", "6 piece" in the UI language. */

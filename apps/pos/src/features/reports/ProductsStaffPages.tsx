@@ -1,4 +1,5 @@
 import {
+  displayName,
   productsCsv,
   rangePreset,
   staffCsv,
@@ -25,7 +26,7 @@ export function ProductsReportPage() {
 }
 
 function ProductsReport({ today }: { today: string }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const rs = useRs();
   const qty = useQtyText();
   const [range, setRange] = useState<Range>(rangePreset('this_month', today));
@@ -34,10 +35,10 @@ function ProductsReport({ today }: { today: string }) {
     {
       key: 'name',
       label: t('reports.col.product'),
-      value: (r) => r.name,
+      value: (r) => displayName(r, i18n.language),
       render: (r) => (
         <>
-          {r.name}
+          {displayName(r, i18n.language)}
           {r.custom && <span className="ms-2 text-xs text-muted">{t('reports.custom')}</span>}
         </>
       ),

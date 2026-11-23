@@ -231,18 +231,21 @@ export function rupeesText(paisa: Paisa): string {
   return paisa < 0 ? `-${text}` : text;
 }
 
-/** The WhatsApp receipt for a khata payment, in the app language. */
+/**
+ * The WhatsApp receipt for a khata payment, in the app language: the words come from i18n
+ * (`khata.whatsappText`) so they are reviewed with the rest; amounts are grouped Latin digits.
+ */
 export function khataReceiptText(
-  lang: string,
+  label: (key: string, vars: Record<string, string>) => string,
   amountPaisa: Paisa,
   balancePaisa: Paisa,
   shopName: string,
 ): string {
-  const amount = rupeesText(amountPaisa);
-  const balance = rupeesText(balancePaisa);
-  return lang === 'ur'
-    ? `${amount} روپے وصول ہوئے۔ نیا بقایا ${balance} روپے۔ — ${shopName}`
-    : `Rs ${amount} received. New balance Rs ${balance}. — ${shopName}`;
+  return label('khata.whatsappText', {
+    amount: rupeesText(amountPaisa),
+    balance: rupeesText(balancePaisa),
+    shop: shopName,
+  });
 }
 
 /** wa.me link: digits only, no "+". */

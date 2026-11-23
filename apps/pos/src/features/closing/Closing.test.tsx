@@ -27,7 +27,12 @@ import { createFromPresets } from '../catalogue/catalogueRepo.ts';
 import { addExpense } from '../expenses/expenseRepo.ts';
 import { useCartStore } from '../sale/cartStore.ts';
 import { completeSale } from '../sale/completeSale.ts';
+import { formatDate } from '../../i18n/format.ts';
+import { i18n as i18nForDates } from '../../i18n/index.ts';
 import { costsAt } from './closingData.ts';
+
+/** A business date as the English UI shows it ("23 Nov 2026"). */
+const shown = (iso: string) => formatDate(iso, i18nForDates.getFixedT('en'));
 
 const sync = vi.hoisted(() => ({ syncNow: vi.fn(() => Promise.resolve('synced')) }));
 vi.mock('../../api/index.ts', () => import('../../test/apiMock.ts'));
@@ -169,9 +174,9 @@ describe('closing screen (US044, US067)', () => {
     renderAt('/closing');
     expect(await screen.findByLabelText('Opening cash (Rs)')).toHaveValue('2000');
     // expected = 2000 + 215
-    expect(screen.getByText('Expected cash').closest('p')).toHaveTextContent('Rs 2215');
+    expect(screen.getByText('Expected cash').closest('p')).toHaveTextContent('Rs 2,215');
     fireEvent.click(screen.getByRole('button', { name: 'Notes and coins' }));
-    fireEvent.change(screen.getByLabelText('Number of Rs 1000'), { target: { value: '2' } });
+    fireEvent.change(screen.getByLabelText('Number of Rs 1,000'), { target: { value: '2' } });
     fireEvent.change(screen.getByLabelText('Number of Rs 100'), { target: { value: '2' } });
     fireEvent.change(screen.getByLabelText('Number of Rs 10'), { target: { value: '1' } });
     expect(screen.getByText('Short')).toBeInTheDocument(); // 2210 counted
@@ -220,7 +225,7 @@ describe('closing screen (US044, US067)', () => {
     await sale(TODAY, 1_000);
     renderAt('/closing');
     expect(
-      await screen.findByRole('heading', { name: `Close day — ${DAY_BEFORE}` }),
+      await screen.findByRole('heading', { name: `Close day — ${shown(DAY_BEFORE)}` }),
     ).toBeInTheDocument();
     expect(screen.getByText('2 days are open: close the oldest first.')).toBeInTheDocument();
   });
@@ -259,7 +264,7 @@ describe('after closing (roll-forward)', () => {
     expect(e.business_date).toBe(nextDate(TODAY));
     renderAt('/sale');
     expect(
-      await screen.findByText(`Day closed — new sales count for ${nextDate(TODAY)}`),
+      await screen.findByText(`Day closed — new sales count for ${shown(nextDate(TODAY))}`),
     ).toBeInTheDocument();
   });
 });
@@ -357,7 +362,7 @@ describe('daily summary (US045)', () => {
     Object.defineProperty(navigator, 'share', { value: undefined, configurable: true });
     fireEvent.click(screen.getByRole('button', { name: 'Share on WhatsApp' }));
     await waitFor(() => expect(writeText).toHaveBeenCalled());
-    expect(writeText.mock.calls[0]![0]).toContain(`Day summary ${YESTERDAY}`);
+    expect(writeText.mock.calls[0]![0]).toContain(`Day summary ${shown(YESTERDAY)}`);
   });
 
   it('lists past closes', async () => {
@@ -366,6 +371,8 @@ describe('daily summary (US045)', () => {
       close(YESTERDAY, { difference_paisa: -500, counted_cash_paisa: 0, expected_cash_paisa: 500 }),
     );
     renderAt('/closing/history');
-    expect(await screen.findByRole('link', { name: new RegExp(YESTERDAY) })).toBeInTheDocument();
+    expect(
+      await screen.findByRole('link', { name: new RegExp(shown(YESTERDAY)) }),
+    ).toBeInTheDocument();
   });
 });

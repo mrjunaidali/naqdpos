@@ -204,7 +204,7 @@ describe('sale on khata (US039)', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Complete sale' }));
     await waitFor(() => expect(router.state.location.pathname).toMatch(/^\/sale\/done\//));
     expect(await screen.findByText('On khata: Rs 215')).toBeInTheDocument();
-    expect(await screen.findByText('New balance: Rs 1215')).toBeInTheDocument();
+    expect(await screen.findByText('New balance: Rs 1,215')).toBeInTheDocument();
 
     const [sale] = await db.sales.toArray();
     expect(sale?.customer_id).toBe(c.id);
@@ -338,7 +338,7 @@ describe('add customer and opening balance (US080)', () => {
       staff_id: STAFF_ID,
     });
     await waitFor(() =>
-      expect(screen.getByText('Rs 1200', { selector: '.text-3xl' })).toBeInTheDocument(),
+      expect(screen.getByText('Rs 1,200', { selector: '.text-3xl' })).toBeInTheDocument(),
     );
     await router.navigate('/khata');
     // The list re-renders as its live queries settle: check inside waitFor, not on a node found
@@ -402,7 +402,7 @@ describe('khata list and ledger (US041)', () => {
     await entry(zero.id, -1000, '2026-01-02', 'adjustment');
 
     renderAt('/khata');
-    expect(await screen.findByText('Rs 1700')).toBeInTheDocument();
+    expect(await screen.findByText('Rs 1,700')).toBeInTheDocument();
     const names = () =>
       within(screen.getByRole('list'))
         .getAllByRole('link')

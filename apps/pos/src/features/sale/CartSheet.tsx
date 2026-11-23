@@ -51,7 +51,7 @@ export function CartSheet(props: {
                   type="button"
                   className="min-h-11 min-w-0 flex-1 text-start"
                   onClick={() => props.onEdit(line)}
-                  aria-label={t('sale.editLine', { name: line.name })}
+                  aria-label={t('sale.editLine', { name: displayName(line, i18n.language) })}
                 >
                   <span className="block truncate font-medium">
                     {displayName(line, i18n.language)}
@@ -94,7 +94,7 @@ export function CartSheet(props: {
                 <button
                   type="button"
                   onClick={() => remove(line.id)}
-                  aria-label={t('sale.removeLine', { name: line.name })}
+                  aria-label={t('sale.removeLine', { name: displayName(line, i18n.language) })}
                   className="min-h-11 min-w-11 rounded-md border border-border"
                 >
                   ✕
@@ -115,7 +115,7 @@ export function CartSheet(props: {
                   type="button"
                   disabled={line.is_foc}
                   onClick={() => setDiscountFor(line)}
-                  aria-label={t('discount.forLine', { name: line.name })}
+                  aria-label={t('discount.forLine', { name: displayName(line, i18n.language) })}
                   className="min-h-11 rounded-md border border-border px-3 text-sm disabled:opacity-50"
                 >
                   {t('discount.button')}
@@ -124,7 +124,7 @@ export function CartSheet(props: {
                   type="button"
                   aria-pressed={line.is_foc}
                   onClick={() => put({ ...line, is_foc: !line.is_foc, discount: null })}
-                  aria-label={t('foc.toggleFor', { name: line.name })}
+                  aria-label={t('foc.toggleFor', { name: displayName(line, i18n.language) })}
                   className={`min-h-11 rounded-md border px-3 text-sm ${
                     line.is_foc
                       ? 'border-success bg-success-soft font-semibold text-success-fg'

@@ -1,4 +1,11 @@
-import { giveAway, displayName, searchItems, type CartLine, type ProductRow } from '@naqdpos/core';
+import {
+  giveAway,
+  displayName,
+  otherName,
+  searchItems,
+  type CartLine,
+  type ProductRow,
+} from '@naqdpos/core';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -273,7 +280,7 @@ function SaleTile(props: {
   const priceLabel = usePriceLabel();
   const qtyText = useQtyText();
   const { product, line } = props;
-  const other = i18n.language === 'ur' ? product.name : product.name_ur;
+  const other = otherName(product, i18n.language);
   return (
     <li>
       <button

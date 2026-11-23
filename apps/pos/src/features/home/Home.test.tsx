@@ -9,6 +9,11 @@ import { resetApiMock } from '../../test/apiMock.ts';
 import { DEVICE_ID, resetDb, seedReady, SHOP_ID, STAFF_ID, staffRow } from '../../test/fixtures.ts';
 import { renderAt } from '../../test/render.tsx';
 import { barItems, moreItems, navHidden } from './navItems.ts';
+import { formatDate } from '../../i18n/format.ts';
+import { i18n as i18nForDates } from '../../i18n/index.ts';
+
+/** A business date as the English UI shows it ("23 Nov 2026"). */
+const shown = (iso: string) => formatDate(iso, i18nForDates.getFixedT('en'));
 
 vi.mock('../../api/index.ts', () => import('../../test/apiMock.ts'));
 vi.mock('../../sync/index.ts', () => ({
@@ -222,10 +227,10 @@ describe('Home (owner)', () => {
     await sale(TODAY, STAFF_ID, 9_000, [['cash', 9_000]]);
     await sale(nextDate(TODAY), STAFF_ID, 4_000, [['cash', 4_000]]); // made after the close
     renderAt('/');
-    expect(await screen.findByText(`Sales for ${nextDate(TODAY)}`)).toBeInTheDocument();
+    expect(await screen.findByText(`Sales for ${shown(nextDate(TODAY))}`)).toBeInTheDocument();
     expect(screen.getByText('Rs 40', { selector: '.text-4xl' })).toBeInTheDocument();
     expect(
-      screen.getByText(`Day closed — new sales count for ${nextDate(TODAY)}`),
+      screen.getByText(`Day closed — new sales count for ${shown(nextDate(TODAY))}`),
     ).toBeInTheDocument();
   });
 

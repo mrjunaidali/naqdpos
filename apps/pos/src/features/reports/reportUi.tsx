@@ -1,6 +1,7 @@
 import { RANGE_PRESETS, rangePreset, type RangePreset } from '@naqdpos/core';
 import { useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useDates } from '../../i18n/format.ts';
 import { Alert } from '../../ui/Button.tsx';
 import type { ReportState } from './reportsData.ts';
 
@@ -81,16 +82,13 @@ export function ReportView<T>({
   state: ReportState<T>;
   children: (data: T) => ReactNode;
 }) {
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
+  const dates = useDates();
   if (state.status === 'loading') return <p className="text-muted">{t('common.loading')}</p>;
   if (state.status === 'needs_internet')
     return <Alert tone="info">{t('reports.needsInternet')}</Alert>;
   if (state.status === 'error') return <Alert>{t('reports.error')}</Alert>;
-  const time = new Intl.DateTimeFormat(i18n.language === 'ur' ? 'ur-PK' : 'en-PK', {
-    timeZone: 'Asia/Karachi',
-    dateStyle: 'medium',
-    timeStyle: 'short',
-  }).format(new Date(state.asOf));
+  const time = dates.dateTime(state.asOf);
   return (
     <>
       {state.offline && <Alert tone="info">{t('reports.asOfOffline', { time })}</Alert>}

@@ -182,12 +182,13 @@ describe('sharing', () => {
   it('receipt text in English and Urdu, with grouped rupees', () => {
     expect(rupeesText(120000)).toBe('1,200');
     expect(rupeesText(123456789)).toBe('1,234,567.89');
-    expect(khataReceiptText('en', 50000, 120000, 'Ali Fruits')).toBe(
-      'Rs 500 received. New balance Rs 1,200. — Ali Fruits',
+    // The words come from the app's i18n; core fills in grouped rupees and the shop name.
+    const label = (key: string, v: Record<string, string>) =>
+      `${key}|${v.amount}|${v.balance}|${v.shop}`;
+    expect(khataReceiptText(label, 50000, 120000, 'Ali Fruits')).toBe(
+      'khata.whatsappText|500|1,200|Ali Fruits',
     );
-    expect(khataReceiptText('ur', 50000, 120000, 'Ali Fruits')).toBe(
-      '500 روپے وصول ہوئے۔ نیا بقایا 1,200 روپے۔ — Ali Fruits',
-    );
+    expect(khataReceiptText(label, 50, -120050, 'X')).toBe('khata.whatsappText|0.50|-1,200.50|X');
   });
 
   it('wa.me and tel links', () => {

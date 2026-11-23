@@ -6,6 +6,7 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router';
 import { db } from '../../db/schema.ts';
+import { intlLocale } from '../../i18n/format.ts';
 import { syncEngine } from '../../sync/index.ts';
 import { chipTone } from '../../sync/tone.ts';
 import { useSyncStatus } from '../../sync/useSyncStatus.ts';
@@ -37,7 +38,7 @@ export function SyncPage() {
   const tone = chipTone(health.level);
   const lastSync = state.lastSyncAt
     ? t('sync.lastSync', {
-        time: new Intl.DateTimeFormat(i18n.language, {
+        time: new Intl.DateTimeFormat(intlLocale(i18n.language), {
           dateStyle: 'medium',
           timeStyle: 'short',
         }).format(new Date(state.lastSyncAt)),

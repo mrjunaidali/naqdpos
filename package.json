@@ -21,6 +21,8 @@
     "db:reset": "node db/scripts/db.ts reset",
     "db:test": "node db/scripts/db.ts test",
     "check:precache": "pnpm --filter @naqdpos/pos build && node scripts/check-precache.ts",
+    "i18n:export-review": "node scripts/urdu-review.ts export",
+    "i18n:import-review": "node scripts/urdu-review.ts import",
     "admin:grant": "node db/scripts/admin.ts grant",
     "admin:revoke": "node db/scripts/admin.ts revoke"
   },

@@ -201,7 +201,7 @@ Login runs inside our API with **Better Auth** (open-source library). Users and 
 
 ### PWA requirements (`apps/pos`)
 - Served over **HTTPS** only (service workers need it).
-- **Manifest** (via `vite-plugin-pwa`): `name`, `short_name`, `start_url: "/"`, `display: "standalone"`, `theme_color`, `background_color`, `lang`, `dir`. Urdu UI switches `dir` at runtime; the manifest default is `ltr`.
+- **Manifest** (via `vite-plugin-pwa`): `name`, `short_name`, `start_url: "/"`, `display: "standalone"`, `theme_color`, `background_color`, `lang`, `dir`. Urdu UI switches `dir` at runtime; the manifest default is `ltr`. The UI language is a device setting kept in `localStorage` (`naqdpos.language`) and read synchronously before the first render, so Urdu opens right-to-left with no English flash (US009, decided 23 Nov 2026). Numbers, money, quantities and dates use Latin digits in both languages; dates show Urdu month names in Urdu.
 - **Icons**: 192 and 512 px, a `maskable` 512 px, and `apple-touch-icon` (180 px). Add `apple-mobile-web-app-capable` and `apple-mobile-web-app-status-bar-style` meta tags for iOS.
 - **Precache the full app shell**: all JS/CSS, the Urdu font, icons and i18n JSON. The app must open and complete a sale on first launch after install with the network off.
 - **Updates**: `registerType: 'prompt'`. Show a "New version available — Reload" banner. Never auto-reload, and never show the prompt while a cart has items.

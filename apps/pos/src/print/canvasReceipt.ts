@@ -16,7 +16,8 @@ export async function receiptToEscpos(doc: ReceiptDoc): Promise<Uint8Array> {
   const ctx = canvas.getContext('2d');
   if (!ctx) throw new Error('no canvas');
   const rtl = doc.dir === 'rtl';
-  const lineHeight = (size: number) => Math.round(size * 1.6);
+  // Naskh needs taller lines than Latin (US009), so receipts with Urdu get 1.8.
+  const lineHeight = (size: number) => Math.round(size * (doc.language === 'en' ? 1.6 : 1.8));
 
   // First pass measures the height; the second draws.
   const draw = (paint: boolean): number => {

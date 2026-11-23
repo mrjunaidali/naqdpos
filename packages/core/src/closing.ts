@@ -213,6 +213,8 @@ export interface SummaryInput {
   categoryName: (id: string) => string;
   methodName: (code: string) => string;
   label: LabelFn;
+  /** Shows the business date in the UI language ("23 نومبر 2026"); ISO when not given. */
+  formatDate?: (isoDate: string) => string;
   shopName: string;
   paperWidthMm: PaperWidth;
   rtl: boolean;
@@ -247,7 +249,10 @@ export function dailySummary(input: SummaryInput): DaySummary {
   };
   const out: ReceiptLine[] = [
     { kind: 'title', text: input.shopName },
-    { kind: 'center', text: L('summary.title', { date: close.business_date }) },
+    {
+      kind: 'center',
+      text: L('summary.title', { date: (input.formatDate ?? String)(close.business_date) }),
+    },
     { kind: 'rule' },
   ];
   const pair = (label: string, value: string, strong = false) =>
