@@ -1,10 +1,9 @@
 // The app's one way to reach the backend (CLAUDE.md, Portability 3). The base URL comes only
-// from VITE_API_URL (on the dev server, empty or /api = the same-origin dev proxy, see baseUrl.ts);
+// from VITE_API_URL (on the dev server, empty or /api = the same-origin dev proxy, see packages/core/src/api/baseUrl.ts);
 // the token and device id come from Dexie, so calls work after a restart.
-import { createApiClient } from '@naqdpos/core';
+import { apiBaseUrl, createApiClient } from '@naqdpos/core';
 import { APP_VERSION } from '../app/version.ts';
 import { getStoredDevice, getStoredSession } from '../db/session.ts';
-import { apiBaseUrl } from './baseUrl.ts';
 
 export { ApiError } from '@naqdpos/core';
 

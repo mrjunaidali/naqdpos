@@ -30,8 +30,13 @@ export default defineConfig({
   // App version for X-App-Version (architecture §4), from package.json at build time.
   define: { __APP_VERSION__: JSON.stringify(version) },
   server: {
+    // Fixed ports (pos 5173, admin 5174): dev:lan prints these URLs and VITE_POS_URL uses 5173, so
+    // fail instead of silently moving to another port.
+    port: 5173,
+    strictPort: true,
     ...(lan && { host: true }),
-    // Dev only: /api/* → the local API, so the app calls its own origin (src/api/baseUrl.ts).
+    // Dev only: /api/* → the local API, so the app calls its own origin
+    // (packages/core/src/api/baseUrl.ts).
     // Every request header (Authorization, X-Device-Id, X-App-Version) passes through as is.
     proxy: {
       '/api': {

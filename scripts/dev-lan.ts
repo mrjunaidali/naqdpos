@@ -1,16 +1,19 @@
-// `pnpm dev:lan`: test the POS app on a phone on the same Wi-Fi (development only).
-// Starts the API (localhost:8787) and the POS dev server with HTTPS on all interfaces. The app
-// calls the API through the dev server's /api proxy, so only port 5173 is reachable from the
-// phone and the API itself stays on this PC.
+// `pnpm dev:lan`: test the POS app and the admin portal on a phone on the same Wi-Fi
+// (development only). Starts the API (localhost:8787) and both dev servers with HTTPS on all
+// interfaces: POS on 5173, admin on 5174 (fixed ports, strictPort). Each app calls the API through
+// its own dev server's /api proxy, so only 5173 and 5174 are reachable from the phone and the API
+// itself stays on this PC.
 //
-// Windows Firewall: allow the dev server on Private networks once, from an admin PowerShell:
-//   New-NetFirewallRule -DisplayName "NaqdPOS dev server (5173)" -Direction Inbound -Protocol TCP -LocalPort 5173 -Action Allow -Profile Private
+// Windows Firewall: allow both dev servers on Private networks once, from an admin PowerShell:
+//   New-NetFirewallRule -DisplayName "NaqdPOS dev servers (5173, 5174)" -Direction Inbound -Protocol TCP -LocalPort 5173,5174 -Action Allow -Profile Private
 // Remove it later with:
-//   Remove-NetFirewallRule -DisplayName "NaqdPOS dev server (5173)"
+//   Remove-NetFirewallRule -DisplayName "NaqdPOS dev servers (5173, 5174)"
+// (An older rule for 5173 only, "NaqdPOS dev server (5173)", can stay or be removed the same way.)
 import { spawn, type ChildProcess } from 'node:child_process';
 import { networkInterfaces } from 'node:os';
 
-const PORT = 5173;
+const POS_PORT = 5173;
+const ADMIN_PORT = 5174;
 
 /** Virtual adapters a phone cannot reach (WSL, Hyper-V, VMs, Docker). */
 const VIRTUAL = /vEthernet|WSL|Hyper-V|VirtualBox|VMware|docker|Loopback/i;
@@ -48,27 +51,38 @@ function stopAll() {
 process.on('SIGINT', stopAll);
 process.on('SIGTERM', stopAll);
 
+const addresses = lanAddresses();
+// The invite text in the admin portal links to the POS app; on a LAN test that is the phone URL.
+// A VITE_POS_URL set in the shell wins (Vite gives process env priority over the .env file).
+const posUrl =
+  process.env.VITE_POS_URL ||
+  (addresses[0] ? `https://${addresses[0].ip}:${POS_PORT}` : `https://localhost:${POS_PORT}`);
+
+// Empty/"/api" = call the API through the dev server's own origin
+// (packages/core/src/api/baseUrl.ts).
+const lanEnv = { ...process.env, NAQDPOS_LAN: '1', VITE_API_URL: '/api' };
+
 children.push(start('API', 'pnpm --filter @naqdpos/api dev', process.env));
+children.push(start('POS', 'pnpm --filter @naqdpos/pos dev', lanEnv));
 children.push(
-  start('POS', 'pnpm --filter @naqdpos/pos dev', {
-    ...process.env,
-    NAQDPOS_LAN: '1',
-    // Empty/"/api" = call the API through the dev server's own origin (apps/pos/src/api/baseUrl.ts).
-    VITE_API_URL: '/api',
-  }),
+  start('Admin', 'pnpm --filter @naqdpos/admin dev', { ...lanEnv, VITE_POS_URL: posUrl }),
 );
 
-const addresses = lanAddresses();
 console.log('');
-console.log('[dev:lan] Open the POS app on your phone:');
 if (addresses.length === 0) {
-  console.log('  (no private Wi-Fi address found: is this PC on the Wi-Fi?)');
+  console.log('[dev:lan] No private Wi-Fi address found: is this PC on the Wi-Fi?');
 } else {
-  for (const { ip, name } of addresses) console.log(`  https://${ip}:${PORT}   (${name})`);
+  console.log('[dev:lan] Open on your phone:');
+  for (const { ip, name } of addresses) {
+    console.log(`  POS app:       https://${ip}:${POS_PORT}   (${name})`);
+    console.log(`  Admin portal:  https://${ip}:${ADMIN_PORT}   (${name})`);
+  }
 }
+console.log(`  - Invite messages from the admin portal link to ${posUrl}`);
 console.log('  - The phone must be on the same Wi-Fi as this PC.');
-console.log('  - The certificate is self-signed: accept the warning once (Advanced → Proceed).');
-console.log('  - If the phone cannot connect, allow port 5173 in Windows Firewall on Private');
-console.log('    networks (the PowerShell command is at the top of scripts/dev-lan.ts).');
+console.log('  - The certificates are self-signed: accept the warning once per port');
+console.log('    (Advanced → Proceed).');
+console.log('  - If the phone cannot connect, allow ports 5173 and 5174 in Windows Firewall on');
+console.log('    Private networks (the PowerShell command is at the top of scripts/dev-lan.ts).');
 console.log('  - Sign in with an email code; in development the code is printed by the API here.');
 console.log('');

@@ -1,4 +1,4 @@
-// Where the app's API client sends requests (CLAUDE.md, Portability 1: settings only).
+// Where the apps' API clients (pos and admin) send requests (CLAUDE.md, Portability 1: settings only).
 //
 // Production and normal builds: exactly VITE_API_URL, as before.
 // Dev server only: when VITE_API_URL is empty or "/api", the API is reached through the Vite
