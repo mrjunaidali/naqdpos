@@ -2,6 +2,16 @@
 // with the shared schemas, so a server change that breaks the contract fails loudly here.
 import { z } from 'zod';
 import {
+  AdminCatalogue,
+  AdminCategoryInput,
+  AdminCreateShopRequest,
+  AdminCreateShopResponse,
+  AdminImportRequest,
+  AdminImportResponse,
+  AdminInviteRequest,
+  AdminProductInput,
+  AdminStaffInput,
+  IdResponse,
   AdminEnrollResponse,
   AdminMeResponse,
   AdminShopDetail,
@@ -212,6 +222,60 @@ export function createApiClient(options: ApiClientOptions) {
         SetShopStatusResponse,
         SetShopStatusRequest.parse(input),
       ),
+
+    adminCreateShop: async (input: AdminCreateShopRequest) =>
+      request('POST', '/admin/shops', AdminCreateShopResponse, AdminCreateShopRequest.parse(input)),
+    adminCatalogue: async (shopId: string) =>
+      request('GET', `/admin/shops/${encodeURIComponent(shopId)}/catalogue`, AdminCatalogue),
+    adminCreateInvite: async (shopId: string, email: string) =>
+      request(
+        'POST',
+        `/admin/shops/${encodeURIComponent(shopId)}/invites`,
+        IdResponse,
+        AdminInviteRequest.parse({ email }),
+      ),
+    adminRevokeInvite: async (inviteId: string) =>
+      request('POST', `/admin/invites/${encodeURIComponent(inviteId)}/revoke`, SuccessResponse, {}),
+    adminSaveProduct: async (shopId: string, input: AdminProductInput) =>
+      request(
+        'POST',
+        `/admin/shops/${encodeURIComponent(shopId)}/products`,
+        IdResponse,
+        AdminProductInput.parse(input),
+      ),
+    adminHideProduct: async (shopId: string, productId: string, hidden: boolean) =>
+      request(
+        'POST',
+        `/admin/shops/${encodeURIComponent(shopId)}/products/${encodeURIComponent(productId)}/hide`,
+        SuccessResponse,
+        { hidden },
+      ),
+    adminImportProducts: async (shopId: string, input: AdminImportRequest) =>
+      request(
+        'POST',
+        `/admin/shops/${encodeURIComponent(shopId)}/products/import`,
+        AdminImportResponse,
+        AdminImportRequest.parse(input),
+      ),
+    adminSaveCategory: async (shopId: string, input: AdminCategoryInput) =>
+      request(
+        'POST',
+        `/admin/shops/${encodeURIComponent(shopId)}/categories`,
+        IdResponse,
+        AdminCategoryInput.parse(input),
+      ),
+    adminSaveStaff: async (shopId: string, input: AdminStaffInput) =>
+      request(
+        'POST',
+        `/admin/shops/${encodeURIComponent(shopId)}/staff`,
+        IdResponse,
+        AdminStaffInput.parse(input),
+      ),
+    /** The invited owner's own first PIN (hashed on the device). */
+    setFirstPin: async (staffId: string, pinHash: string) =>
+      request('POST', `/staff/${encodeURIComponent(staffId)}/first-pin`, SuccessResponse, {
+        pin_hash: pinHash,
+      }),
 
     /** Sends up to 200 outbox entries (architecture §4). */
     syncPush: async (input: SyncPushRequest) =>

@@ -1,4 +1,10 @@
-import { useId, type ButtonHTMLAttributes, type InputHTMLAttributes, type ReactNode } from 'react';
+import {
+  useId,
+  type ButtonHTMLAttributes,
+  type InputHTMLAttributes,
+  type ReactNode,
+  type SelectHTMLAttributes,
+} from 'react';
 
 /** Admin UI pieces (theme tokens only, 44px targets), like apps/pos/src/ui. */
 export function Button({
@@ -55,6 +61,44 @@ export function Card({ title, children }: { title?: string; children: ReactNode 
 export function Alert({ children }: { children: ReactNode }) {
   return (
     <p role="alert" className="rounded-md border border-danger bg-danger/10 px-3 py-2 text-danger">
+      {children}
+    </p>
+  );
+}
+
+export function Select({
+  label,
+  options,
+  ...select
+}: SelectHTMLAttributes<HTMLSelectElement> & {
+  label: string;
+  options: readonly (readonly [value: string, label: string])[];
+}) {
+  const id = useId();
+  return (
+    <div className="space-y-1">
+      <label htmlFor={id} className="block font-medium">
+        {label}
+      </label>
+      <select
+        id={id}
+        className="min-h-11 w-full rounded-md border border-border bg-surface px-2"
+        {...select}
+      >
+        {options.map(([value, text]) => (
+          <option key={value} value={value}>
+            {text}
+          </option>
+        ))}
+      </select>
+    </div>
+  );
+}
+
+/** A plain success line (saved, copied, imported). */
+export function Notice({ children }: { children: ReactNode }) {
+  return (
+    <p role="status" className="rounded-md border border-border bg-bg px-3 py-2">
       {children}
     </p>
   );

@@ -118,7 +118,11 @@
   },
   "setup": {
     "notOwner": "Only the shop owner can set up a new device. Ask the owner to sign in here.",
-    "signOut": "Sign out"
+    "signOut": "Sign out",
+    "whichShop": "Which shop is this device for?",
+    "setPinTitle": "Set your PIN",
+    "setPinIntro": "You use this 4-digit PIN to open the app on shop devices. Only you know it.",
+    "savePin": "Save PIN and continue"
   },
   "language": {
     "switchLabel": "Change language",

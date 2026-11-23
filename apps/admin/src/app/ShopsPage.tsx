@@ -51,7 +51,15 @@ export function ShopsPage() {
 
   return (
     <section className="space-y-4">
-      <h1 className="text-2xl font-bold">Shops</h1>
+      <div className="flex flex-wrap items-center gap-3">
+        <h1 className="flex-1 text-2xl font-bold">Shops</h1>
+        <Link
+          to="/shops/new"
+          className="inline-flex min-h-11 items-center rounded-md bg-primary px-4 font-semibold text-primary-fg"
+        >
+          New shop
+        </Link>
+      </div>
       <form
         className="flex flex-wrap items-end gap-2"
         onSubmit={(e) => {

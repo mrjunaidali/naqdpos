@@ -15,6 +15,7 @@ export * from './phone.ts';
 export * from './pin.ts';
 export * from './pinLock.ts';
 export * from './presets/freshProduce.ts';
+export * from './productImport.ts';
 export * from './qty.ts';
 export * from './receipt.ts';
 export * from './sale.ts';

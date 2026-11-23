@@ -31,6 +31,7 @@ Moving a part = changing its settings. Nothing host-specific is in code.
 | Where | Variable | Example / note |
 | --- | --- | --- |
 | pos, admin (build time) | `VITE_API_URL` | `https://api.<domain>` (local: `http://localhost:8787`) |
+| admin (build time) | `VITE_POS_URL` | shop app address used in the owner invite text, `https://pos.<domain>` (local: `http://localhost:5173`); the portal warns when it is empty |
 | API, worker | `DATABASE_URL` | `postgres://naqdpos_app:…@host:5432/naqdpos` (app role, RLS applies) |
 | API, worker | `DATABASE_ADMIN_URL` | owner role; migrations and backup jobs only |
 | API, worker | `S3_ENDPOINT`, `S3_REGION`, `S3_BUCKET`, `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY` | R2 endpoint now |

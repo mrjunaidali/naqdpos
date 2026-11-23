@@ -8,7 +8,7 @@ import { Alert, Button } from '../../ui/Button.tsx';
 import { errorMessageKey } from '../../ui/errors.ts';
 import { OnboardingForm } from './OnboardingForm.tsx';
 import { RegisterDeviceForm } from './RegisterDeviceForm.tsx';
-import { ownerShop } from './setup.ts';
+import { ownerShops } from './setup.ts';
 
 type Load =
   | { status: 'loading' }
@@ -23,6 +23,7 @@ export function SetupPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const [load, setLoad] = useState<Load>({ status: 'loading' });
+  const [chosen, setChosen] = useState<string>();
 
   // State changes only in the promise callbacks, so the effect never renders twice in a row.
   const fetchMe = useCallback(
@@ -56,11 +57,27 @@ export function SetupPage() {
     );
   }
 
-  const owned = ownerShop(load.me);
+  const ownedShops = ownerShops(load.me);
+  const owned =
+    ownedShops.length === 1 ? ownedShops[0] : ownedShops.find((e) => e.shop.id === chosen);
   return (
     <section className="mx-auto max-w-sm">
-      {owned ? (
-        <RegisterDeviceForm shop={owned.shop} onDone={done} />
+      {ownedShops.length > 1 && !owned ? (
+        // An owner of several shops: each device belongs to one shop.
+        <div className="space-y-3">
+          <h1 className="text-2xl font-bold">{t('setup.whichShop')}</h1>
+          {ownedShops.map((e) => (
+            <Button key={e.shop.id} variant="secondary" onClick={() => setChosen(e.shop.id)}>
+              {e.shop.name}
+            </Button>
+          ))}
+        </div>
+      ) : owned ? (
+        <RegisterDeviceForm
+          shop={owned.shop}
+          ownerStaffId={owned.has_pin === false ? (owned.staff?.id ?? null) : null}
+          onDone={done}
+        />
       ) : load.me.shops.length > 0 ? (
         // A cashier or rider membership: only the owner can set up a device (§4, §5).
         <div className="space-y-4">

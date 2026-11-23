@@ -8,7 +8,7 @@ import { META_KEYS, type StoredDevice } from '../../db/session.ts';
 import { useCurrentStaffStore, writeCurrentStaffId } from '../../staff/currentStaff.ts';
 import { syncEngine } from '../../sync/index.ts';
 
-type ShopEntry = MeResponse['shops'][number];
+export type ShopEntry = MeResponse['shops'][number];
 
 /** meta key: where to go right after setup (read once by Home). */
 export const AFTER_SETUP_KEY = 'after_setup';
@@ -21,9 +21,14 @@ export function defaultDeviceName(mode: SetupMode, t: (key: string) => string): 
   return mode === 'owner' ? t('device.defaultName') : t('device.defaultNameShop');
 }
 
-/** The shop this device is set up for: the first one the user owns (a picker comes later). */
+/** The shop this device is set up for: the first one the user owns. */
 export function ownerShop(me: MeResponse): ShopEntry | undefined {
   return me.shops.find((entry) => entry.role === 'owner');
+}
+
+/** Every shop the user owns (an owner of several shops picks one per device). */
+export function ownerShops(me: MeResponse): ShopEntry[] {
+  return me.shops.filter((entry) => entry.role === 'owner');
 }
 
 export async function registerThisDevice(input: {

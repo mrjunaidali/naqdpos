@@ -5,7 +5,15 @@ import { api, ApiError } from '../../api/index.ts';
 import { db } from '../../db/schema.ts';
 import { getStoredDevice } from '../../db/session.ts';
 import { resetApiMock } from '../../test/apiMock.ts';
-import { deviceRow, me, resetDb, seedSession, shopRow, staffRow } from '../../test/fixtures.ts';
+import {
+  deviceRow,
+  me,
+  resetDb,
+  seedReady,
+  seedSession,
+  shopRow,
+  staffRow,
+} from '../../test/fixtures.ts';
 import { renderAt } from '../../test/render.tsx';
 
 vi.mock('../../api/index.ts', () => import('../../test/apiMock.ts'));
@@ -271,6 +279,106 @@ describe('setup for an owner who already has a shop', () => {
     await waitFor(() =>
       expect(screen.getByRole('heading', { name: 'Set up your shop' })).toBeInTheDocument(),
     );
+  });
+});
+
+describe('invited owner (US012)', () => {
+  const registers = () =>
+    mocked.registerDevice.mockImplementation((input) =>
+      Promise.resolve(
+        deviceRow({
+          id: input.id,
+          code: 'B1',
+          name: input.name,
+          mode: input.mode ?? 'shop',
+          shop_id: input.shop_id,
+        }),
+      ),
+    );
+
+  it('without a PIN: adds the device, then sets the first PIN (hashed here) and saves it', async () => {
+    mocked.me.mockResolvedValue(
+      me([
+        { role: 'owner', shop: shopRow({ type: 'grocery' }), staff: staffRow(), has_pin: false },
+      ]),
+    );
+    mocked.setFirstPin.mockResolvedValue({ success: true });
+    registers();
+    renderAt('/setup');
+    await screen.findByRole('heading', { name: 'Add this device' });
+    fireEvent.click(screen.getByRole('button', { name: 'Add device' }));
+    expect(await screen.findByRole('heading', { name: 'Set your PIN' })).toBeInTheDocument();
+    expect(mocked.registerDevice).not.toHaveBeenCalled();
+
+    typeInto('Your 4-digit PIN', '1234');
+    typeInto('Enter the PIN again', '9999');
+    fireEvent.click(screen.getByRole('button', { name: 'Save PIN and continue' }));
+    expect(await screen.findByText('The two PINs do not match.')).toBeInTheDocument();
+    expect(mocked.setFirstPin).not.toHaveBeenCalled();
+
+    typeInto('Enter the PIN again', '1234');
+    fireEvent.click(screen.getByRole('button', { name: 'Save PIN and continue' }));
+    await waitFor(() => expect(mocked.registerDevice).toHaveBeenCalled());
+    const [staffId, hash] = mocked.setFirstPin.mock.calls[0]!;
+    expect(staffId).toBe(staffRow().id);
+    expect(await verifyPin('1234', hash)).toBe(true);
+    await waitFor(async () => expect(await db.staff_pins.get(staffRow().id)).toBeDefined());
+  });
+
+  it('an owner of several shops chooses the shop for this device', async () => {
+    const second = shopRow({ id: '01900000-0000-7000-8000-0000000000b2', name: 'Second Fruit' });
+    mocked.me.mockResolvedValue(
+      me([
+        { role: 'owner', shop: shopRow(), staff: staffRow(), has_pin: true },
+        {
+          role: 'owner',
+          shop: second,
+          staff: staffRow({ id: '01900000-0000-7000-8000-0000000000c2', shop_id: second.id }),
+          has_pin: true,
+        },
+      ]),
+    );
+    registers();
+    renderAt('/setup');
+    expect(
+      await screen.findByRole('heading', { name: 'Which shop is this device for?' }),
+    ).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Second Fruit' }));
+    expect(screen.getByText(/You are signed in to Second Fruit/)).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Add device' }));
+    await waitFor(() =>
+      expect(mocked.registerDevice).toHaveBeenCalledWith(
+        expect.objectContaining({ shop_id: second.id }),
+      ),
+    );
+    expect((await getStoredDevice())?.shop_id).toBe(second.id);
+  });
+
+  it('a device already set up for the first shop stays on it after a second shop is added', async () => {
+    await resetDb();
+    await seedReady('owner');
+    const second = shopRow({ id: '01900000-0000-7000-8000-0000000000b2', name: 'Second Fruit' });
+    mocked.me.mockResolvedValue(
+      me([
+        { role: 'owner', shop: shopRow(), staff: staffRow(), has_pin: true },
+        {
+          role: 'owner',
+          shop: second,
+          staff: staffRow({ id: '01900000-0000-7000-8000-0000000000c2', shop_id: second.id }),
+          has_pin: true,
+        },
+      ]),
+    );
+    const { router } = renderAt('/');
+    await waitFor(() =>
+      expect(
+        screen.getByRole('heading', { name: /^Good (morning|afternoon|evening)$/ }),
+      ).toBeInTheDocument(),
+    );
+    expect(screen.queryByRole('heading', { name: 'Which shop is this device for?' })).toBeNull();
+    expect(router.state.location.pathname).toBe('/');
+    expect((await getStoredDevice())?.shop_id).toBe(shopRow().id);
+    expect(mocked.registerDevice).not.toHaveBeenCalled();
   });
 });
 

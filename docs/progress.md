@@ -735,3 +735,40 @@ The approved Home (hero card, stat cards, action tiles, Recent) and the navigati
 **Follow-ups**
 - US012 / US013 (next prompt). App version per device is not stored yet (shown later in device lists).
 - Owner sessions keep 90 days; admin portal sessions are ended by the 12-hour check (Better Auth's own expiry stays 90 days for the shared config).
+
+## Step 22 — Admin creates shops, invites owners, acts as shop (US012, US013) (2026-11-23)
+
+The admin portal can now onboard a shopkeeper end to end: create the shop, invite the owner by email (sent as a WhatsApp text), and set up products, categories and staff on the shop's behalf. The owner signs in with the invited email, adds their device and sets their own PIN.
+
+**Built**
+- Migration `20261123150000_invites_admin_shop.sql` (approved):
+  - `uuid_v7()` in plain SQL (same layout as core's `uuidv7()`), for rows the admin functions create.
+  - `invites` (architecture §3): RLS on, no privileges for `naqdpos_app`, one pending per (shop, email), 14 days, not synced.
+  - `accept_invites()` (verified email only; membership, staff link, accepted, audit `invite.accept`) and `owner_set_first_pin()` (linked owner only, only once, audit `staff.first_pin`).
+  - Admin functions, each `admin_assert()` first and audited with `acting_as_admin = true` and the shop_id: `admin_create_shop`, `admin_create_invite` (replaces the pending one), `admin_revoke_invite`, `admin_save_product` / `admin_hide_product` (price and cost history like the shop's writes; an edit keeps `track_stock` and the hidden state), `admin_import_products` (categories on demand, existing names skip or update), `admin_save_category`, `admin_save_staff` (cashiers and riders only; optional cashier PIN "set by admin"), `admin_shop_catalogue` (categories, products with cost, invites with status, staff with phone and `has_pin`).
+  - No Dexie bump: no synced table changed; admin-written rows are ordinary rows with `device_id` null.
+- `packages/core`:
+  - `productImport.ts`: `parseCsv` (quotes, `""`, commas and line breaks in quotes, CRLF), `decodeCsvText` (strips the BOM; refuses U+FFFD and Arabic-script Windows-1252 mojibake, the full 0x80–0x9F set), `previewImport` (per-row errors, duplicates in the file, existing names, missing columns), `presetImportRows`, `inviteMessage`, `whatsAppLink`.
+  - `api/admin.ts` schemas (create shop, invites, catalogue, product / category / staff input, import) and client methods; `FirstPinRequest`; `/me` `has_pin`.
+- `apps/api`: `routes/adminShop.ts` (`POST /admin/shops`, `GET /admin/shops/{id}/catalogue`, invites, revoke, products, hide, import, categories, staff — on the guarded admin app); `routes/firstPin.ts` (`POST /staff/{id}/first-pin`: 403 not the linked owner, 409 PIN exists); `GET /me` runs `accept_invites()` first and returns `has_pin`.
+- `apps/pos`: "Which shop is this device for?" when `/me` shows more than one owned shop (setup and "Add this device"); "Set your PIN" after adding the device when the owner has no PIN (hashed on the device). en strings; ur strings are `TODO-ur` placeholders.
+- `apps/admin` (English, theme tokens):
+  - Shops → **New shop** (shop name, type, city, address, phone; owner name, Pakistani mobile normalised, email), then the WhatsApp text with Copy and an "Open WhatsApp" `wa.me` button; warns when `VITE_POS_URL` is not set.
+  - Shop detail: **Owner invites** card (status, Resend message, Revoke, New invite when none is pending) and **Act as shop**.
+  - **Act as shop** (`/shops/:id/act/...`), "Acting as <shop> — every change is saved as you (admin) and audit-logged" banner on every screen: Products (search, add / edit with optional cost, hide / restore), Fresh produce list (existing names shown as "Added", optional rates), CSV import ("CSV UTF-8" hint next to the file picker, preview table, skip / update, "Import N products"), Categories (add, rename, ↑ / ↓ renumbering), Staff (cashier / rider only, optional cashier PIN hashed in the browser, deactivate / reactivate).
+  - `Select` and `Notice` UI pieces; `useFailure` (401 → back to sign-in).
+- Settings: `VITE_POS_URL` (admin build) in `.env.example` and deployment §2.
+
+**Tests**: Core 363 (+9: CSV parsing, BOM, mis-encoded Urdu incl. every Urdu letter through a real Windows-1252 decoder, preview validation, missing columns, preset rows, WhatsApp text, `wa.me` link). DB 189 (+9: shop + owner row + seeds + invite, audited; accept only by the invited verified email; expired / revoked ignored; one pending per shop and email; an existing owner accepts a second shop; first PIN rules; every admin function refuses owners; admin rows are UUIDv7 with `device_id` null, audited, pulled by the shop device (costs not to a shop counter); an edit keeps `track_stock`; the catalogue shows `has_pin` and never a hash; import skip / update and presets without duplicates; no owner through staff, no rider PIN). API DB 40 (+1: invited owner signs in with the email code → owner with `has_pin: false` → first PIN once → 409; another email sees no shop). Pos 301 (+3: Set your PIN; owner of several shops picks the shop for the new device; a device already set up stays on its shop). Admin 15 (+9: new shop with mobile validation, WhatsApp text and link; invite card resend / revoke / new invite; banner on every act screen; product edit keeps cost and hide; produce list "Added" and import with skip; CSV preview with BOM, row errors, skip → update, nothing written before Import; a non-UTF-8 file refused; category reorder and add; staff without owner role, hashed PIN, deactivate keeps the phone).
+
+**Decisions**
+- Invites match the verified sign-in email; no link or token. Owners set their own first PIN; admins never see owner PINs.
+- Admin-written rows carry `device_id` null; the audit log shows who wrote them.
+- An admin product edit doesn't change `track_stock` (not on the admin form) or un-hide a product; hide / restore is explicit.
+- The CSV must be UTF-8 ("CSV UTF-8" in Excel); other encodings are refused rather than guessed.
+
+**Follow-ups**
+- Email the invite when an SMTP provider is chosen (architecture §8).
+- Urdu strings for the new POS screens (`TODO-ur`).
+- If an invite for a different email is accepted after the owner row is already linked to another user, the membership is created but the staff row keeps its first link (re-pointing an owner row is not offered yet).
+- Admins can set but not clear a product's cost price.

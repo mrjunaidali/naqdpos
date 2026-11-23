@@ -196,6 +196,9 @@ export const ResetOwnerPinRequest = z.object({
 });
 export type ResetOwnerPinRequest = z.infer<typeof ResetOwnerPinRequest>;
 
+/** POST /staff/{id}/first-pin: the invited owner's own first PIN (hashed on the device). */
+export const FirstPinRequest = z.object({ pin_hash: pinHash });
+
 /** POST /devices/{id}/mode: owner switches a device between owner phone and shop counter. */
 export const SetDeviceModeRequest = z.object({ mode: z.enum(['owner', 'shop']) });
 export type SetDeviceModeRequest = z.infer<typeof SetDeviceModeRequest>;
@@ -209,6 +212,8 @@ export const MeResponse = z.object({
       shop: ShopRowSchema,
       /** The caller's own staff row in that shop (null if none yet). */
       staff: StaffRowSchema.nullable(),
+      /** Whether that staff row has a PIN (an invited owner sets their first PIN). */
+      has_pin: z.boolean().optional(),
     }),
   ),
 });

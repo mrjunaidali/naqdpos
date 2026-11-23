@@ -21,6 +21,7 @@ import { z } from 'zod';
 import type { AppDeps, AppEnv } from '../app.ts';
 import { withUserTx, type Db } from '../db/index.ts';
 import { errorBody, pgCode } from '../errors.ts';
+import { registerAdminShopRoutes } from './adminShop.ts';
 
 const json = <T>(schema: T) => ({ 'application/json': { schema } });
 const PAGE_SIZE = 25;
@@ -147,6 +148,8 @@ export function adminRoutes(deps: Pick<AppDeps, 'db' | 'auth'>) {
   app.use('/admin/*', requireSession(deps));
   app.use('/admin/shops', requireAdmin(deps));
   app.use('/admin/shops/*', requireAdmin(deps));
+  app.use('/admin/invites/*', requireAdmin(deps));
+  registerAdminShopRoutes(app, deps);
 
   const adminOnly = async (userId: string, sessionId: string) => {
     const state = await sessionState(deps.db, userId, sessionId);

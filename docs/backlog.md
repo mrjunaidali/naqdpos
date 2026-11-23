@@ -30,7 +30,7 @@ Build in this order, not in ID order. "Sheet step" is the step number in the ori
 | 10 | Shop profile and receipts | US014, US036 | 29, 30 | Done (Step 16; logo deferred) |
 | 11 | Expenses | US065, US046, US066 | 30a, 31, 31a | Done (Step 17) |
 | 12 | Daily closing | US044, US045, US067 | 32, 33, 33a | Done (Step 18) |
-| 13 | Admin portal | US010, US011, US012, US013 | 34, 35, 7, 36 | To do |
+| 13 | Admin portal | US010, US011, US012, US013 | 34, 35, 7, 36 | Done (Steps 21–22) |
 | 14 | Reports | US047, US048, US049, US068 | 37, 38, 39, 39a | To do |
 | 15 | Urdu complete, backups | US009, US008 | 40, 41 | To do |
 | 16 | Self-registration and trial | US073–US077 | — | Proposed (see `docs/features/self-registration.md`) |
@@ -132,14 +132,16 @@ Build in this order, not in ID order. "Sheet step" is the step number in the ori
 
 ### F07 · Setup on shop's behalf
 
-**US012** · Must · 3 · To do (self-service part done in Step 4) — As system admin, I want to create a shop and invite its owner, so that I can onboard shopkeepers who can't do it themselves.
+**US012** · Must · 3 · Done (self-service part Step 4; admin part Step 22) — As system admin, I want to create a shop and invite its owner, so that I can onboard shopkeepers who can't do it themselves.
 - Admin creates shop: name, type (fruit & veg, grocery, meat, general), address, phone
-- Owner invited by email; the membership links when that email first signs in (Google or email OTP). Invite flow may need an `invites` table — **ask before adding** (architecture §8)
-- Audit-logged
+- Owner invited by email; the membership links when that email first signs in (Google or email OTP). `invites` table approved (architecture §3, §5) — *done*: matched by the verified email, 14 days, one pending per shop and email, resend / revoke
+- No email provider yet: copyable WhatsApp text and a `wa.me` link to the owner (`VITE_POS_URL` for the app address) — *done*; emailing it when SMTP exists is a follow-up
+- The owner sets their own PIN at first sign-in ("Set your PIN"); an owner of several shops picks "Which shop is this device for?" — *done*
+- Audit-logged — *done*
 
-**US013** · Must · 5 · To do — As system admin, I want to add products and staff for a shop on its behalf, so that the shop is ready to sell on day one.
-- "Act as shop" mode with a visible banner; every write audit-logged as admin
-- Can use the fresh produce list (US072) and CSV import with preview and validation
+**US013** · Must · 5 · Done (Step 22) — As system admin, I want to add products and staff for a shop on its behalf, so that the shop is ready to sell on day one.
+- "Act as shop" mode with a visible banner; every write audit-logged as admin — *done* (products, categories, cashiers / riders; owners only via invites)
+- Can use the fresh produce list (US072) and CSV import with preview and validation — *done* (CSV UTF-8 / BOM handling; skip or update existing names)
 
 ### F08 · Shop profile
 

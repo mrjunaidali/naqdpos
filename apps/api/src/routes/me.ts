@@ -1,6 +1,7 @@
 import { createRoute, OpenAPIHono } from '@hono/zod-openapi';
 import { ErrorResponse, MeResponse } from '@naqdpos/core';
 import type { AppDeps, AppEnv } from '../app.ts';
+import { sql } from 'kysely';
 import { withUserTx } from '../db/index.ts';
 import { toShopRow, toStaffRow } from '../db/rows.ts';
 import { requireUser } from './require-user.ts';
@@ -26,6 +27,8 @@ export function meRoutes(deps: Pick<AppDeps, 'db' | 'auth'>) {
     const user = c.get('user');
     // Everything is read through RLS as this user, so only their own shops come back.
     const shops = await withUserTx(deps.db, c.get('tx'), async (tx) => {
+      // An invite for this user's verified email becomes an owner membership now (US012).
+      await sql`select accept_invites()`.execute(tx);
       const memberships = await tx
         .selectFrom('memberships')
         .select(['shop_id', 'role'])
@@ -44,11 +47,29 @@ export function meRoutes(deps: Pick<AppDeps, 'db' | 'auth'>) {
           .where('deleted_at', 'is', null)
           .execute(),
       ]);
+      const ids = staffRows.map((s) => s.id);
+      const pins = ids.length
+        ? (
+            await sql<{
+              staff_id: string;
+            }>`select staff_id from staff_pins where staff_id = any(${ids}::uuid[]) and deleted_at is null`.execute(
+              tx,
+            )
+          ).rows
+        : [];
+      const withPin = new Set(pins.map((p) => p.staff_id));
       return memberships.flatMap((m) => {
         const shop = shopRows.find((s) => s.id === m.shop_id);
         if (!shop || shop.deleted_at) return [];
         const staff = staffRows.find((s) => s.shop_id === m.shop_id);
-        return [{ role: m.role, shop: toShopRow(shop), staff: staff ? toStaffRow(staff) : null }];
+        return [
+          {
+            role: m.role,
+            shop: toShopRow(shop),
+            staff: staff ? toStaffRow(staff) : null,
+            has_pin: staff ? withPin.has(staff.id) : false,
+          },
+        ];
       });
     });
     return c.json({ user, shops }, 200);

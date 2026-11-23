@@ -1,15 +1,20 @@
-import type { AdminShopDetail } from '@naqdpos/core';
+import type { AdminCatalogue, AdminShopDetail } from '@naqdpos/core';
 import { useCallback, useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router';
 import { api, ApiError } from '../api/index.ts';
 import { useAdmin, when } from './adminContext.ts';
+import { InvitesCard } from './InvitesCard.tsx';
 import { Alert, Button, Card } from './ui.tsx';
 
-/** One shop: profile, devices, staff (no PIN data), conflicts, audit; suspend / reactivate. */
+/**
+ * One shop: profile, owner invites (US012), devices, staff (no PIN data), conflicts, audit;
+ * suspend / reactivate; the way into "Act as shop" (US013).
+ */
 export function ShopDetailPage() {
   const { id } = useParams();
   const { expired } = useAdmin();
   const [data, setData] = useState<AdminShopDetail | null>(null);
+  const [catalogue, setCatalogue] = useState<AdminCatalogue | null>(null);
   const [error, setError] = useState<string>();
   const [changing, setChanging] = useState(false);
   const [reason, setReason] = useState('');
@@ -17,9 +22,11 @@ export function ShopDetailPage() {
 
   const load = useCallback(() => {
     if (!id) return;
-    void api
-      .adminGetShop(id)
-      .then(setData)
+    void Promise.all([api.adminGetShop(id), api.adminCatalogue(id)])
+      .then(([detail, cat]) => {
+        setData(detail);
+        setCatalogue(cat);
+      })
       .catch((e: unknown) => {
         if (e instanceof ApiError && e.status === 401) expired();
         else
@@ -61,7 +68,15 @@ export function ShopDetailPage() {
       <Link to="/" className="underline">
         ← Shops
       </Link>
-      <h1 className="text-2xl font-bold">{shop.name}</h1>
+      <div className="flex flex-wrap items-center gap-3">
+        <h1 className="flex-1 text-2xl font-bold">{shop.name}</h1>
+        <Link
+          to={`/shops/${shop.id}/act`}
+          className="inline-flex min-h-11 items-center rounded-md bg-primary px-4 font-semibold text-primary-fg"
+        >
+          Act as shop
+        </Link>
+      </div>
       <Card title="Profile">
         <dl className="grid grid-cols-2 gap-1 text-sm">
           {(
@@ -115,6 +130,9 @@ export function ShopDetailPage() {
           </div>
         )}
       </Card>
+      {catalogue && (
+        <InvitesCard shopId={shop.id} shopName={shop.name} catalogue={catalogue} reload={load} />
+      )}
       <Card title={`Devices (${data.devices.length})`}>
         <ul className="divide-y divide-border text-sm">
           {data.devices.map((d) => (

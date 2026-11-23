@@ -29,6 +29,16 @@ export const api = {
   adminListShops: vi.fn(),
   adminGetShop: vi.fn(),
   adminSetShopStatus: vi.fn(),
+  adminCreateShop: vi.fn(),
+  adminCatalogue: vi.fn(),
+  adminCreateInvite: vi.fn(),
+  adminRevokeInvite: vi.fn(),
+  adminSaveProduct: vi.fn(),
+  adminHideProduct: vi.fn(),
+  adminImportProducts: vi.fn(),
+  adminSaveCategory: vi.fn(),
+  adminSaveStaff: vi.fn(),
+  setFirstPin: vi.fn(),
 } satisfies Record<keyof ApiClient, Mock>;
 
 /** apiWithToken(token) returns the same mocks; check which token was used via its calls. */

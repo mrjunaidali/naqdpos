@@ -15,6 +15,15 @@ const api = vi.hoisted(() => ({
   adminListShops: vi.fn(),
   adminGetShop: vi.fn(),
   adminSetShopStatus: vi.fn(() => Promise.resolve({ id: 'x', status: 'suspended' })),
+  adminCatalogue: vi.fn(),
+  adminCreateShop: vi.fn(),
+  adminCreateInvite: vi.fn(() => Promise.resolve({ id: 'i' })),
+  adminRevokeInvite: vi.fn(() => Promise.resolve({ success: true })),
+  adminSaveProduct: vi.fn(() => Promise.resolve({ id: 'p' })),
+  adminHideProduct: vi.fn(() => Promise.resolve({ success: true })),
+  adminImportProducts: vi.fn(),
+  adminSaveCategory: vi.fn(() => Promise.resolve({ id: 'c' })),
+  adminSaveStaff: vi.fn(() => Promise.resolve({ id: 's' })),
 }));
 vi.mock('../api/index.ts', async () => {
   const core = await vi.importActual<typeof import('@naqdpos/core')>('@naqdpos/core');
@@ -58,6 +67,51 @@ const detail = {
   audit: [],
 };
 
+const OWNER = '019a9b8e-0000-7000-8000-0000000000a1';
+const CASHIER = '019a9b8e-0000-7000-8000-0000000000a2';
+const CAT = '019a9b8e-0000-7000-8000-0000000000c1';
+const MANGO = '019a9b8e-0000-7000-8000-0000000000d1';
+const INVITE = '019a9b8e-0000-7000-8000-0000000000e1';
+const catalogue = {
+  categories: [{ id: CAT, name: 'Fruits', name_ur: 'پھل', sort: 1 }],
+  products: [
+    {
+      id: MANGO,
+      name: 'Mango',
+      name_ur: null,
+      unit: 'kg',
+      category_id: CAT,
+      sale_price_paisa: 30000,
+      cost_price_paisa: 22000,
+      icon: null,
+      search_terms: ['aam'],
+      hidden: false,
+    },
+  ],
+  invites: [
+    {
+      id: INVITE,
+      email: 'ali@example.test',
+      created_at: '2026-11-20T00:00:00Z',
+      expires_at: '2026-12-04T00:00:00Z',
+      accepted_at: null,
+      revoked_at: null,
+      status: 'pending',
+    },
+  ],
+  staff: [
+    { id: OWNER, name: 'Ali', phone: '+923001234567', role: 'owner', active: true, has_pin: false },
+    {
+      id: CASHIER,
+      name: 'Asif',
+      phone: '+923331112222',
+      role: 'cashier',
+      active: true,
+      has_pin: true,
+    },
+  ],
+};
+
 function start(path = '/') {
   const router = createMemoryRouter(routes, { initialEntries: [path] });
   render(<RouterProvider router={router} />);
@@ -68,6 +122,7 @@ beforeEach(() => {
   vi.clearAllMocks();
   api.adminListShops.mockResolvedValue({ rows: [listRow], total: 1, page: 1, page_size: 25 });
   api.adminGetShop.mockResolvedValue(detail);
+  api.adminCatalogue.mockResolvedValue(catalogue);
 });
 
 describe('admin sign-in', () => {
@@ -179,4 +234,263 @@ describe('shops (US010, US011)', () => {
       }),
     );
   });
+});
+
+describe('new shop and invites (US012)', () => {
+  beforeEach(() => {
+    setToken('tok-1');
+    api.adminMe.mockResolvedValue({ email: 'me@x.test', state: 'ok' });
+  });
+
+  it('creates the shop with a normalised mobile and shows the WhatsApp text and wa.me link', async () => {
+    api.adminCreateShop.mockResolvedValue({
+      shop_id: SHOP,
+      owner_staff_id: OWNER,
+      invite_id: INVITE,
+    });
+    start();
+    fireEvent.click(await screen.findByRole('link', { name: 'New shop' }));
+    fireEvent.change(await screen.findByLabelText('Shop name'), {
+      target: { value: 'Bilal Sabzi' },
+    });
+    fireEvent.change(screen.getByLabelText('City'), { target: { value: 'Lahore' } });
+    fireEvent.change(screen.getByLabelText("Owner's name"), { target: { value: 'Bilal' } });
+    fireEvent.change(screen.getByLabelText("Owner's mobile"), { target: { value: '12345' } });
+    fireEvent.change(screen.getByLabelText("Owner's email"), {
+      target: { value: 'Bilal@Example.test' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Create shop and invite owner' }));
+    expect(
+      await screen.findByText('Enter a Pakistani mobile, e.g. 0300 1234567.'),
+    ).toBeInTheDocument();
+    expect(api.adminCreateShop).not.toHaveBeenCalled();
+
+    fireEvent.change(screen.getByLabelText("Owner's mobile"), {
+      target: { value: '0300 1234567' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Create shop and invite owner' }));
+    expect(await screen.findByRole('heading', { name: 'Shop created' })).toBeInTheDocument();
+    expect(api.adminCreateShop).toHaveBeenCalledWith({
+      name: 'Bilal Sabzi',
+      type: 'fruit_veg',
+      city: 'Lahore',
+      owner_name: 'Bilal',
+      owner_mobile: '+923001234567',
+      owner_email: 'bilal@example.test',
+    });
+    const text =
+      'Assalam o alaikum! Your shop Bilal Sabzi is ready on NaqdPOS. Open https://pos.test and sign in with bilal@example.test.';
+    expect(screen.getByTestId('invite-text')).toHaveTextContent(text);
+    expect(screen.getByRole('link', { name: 'Open WhatsApp' })).toHaveAttribute(
+      'href',
+      `https://wa.me/923001234567?text=${encodeURIComponent(text)}`,
+    );
+  });
+
+  it('shop detail: pending invite with resend and revoke; a new invite once none is pending', async () => {
+    start(`/shops/${SHOP}`);
+    expect(await screen.findByText('pending')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Resend message' }));
+    expect(screen.getByTestId('invite-text')).toHaveTextContent('sign in with ali@example.test');
+    expect(screen.getByRole('link', { name: 'Open WhatsApp' }).getAttribute('href')).toContain(
+      'wa.me/923001234567',
+    );
+    expect(screen.queryByRole('button', { name: 'New invite' })).toBeNull();
+
+    api.adminCatalogue.mockResolvedValue({
+      ...catalogue,
+      invites: [
+        { ...catalogue.invites[0]!, status: 'revoked', revoked_at: '2026-11-23T00:00:00Z' },
+      ],
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Revoke' }));
+    await waitFor(() => expect(api.adminRevokeInvite).toHaveBeenCalledWith(INVITE));
+    fireEvent.change(await screen.findByLabelText('Invite owner email'), {
+      target: { value: 'New@Example.test' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'New invite' }));
+    await waitFor(() =>
+      expect(api.adminCreateInvite).toHaveBeenCalledWith(SHOP, 'new@example.test'),
+    );
+  });
+});
+
+describe('act as shop (US013)', () => {
+  beforeEach(() => {
+    setToken('tok-1');
+    api.adminMe.mockResolvedValue({ email: 'me@x.test', state: 'ok' });
+  });
+
+  it('shows the "Acting as" banner on every screen', async () => {
+    start(`/shops/${SHOP}`);
+    fireEvent.click(await screen.findByRole('link', { name: 'Act as shop' }));
+    for (const tab of ['Products', 'Fresh produce list', 'CSV import', 'Categories', 'Staff']) {
+      fireEvent.click(await screen.findByRole('link', { name: tab }));
+      expect(await screen.findByRole('region', { name: 'Acting as shop' })).toHaveTextContent(
+        'Acting as Ali Fruit',
+      );
+    }
+  });
+
+  it('edits a product, keeping the cost as it is; hides it', async () => {
+    start(`/shops/${SHOP}/act`);
+    expect(await screen.findByText('Rs 300 / kg')).toBeInTheDocument();
+    expect(screen.getByText('cost Rs 220')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Edit' }));
+    fireEvent.change(screen.getByLabelText('Sale price (Rs)'), { target: { value: '320' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Save product' }));
+    await waitFor(() =>
+      expect(api.adminSaveProduct).toHaveBeenCalledWith(SHOP, {
+        id: MANGO,
+        name: 'Mango',
+        name_ur: null,
+        unit: 'kg',
+        category_id: CAT,
+        sale_price_paisa: 32000,
+        cost_price_paisa: 22000,
+        icon: null,
+        search_terms: ['aam'],
+      }),
+    );
+    fireEvent.click(await screen.findByRole('button', { name: 'Hide' }));
+    await waitFor(() => expect(api.adminHideProduct).toHaveBeenCalledWith(SHOP, MANGO, true));
+  });
+
+  it('fresh produce list: existing names are "Added"; picks import with skip and a rate', async () => {
+    api.adminImportProducts.mockResolvedValue({ created: 1, updated: 0, skipped: 0 });
+    api.adminCatalogue.mockResolvedValue({
+      ...catalogue,
+      products: [{ ...catalogue.products[0]!, name: 'Onion (red)' }],
+    });
+    start(`/shops/${SHOP}/act/produce`);
+    expect(await screen.findByRole('checkbox', { name: /Onion \(red\)/ })).toBeDisabled();
+    fireEvent.click(screen.getAllByRole('checkbox', { name: /Potato/ })[0]!);
+    fireEvent.change(screen.getByLabelText('Rate for Potato (Rs)'), { target: { value: '120' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Add 1 products' }));
+    await waitFor(() => expect(api.adminImportProducts).toHaveBeenCalled());
+    const [, body] = api.adminImportProducts.mock.calls[0]! as unknown as [
+      string,
+      { rows: { sale_price_paisa: number; category: string }[]; on_existing: string },
+    ];
+    expect(body.on_existing).toBe('skip');
+    expect(body.rows).toHaveLength(1);
+    expect(body.rows[0]).toMatchObject({ sale_price_paisa: 12000, category: 'Vegetables' });
+    expect(await screen.findByText('Added 1 products.')).toBeInTheDocument();
+  });
+
+  it('CSV: BOM stripped, preview with row errors, skip / update choice, nothing written before Import', async () => {
+    api.adminImportProducts.mockResolvedValue({ created: 1, updated: 1, skipped: 0 });
+    start(`/shops/${SHOP}/act/import`);
+    expect(await screen.findByText(/CSV UTF-8 \(Comma delimited\)/)).toBeInTheDocument();
+    const csv =
+      '﻿name,name_ur,unit,category,sale_price,cost_price,search_terms\r\n' +
+      'Mango,آم,kg,Fruits,320,,aam\r\n' +
+      'Banana,کیلا,dozen,Fruits,180,150,kela;kaila\r\n' +
+      ',,kg,,10,,\r\n' +
+      'Apple,,box,Fruits,200,,\r\n' +
+      'Grapes,,kg,Fruits,-5,,\r\n';
+    fireEvent.change(screen.getByLabelText('CSV file'), {
+      target: { files: [new File([csv], 'products.csv', { type: 'text/csv' })] },
+    });
+    expect(
+      await screen.findByText(/5 rows · 3 with errors \(not imported\) · 1 already exist/),
+    ).toBeInTheDocument();
+    expect(screen.getByText('name is missing')).toBeInTheDocument();
+    expect(screen.getByText('unknown unit')).toBeInTheDocument();
+    expect(screen.getByText('bad sale price')).toBeInTheDocument();
+    expect(screen.getByText('آم')).toBeInTheDocument();
+    expect(screen.getByText('exists: skip')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Import 1 products' })).toBeEnabled();
+    fireEvent.click(screen.getByRole('radio', { name: 'Update them from the file' }));
+    expect(api.adminImportProducts).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole('button', { name: 'Import 2 products' }));
+    await waitFor(() => expect(api.adminImportProducts).toHaveBeenCalledTimes(1));
+    const [, body] = api.adminImportProducts.mock.calls[0]! as unknown as [
+      string,
+      { rows: { name: string }[]; on_existing: string },
+    ];
+    expect(body.on_existing).toBe('update');
+    expect(body.rows.map((r) => r.name)).toEqual(['Mango', 'Banana']);
+    expect(await screen.findByText('Imported: 1 new, 1 updated, 0 skipped.')).toBeInTheDocument();
+  });
+
+  it('CSV: Urdu saved in a Windows code page (not UTF-8) is refused', async () => {
+    start(`/shops/${SHOP}/act/import`);
+    // "آم" in Windows-1256 is C2 E3: not valid UTF-8, so the browser decodes it to U+FFFD.
+    const bytes = new Uint8Array([
+      ...new TextEncoder().encode('name,name_ur,unit,sale_price\r\nMango,'),
+      0xc2,
+      0xe3,
+      ...new TextEncoder().encode(',kg,300\r\n'),
+    ]);
+    fireEvent.change(await screen.findByLabelText('CSV file'), {
+      target: { files: [new File([bytes], 'products.csv')] },
+    });
+    expect(
+      await screen.findByText("Save the file as 'CSV UTF-8' in Excel and try again."),
+    ).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /^Import/ })).toBeNull();
+  });
+
+  it('categories: move down renumbers; add a category', async () => {
+    api.adminCatalogue.mockResolvedValue({
+      ...catalogue,
+      categories: [
+        { id: CAT, name: 'Fruits', name_ur: null, sort: 1 },
+        { id: OWNER, name: 'Vegetables', name_ur: null, sort: 1 },
+      ],
+    });
+    start(`/shops/${SHOP}/act/categories`);
+    fireEvent.click(await screen.findByRole('button', { name: 'Move Fruits down' }));
+    await waitFor(() =>
+      expect(api.adminSaveCategory).toHaveBeenCalledWith(SHOP, {
+        id: CAT,
+        name: 'Fruits',
+        name_ur: null,
+        sort: 2,
+      }),
+    );
+    expect(api.adminSaveCategory).toHaveBeenCalledTimes(1); // Vegetables already has sort 1
+    fireEvent.change(screen.getByLabelText('New category'), { target: { value: 'Greens' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Add category' }));
+    await waitFor(() =>
+      expect(api.adminSaveCategory).toHaveBeenLastCalledWith(SHOP, {
+        name: 'Greens',
+        name_ur: null,
+      }),
+    );
+  });
+
+  it('staff: no owner role offered; a cashier PIN is sent hashed; deactivate keeps the phone', async () => {
+    start(`/shops/${SHOP}/act/staff`);
+    const role = await screen.findByLabelText('Role');
+    expect([...role.querySelectorAll('option')].map((o) => o.value)).toEqual(['cashier', 'rider']);
+    expect(screen.getByText('owner (by invite)')).toBeInTheDocument();
+    fireEvent.change(screen.getByLabelText('Name'), { target: { value: 'Naveed' } });
+    fireEvent.change(screen.getByLabelText(/^PIN \(optional/), { target: { value: '1234' } });
+    fireEvent.change(screen.getByLabelText('PIN again'), { target: { value: '1243' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Add staff member' }));
+    expect(await screen.findByText('The PINs do not match.')).toBeInTheDocument();
+    fireEvent.change(screen.getByLabelText('PIN again'), { target: { value: '1234' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Add staff member' }));
+    await waitFor(() => expect(api.adminSaveStaff).toHaveBeenCalled(), { timeout: 5000 });
+    const [, input] = api.adminSaveStaff.mock.calls[0]! as unknown as [
+      string,
+      { pin_hash: string },
+    ];
+    expect(input).toMatchObject({ name: 'Naveed', role: 'cashier', phone: null });
+    expect(input.pin_hash).toMatch(/^pbkdf2-sha256\$/);
+    expect(JSON.stringify(input)).not.toContain('"1234"');
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Deactivate' }));
+    await waitFor(() =>
+      expect(api.adminSaveStaff).toHaveBeenLastCalledWith(SHOP, {
+        id: CASHIER,
+        name: 'Asif',
+        phone: '+923331112222',
+        role: 'cashier',
+        active: false,
+      }),
+    );
+  }, 15_000);
 });

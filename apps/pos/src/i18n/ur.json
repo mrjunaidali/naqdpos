@@ -118,7 +118,11 @@
   },
   "setup": {
     "notOwner": "TODO-ur نئی ڈیوائس صرف دکان کا مالک سیٹ اپ کر سکتا ہے۔ مالک سے یہاں سائن ان کروائیں۔",
-    "signOut": "سائن آؤٹ"
+    "signOut": "سائن آؤٹ",
+    "whichShop": "TODO-ur Which shop is this device for?",
+    "setPinTitle": "TODO-ur Set your PIN",
+    "setPinIntro": "TODO-ur You use this 4-digit PIN to open the app on shop devices. Only you know it.",
+    "savePin": "TODO-ur Save PIN and continue"
   },
   "language": {
     "switchLabel": "زبان تبدیل کریں",
