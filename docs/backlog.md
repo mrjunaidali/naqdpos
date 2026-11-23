@@ -27,12 +27,12 @@ Build in this order, not in ID order. "Sheet step" is the step number in the ori
 | 7 | Selling: cart, custom item, cash, wallets/split | US029, US030, US034, US035 | 14, 15, 16, 20 | Done (Steps 11–12) |
 | 8 | Stock, wastage, discounts, FOC | US024, US025, US032, US033 | 21–24 | Done (Steps 13–14) |
 | 9 | Customers and khata | US038, US039, US040, US041, US080 | 25–28 | Done (Steps 15, 19) |
-| 10 | Shop profile and receipts | US014, US036 | 29, 30 | Done (Step 16; logo deferred) |
+| 10 | Shop profile and receipts | US014, US036 | 29, 30 | Done (Step 16; logo Step 25) |
 | 11 | Expenses | US065, US046, US066 | 30a, 31, 31a | Done (Step 17) |
 | 12 | Daily closing | US044, US045, US067 | 32, 33, 33a | Done (Step 18) |
 | 13 | Admin portal | US010, US011, US012, US013 | 34, 35, 7, 36 | Done (Steps 21–22) |
 | 14 | Reports | US047, US048, US049, US068 | 37, 38, 39, 39a | Done (Step 23) |
-| 15 | Urdu complete, backups | US009, US008 | 40, 41 | US009 done (Step 24); US008 to do |
+| 15 | Urdu complete, backups | US009, US008 | 40, 41 | Done (Steps 24, 25; restore drill on staging before the pilot) |
 | 16 | Self-registration and trial | US073–US077 | — | Proposed (see `docs/features/self-registration.md`) |
 | — | **R1 pilot** | | | |
 | 17 | Suppliers, purchases, payables | US050, US051, US052 | 42–44 | To do (R2) |
@@ -103,9 +103,9 @@ Build in this order, not in ID order. "Sheet step" is the step number in the ori
 - `shop_id` on every table; RLS on every table; API connects as `naqdpos_app` (no `BYPASSRLS`)
 - API rejects cross-shop access; Vitest RLS tests against `naqdpos_test` prove isolation
 
-**US008** · Must · 3 · To do — As system admin, I want daily automatic backups, so that shop data can be restored after a failure.
-- Nightly `pg_dump` by a worker job (pg-boss) to a separate R2 bucket, compressed; keep 30 daily + 12 monthly (deployment §5)
-- Restore drill written in `docs/runbook.md` and tested once before the pilot (then monthly)
+**US008** · Must · 3 · Done (Step 25; first restore drill on staging before the pilot) — As system admin, I want daily automatic backups, so that shop data can be restored after a failure.
+- Nightly `pg_dump` by a worker job (pg-boss) to a separate R2 bucket, compressed; keep 30 daily + 12 monthly (deployment §5) — *done*: 02:00 Asia/Karachi, custom format, AES-256-GCM (`BACKUP_ENCRYPTION_KEY`), own bucket and token
+- Restore drill written in `docs/runbook.md` and tested once before the pilot (then monthly) — *written*; `pnpm backup:restore` tested in CI against a scratch database; the first drill on staging is still to do
 
 ### F05 · Urdu/English language
 
@@ -135,7 +135,7 @@ Build in this order, not in ID order. "Sheet step" is the step number in the ori
 **US012** · Must · 3 · Done (self-service part Step 4; admin part Step 22) — As system admin, I want to create a shop and invite its owner, so that I can onboard shopkeepers who can't do it themselves.
 - Admin creates shop: name, type (fruit & veg, grocery, meat, general), address, phone
 - Owner invited by email; the membership links when that email first signs in (Google or email OTP). `invites` table approved (architecture §3, §5) — *done*: matched by the verified email, 14 days, one pending per shop and email, resend / revoke
-- No email provider yet: copyable WhatsApp text and a `wa.me` link to the owner (`VITE_POS_URL` for the app address) — *done*; emailing it when SMTP exists is a follow-up
+- Copyable WhatsApp text and a `wa.me` link to the owner (`VITE_POS_URL` for the app address) — *done*; also emailed (English and Urdu) when SMTP is set, the portal shows whether it went — *done (Step 25)*
 - The owner sets their own PIN at first sign-in ("Set your PIN"); an owner of several shops picks "Which shop is this device for?" — *done*
 - Audit-logged — *done*
 
@@ -145,9 +145,9 @@ Build in this order, not in ID order. "Sheet step" is the step number in the ori
 
 ### F08 · Shop profile
 
-**US014** · Should · 2 · Done except the logo (deferred to the deploy step: needs object storage) — As a shop owner, I want to set my shop name, address, phone, receipt footer and logo, so that receipts show my details.
+**US014** · Should · 2 · Done (logo Step 25) — As a shop owner, I want to set my shop name, address, phone, receipt footer and logo, so that receipts show my details.
 - Editable shop profile; changes appear on the next receipt
-- Logo uploaded through a pre-signed URL to object storage (key `logos/<shop_id>/…`, never a URL in the row), cached for offline use; `<BrandMark />` shows it
+- Logo uploaded through a pre-signed URL to object storage (key `logos/<shop_id>/…`, never a URL in the row), cached for offline use; `<BrandMark />` shows it — *done*: `logos/<shop_id>/logo-<uuidv7>.webp`, shrunk on the device (≤ 256 px, < 100 KB), also on receipts and the printed day summary; hidden without storage
 
 ---
 

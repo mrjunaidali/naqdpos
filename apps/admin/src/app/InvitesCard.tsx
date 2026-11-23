@@ -29,6 +29,8 @@ export function InvitesCard({
   const [email, setEmail] = useState(catalogue.invites[0]?.email ?? '');
   const [error, setError] = useState<string>();
   const [busy, setBusy] = useState(false);
+  /** The invite just created, and whether the API emailed it. */
+  const [created, setCreated] = useState<{ id: string; emailed: boolean | undefined }>();
   const owner = catalogue.staff.find((s) => s.role === 'owner');
   const pending = catalogue.invites.some((i) => i.status === 'pending');
 
@@ -80,7 +82,12 @@ export function InvitesCard({
               )}
             </div>
             {showing === i.id && (
-              <InviteMessage shopName={shopName} email={i.email} mobile={owner?.phone ?? null} />
+              <InviteMessage
+                shopName={shopName}
+                email={i.email}
+                mobile={owner?.phone ?? null}
+                emailed={created?.id === i.id ? created.emailed : undefined}
+              />
             )}
           </li>
         ))}
@@ -92,7 +99,11 @@ export function InvitesCard({
             e.preventDefault();
             const value = email.trim().toLowerCase();
             if (!value) return;
-            void run(() => api.adminCreateInvite(shopId, value), 'Could not create the invite.');
+            void run(async () => {
+              const r = await api.adminCreateInvite(shopId, value);
+              setCreated({ id: r.id, emailed: r.emailed });
+              setShowing(r.id);
+            }, 'Could not create the invite.');
           }}
         >
           <div className="flex-1">

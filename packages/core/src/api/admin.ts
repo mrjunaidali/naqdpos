@@ -151,6 +151,8 @@ export const AdminCreateShopResponse = z.object({
   shop_id: z.uuid(),
   owner_staff_id: z.uuid(),
   invite_id: z.uuid(),
+  /** The invite was also emailed (SMTP configured and the send worked); the WhatsApp text stays. */
+  emailed: z.boolean().optional(),
 });
 
 /** 409 owner_joined from POST /admin/shops/{id}/invites (shown in the admin portal). */
@@ -275,3 +277,5 @@ export const AdminImportResponse = z.object({
 export type AdminImportResponse = z.infer<typeof AdminImportResponse>;
 
 export const IdResponse = z.object({ id: z.uuid() });
+export const AdminInviteResponse = IdResponse.extend({ emailed: z.boolean().optional() });
+export type AdminInviteResponse = z.infer<typeof AdminInviteResponse>;

@@ -10,6 +10,7 @@ import {
   AdminImportRequest,
   AdminImportResponse,
   AdminInviteRequest,
+  AdminInviteResponse,
   AdminProductInput,
   AdminStaffInput,
   ErrorResponse,
@@ -21,6 +22,7 @@ import { z } from 'zod';
 import type { AppDeps, AppEnv } from '../app.ts';
 import { withUserTx, type TxContext } from '../db/index.ts';
 import { errorBody, pgCode } from '../errors.ts';
+import { inviteEmail } from '../mailer.ts';
 
 const json = <T>(schema: T) => ({ 'application/json': { schema } });
 const shopParam = z.object({ id: z.uuid() });
@@ -67,7 +69,7 @@ const createInvite = post(
   '/admin/shops/{id}/invites',
   shopParam,
   AdminInviteRequest,
-  IdResponse,
+  AdminInviteResponse,
   'Invite the owner again',
 );
 const revokeInvite = post(
@@ -116,7 +118,24 @@ const saveStaff = post(
 type AdminEnv = AppEnv & { Variables: { sessionId: string } };
 type Failure = { ok: false; status: 400 | 403 | 404 | 409; body: ErrorResponse };
 
-export function registerAdminShopRoutes(app: OpenAPIHono<AdminEnv>, deps: Pick<AppDeps, 'db'>) {
+export function registerAdminShopRoutes(
+  app: OpenAPIHono<AdminEnv>,
+  deps: Pick<AppDeps, 'db' | 'logger' | 'mailer' | 'posUrl'>,
+) {
+  /**
+   * Emails the owner invite when SMTP and POS_URL are set (US012). Never fails the request: the
+   * invite exists either way and the portal still shows the WhatsApp text.
+   */
+  const emailInvite = async (shopName: string, email: string): Promise<boolean> => {
+    if (!deps.mailer || !deps.posUrl) return false;
+    try {
+      await deps.mailer.send({ to: email, ...inviteEmail(shopName, deps.posUrl, email) });
+      return true;
+    } catch (error) {
+      deps.logger.warn({ err: error, to: email }, 'invite email failed');
+      return false;
+    }
+  };
   /** Runs one admin function as the signed-in admin and maps SQL errors to HTTP. */
   const call = async (
     context: TxContext,
@@ -145,7 +164,10 @@ export function registerAdminShopRoutes(app: OpenAPIHono<AdminEnv>, deps: Pick<A
         c.get('tx'),
         sql`select admin_create_shop(${asJson(c.req.valid('json'))}::jsonb) as r`,
       );
-      return r.ok ? c.json(AdminCreateShopResponse.parse(r.value), 200) : c.json(r.body, r.status);
+      if (!r.ok) return c.json(r.body, r.status);
+      const body = c.req.valid('json');
+      const emailed = await emailInvite(body.name, body.owner_email);
+      return c.json({ ...AdminCreateShopResponse.parse(r.value), emailed }, 200);
     })
     .openapi(catalogue, async (c) => {
       const r = await call(
@@ -159,7 +181,14 @@ export function registerAdminShopRoutes(app: OpenAPIHono<AdminEnv>, deps: Pick<A
         c.get('tx'),
         sql`select admin_create_invite(${c.req.valid('param').id}::uuid, ${c.req.valid('json').email}) as r`,
       );
-      return r.ok ? c.json({ id: String(r.value) }, 200) : c.json(r.body, r.status);
+      if (!r.ok) return c.json(r.body, r.status);
+      const shop = await call(
+        c.get('tx'),
+        sql`select admin_get_shop(${c.req.valid('param').id}::uuid) as r`,
+      );
+      const name = shop.ok ? (shop.value as { shop?: { name?: string } }).shop?.name : undefined;
+      const emailed = name ? await emailInvite(name, c.req.valid('json').email) : false;
+      return c.json({ id: String(r.value), emailed }, 200);
     })
     .openapi(revokeInvite, async (c) => {
       const r = await call(

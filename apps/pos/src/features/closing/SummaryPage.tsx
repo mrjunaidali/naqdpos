@@ -1,4 +1,4 @@
-import { dailySummary, displayName, receiptText, type DaySummary } from '@naqdpos/core';
+import { dailySummary, displayName, receiptText, withLogo, type DaySummary } from '@naqdpos/core';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { useTranslation } from 'react-i18next';
 import { Link, useParams } from 'react-router';
@@ -11,6 +11,7 @@ import { Alert, Button } from '../../ui/Button.tsx';
 import { showToast } from '../../ui/toastStore.ts';
 import { categoryName } from '../expenses/expenseRepo.ts';
 import { useDates } from '../../i18n/format.ts';
+import { useShopLogo } from '../settings/logo.ts';
 import { useRs } from '../sale/saleFormat.ts';
 import { methodName } from '../settings/paymentMethods.ts';
 import { costsAt, dayRows, useDayCloses } from './closingData.ts';
@@ -21,6 +22,7 @@ export function SummaryPage() {
   const { t, i18n } = useTranslation();
   const dates = useDates();
   const rs = useRs();
+  const logo = useShopLogo();
   const summary = useLiveQuery(async (): Promise<DaySummary | null> => {
     const device = await getStoredDevice();
     if (!device || !businessDate) return null;
@@ -74,7 +76,7 @@ export function SummaryPage() {
         <Alert>{t('closing.gapAlert', { amount: rs(summary.gapPaisa) })}</Alert>
       )}
       <div className="receipt-print overflow-x-auto rounded-2xl border border-border bg-surface p-3">
-        <ReceiptView doc={summary.doc} />
+        <ReceiptView doc={withLogo(summary.doc, Boolean(logo))} logoUrl={logo} />
       </div>
       <Button onClick={() => void share()}>{t('receipt.shareWhatsapp')}</Button>
       <Button variant="secondary" onClick={() => printReceipt(summary.doc)}>

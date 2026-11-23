@@ -143,6 +143,30 @@ describe('receipt screen (US036)', () => {
     expect(screen.getByText('Shukriya')).toBeInTheDocument();
   });
 
+  it('shows the shop logo from the device copy, offline (US014)', async () => {
+    await seedShop();
+    const key = `logos/${SHOP_ID}/logo-019a9b8e-1111-7000-8000-000000000001.webp`;
+    await db.shops.update(SHOP_ID, { logo_path: key });
+    await db.meta.put({
+      key: 'shop_logo',
+      value: { key, type: 'image/webp', bytes: new Uint8Array([1, 2, 3]).buffer },
+    });
+    const createObjectURL = vi.fn(() => 'blob:logo');
+    vi.stubGlobal('URL', Object.assign(URL, { createObjectURL, revokeObjectURL: vi.fn() }));
+    setOnline(false);
+    const { sale: s } = await sale();
+    renderAt(`/receipt/${s.id}`);
+    const logo = await waitFor(() => {
+      const img = document.querySelector('.receipt .receipt-logo');
+      expect(img).not.toBeNull();
+      return img!;
+    });
+    expect(logo.getAttribute('src')).toBe('blob:logo');
+    // The paper starts with the logo, then the shop name.
+    expect(logo.parentElement!.firstElementChild).toBe(logo);
+    vi.unstubAllGlobals();
+  });
+
   it('WhatsApp goes to the attached customer, offline too', async () => {
     await seedShop();
     const { sale: s } = await sale(true);

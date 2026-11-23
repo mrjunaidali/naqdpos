@@ -1,0 +1,17 @@
+{
+  "name": "@naqdpos/e2e",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build:apps": "node support/build-apps.ts",
+    "e2e": "node support/build-apps.ts && playwright test",
+    "e2e:only": "playwright test",
+    "typecheck": "tsc --noEmit -p tsconfig.json"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.65.0",
+    "@types/node": "26.6.6",
+    "typescript": "6.0.3"
+  }
+}

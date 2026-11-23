@@ -143,7 +143,7 @@ const setStatus = createRoute({
   },
 });
 
-export function adminRoutes(deps: Pick<AppDeps, 'db' | 'auth'>) {
+export function adminRoutes(deps: Pick<AppDeps, 'db' | 'auth' | 'logger' | 'mailer' | 'posUrl'>) {
   const app = new OpenAPIHono<AdminEnv>();
   app.use('/admin/*', requireSession(deps));
   app.use('/admin/shops', requireAdmin(deps));

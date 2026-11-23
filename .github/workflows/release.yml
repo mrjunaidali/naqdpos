@@ -1,0 +1,28 @@
+# Production deploys (deployment §3): Railway can't follow tags, so the production environment
+# follows the `release` branch, and this moves `release` to the commit of every pushed v* tag.
+# Only tags on main are released. Nothing else should push to `release`.
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  move-release-branch:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: The tag must be on main
+        run: git merge-base --is-ancestor "$GITHUB_SHA" origin/main
+      - name: Point release at the tag
+        run: git push --force origin "$GITHUB_SHA:refs/heads/release"
+      - run: echo "release → ${GITHUB_REF_NAME} (${GITHUB_SHA}); Railway production deploys it" >> "$GITHUB_STEP_SUMMARY"

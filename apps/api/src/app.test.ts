@@ -3,6 +3,7 @@ import { createApp, type AppDeps } from './app.ts';
 import type { AuthService } from './auth.ts';
 import type { Db } from './db/index.ts';
 import { createLogger } from './logger.ts';
+import { memoryStore } from './testing/memoryStore.ts';
 
 const USER = { id: '019a9b8e-1c2d-7e3f-8a4b-5c6d7e8f9a0d', email: 'ali@shop.pk', name: '' };
 
@@ -52,10 +53,26 @@ describe('GET /health', () => {
 });
 
 describe('GET /config', () => {
-  it('reports whether Google sign-in is on', async () => {
-    expect(await (await app().request('/config')).json()).toEqual({ google: false });
-    const on = app({ auth: stubAuth({ googleEnabled: true }) });
-    expect(await (await on.request('/config')).json()).toEqual({ google: true });
+  it('reports whether Google sign-in and file storage are on', async () => {
+    expect(await (await app().request('/config')).json()).toEqual({ google: false, files: false });
+    const on = app({ auth: stubAuth({ googleEnabled: true }), files: memoryStore() });
+    expect(await (await on.request('/config')).json()).toEqual({ google: true, files: true });
+  });
+
+  it('/files is off without storage (404 files_disabled) and needs a session', async () => {
+    const res = await app().request('/files/download-url', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', authorization: 'Bearer good' },
+      body: JSON.stringify({ key: 'x' }),
+    });
+    expect(res.status).toBe(404);
+    expect(await res.json()).toMatchObject({ error: 'files_disabled' });
+    const anonymous = await app({ files: memoryStore() }).request('/files/download-url', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ key: 'x' }),
+    });
+    expect(anonymous.status).toBe(401);
   });
 });
 

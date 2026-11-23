@@ -43,6 +43,9 @@ export const api = {
   reportProducts: vi.fn(),
   reportStaff: vi.fn(),
   reportExpenses: vi.fn(),
+  fileUploadUrl: vi.fn(),
+  fileDownloadUrl: vi.fn(),
+  cleanUpLogos: vi.fn(),
 } satisfies Record<keyof ApiClient, Mock>;
 
 /** apiWithToken(token) returns the same mocks; check which token was used via its calls. */
@@ -51,7 +54,7 @@ export const apiWithToken = vi.fn<(token: string) => typeof api>(() => api);
 /** Clears calls and sets safe defaults: Google off, every other call unanswered. */
 export function resetApiMock(): void {
   for (const fn of Object.values(api)) fn.mockReset();
-  api.config.mockResolvedValue({ google: false });
+  api.config.mockResolvedValue({ google: false, files: false });
   for (const [name, fn] of Object.entries(api)) {
     if (name !== 'config') fn.mockRejectedValue(new Error(`api.${name} not mocked`));
   }

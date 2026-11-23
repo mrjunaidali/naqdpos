@@ -4,7 +4,7 @@ import type { ReceiptDoc } from '@naqdpos/core';
  * The receipt as HTML: the on-screen preview and the browser-print layout (58 / 80 mm). Black on
  * white on purpose: it is paper, not app UI (the print styles in index.css hide everything else).
  */
-export function ReceiptView({ doc }: { doc: ReceiptDoc }) {
+export function ReceiptView({ doc, logoUrl }: { doc: ReceiptDoc; logoUrl?: string | null }) {
   return (
     <div
       className="receipt"
@@ -39,6 +39,9 @@ export function ReceiptView({ doc }: { doc: ReceiptDoc }) {
                 </p>
               </div>
             );
+          case 'logo':
+            // Shop logo (US014), from the device cache.
+            return logoUrl ? <img key={i} src={logoUrl} alt="" className="receipt-logo" /> : null;
           case 'pair':
             return (
               <p key={i} className={`receipt-pair${line.strong ? ' receipt-strong' : ''}`}>

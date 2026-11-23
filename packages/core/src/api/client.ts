@@ -11,6 +11,12 @@ import {
   StaffReportSchema,
 } from './reports.ts';
 import {
+  DownloadUrlResponse,
+  LogoCleanupResponse,
+  UploadUrlRequest,
+  UploadUrlResponse,
+} from './files.ts';
+import {
   AdminCatalogue,
   AdminCategoryInput,
   AdminCreateShopRequest,
@@ -18,6 +24,7 @@ import {
   AdminImportRequest,
   AdminImportResponse,
   AdminInviteRequest,
+  AdminInviteResponse,
   AdminProductInput,
   AdminStaffInput,
   IdResponse,
@@ -240,7 +247,7 @@ export function createApiClient(options: ApiClientOptions) {
       request(
         'POST',
         `/admin/shops/${encodeURIComponent(shopId)}/invites`,
-        IdResponse,
+        AdminInviteResponse,
         AdminInviteRequest.parse({ email }),
       ),
     adminRevokeInvite: async (inviteId: string) =>
@@ -313,6 +320,13 @@ export function createApiClient(options: ApiClientOptions) {
       ),
 
     /** Sends up to 200 outbox entries (architecture §4). */
+    // Files (architecture §9): pre-signed URLs; the upload itself goes straight to storage.
+    fileUploadUrl: async (input: UploadUrlRequest) =>
+      request('POST', '/files/upload-url', UploadUrlResponse, UploadUrlRequest.parse(input)),
+    fileDownloadUrl: async (key: string) =>
+      request('POST', '/files/download-url', DownloadUrlResponse, { key }),
+    cleanUpLogos: async (shopId: string) =>
+      request('POST', '/files/logo/cleanup', LogoCleanupResponse, { shop_id: shopId }),
     syncPush: async (input: SyncPushRequest) =>
       request('POST', '/sync/push', SyncPushResponse, SyncPushRequest.parse(input)),
     /** One page of rows newer than `since_seq`. */

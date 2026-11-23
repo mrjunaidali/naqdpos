@@ -1,6 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import { chunkBytes, escposRaster, toMonoRaster } from './escpos.ts';
-import { receiptDateTime, receiptFor, receiptText, type ReceiptInput } from './receipt.ts';
+import {
+  receiptDateTime,
+  receiptFor,
+  receiptText,
+  withLogo,
+  type ReceiptDoc,
+  type ReceiptInput,
+} from './receipt.ts';
 import type { PaymentRow, SaleLineRow, SaleRow } from './sale.ts';
 import { validateShopProfile } from './shopProfile.ts';
 
@@ -326,5 +333,24 @@ describe('ESC/POS raster', () => {
     expect(chunks.flatMap((c) => [...c])).toEqual([...bytes]);
     expect(chunkBytes(new Uint8Array(0), 180)).toEqual([]);
     expect(() => chunkBytes(bytes, 0)).toThrow(RangeError);
+  });
+});
+
+describe('shop logo on receipts (US014)', () => {
+  const doc: ReceiptDoc = {
+    language: 'en',
+    dir: 'ltr',
+    paperWidthMm: 58,
+    lines: [{ kind: 'title', text: 'Ali Fruit' }],
+  };
+
+  it('withLogo puts the logo first only when the device has one', () => {
+    expect(withLogo(doc, true).lines[0]).toEqual({ kind: 'logo' });
+    expect(withLogo(doc, true).lines).toHaveLength(2);
+    expect(withLogo(doc, false)).toBe(doc);
+  });
+
+  it('plain text (WhatsApp) skips the logo', () => {
+    expect(receiptText(withLogo(doc, true))).toBe('*Ali Fruit*');
   });
 });

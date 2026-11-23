@@ -6,6 +6,8 @@
   "scripts": {
     "dev": "node --watch --env-file-if-exists=../../.env src/dev.ts",
     "start": "node src/server.ts",
+    "worker": "node src/worker.ts",
+    "worker:dev": "node --env-file-if-exists=../../.env src/worker.ts",
     "build": "tsc --noEmit -p tsconfig.json",
     "test": "vitest run --exclude \"**/*.db.test.ts\"",
     "test:db": "vitest run db.test",
@@ -13,13 +15,17 @@
     "auth:schema": "node --env-file-if-exists=../../.env scripts/auth-schema.ts"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "3.1164.0",
+    "@aws-sdk/s3-request-presigner": "3.1164.0",
     "@hono/node-server": "2.1.9",
     "@hono/zod-openapi": "1.6.3",
     "@naqdpos/core": "workspace:*",
     "better-auth": "1.7.26",
     "hono": "4.13.19",
     "kysely": "0.29.9",
+    "nodemailer": "10.4.0",
     "pg": "8.23.1",
+    "pg-boss": "12.38.1",
     "pino": "10.4.0",
     "zod": "4.6.7"
   },

@@ -247,6 +247,7 @@ describe('new shop and invites (US012)', () => {
       shop_id: SHOP,
       owner_staff_id: OWNER,
       invite_id: INVITE,
+      emailed: true,
     });
     start();
     fireEvent.click(await screen.findByRole('link', { name: 'New shop' }));
@@ -281,6 +282,8 @@ describe('new shop and invites (US012)', () => {
     const text =
       'Assalam o alaikum! Your shop Bilal Sabzi is ready on NaqdPOS. Open https://pos.test and sign in with bilal@example.test.';
     expect(screen.getByTestId('invite-text')).toHaveTextContent(text);
+    // The API also emailed the invite (SMTP set); the WhatsApp text stays.
+    expect(screen.getByRole('status')).toHaveTextContent('Email sent to bilal@example.test');
     expect(screen.getByRole('link', { name: 'Open WhatsApp' })).toHaveAttribute(
       'href',
       `https://wa.me/923001234567?text=${encodeURIComponent(text)}`,

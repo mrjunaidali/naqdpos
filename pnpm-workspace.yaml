@@ -2,6 +2,7 @@ packages:
   - apps/*
   - packages/*
   - db
+  - e2e
 minimumReleaseAgeExclude:
   - '@typescript-eslint/eslint-plugin@8.73.0'
   - '@typescript-eslint/parser@8.73.0'

@@ -5,7 +5,20 @@ import { escposRaster, PRINTER_DOTS, toMonoRaster, type ReceiptDoc } from '@naqd
 
 const FONT = "'Noto Naskh Arabic', sans-serif";
 
-export async function receiptToEscpos(doc: ReceiptDoc): Promise<Uint8Array> {
+/** Loads a picture (the cached shop logo) for drawing on the canvas. */
+export function loadImage(url: string): Promise<HTMLImageElement> {
+  return new Promise((resolve, reject) => {
+    const image = new Image();
+    image.onload = () => resolve(image);
+    image.onerror = () => reject(new Error('image'));
+    image.src = url;
+  });
+}
+
+export async function receiptToEscpos(
+  doc: ReceiptDoc,
+  logo?: { image: CanvasImageSource; width: number; height: number } | null,
+): Promise<Uint8Array> {
   const width = PRINTER_DOTS[doc.paperWidthMm];
   const base = doc.paperWidthMm === 58 ? 22 : 26;
   const pad = 4;
@@ -50,6 +63,16 @@ export async function receiptToEscpos(doc: ReceiptDoc): Promise<Uint8Array> {
           text(line.amount, base, 'end');
           y += lineHeight(base);
           break;
+        case 'logo': {
+          // Centred, at most half the paper wide and 120 dots high; the raster turns it 1-bit.
+          if (!logo) break;
+          const scale = Math.min(width / 2 / logo.width, 120 / logo.height, 1);
+          const w = Math.round(logo.width * scale);
+          const h = Math.round(logo.height * scale);
+          if (paint) ctx.drawImage(logo.image, (width - w) / 2, y, w, h);
+          y += h + pad * 2;
+          break;
+        }
         case 'pair':
           text(line.label, base, 'start', line.strong);
           text(line.value, base, 'end', line.strong);

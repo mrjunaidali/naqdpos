@@ -20,11 +20,14 @@
     "db:new": "node db/scripts/db.ts new",
     "db:reset": "node db/scripts/db.ts reset",
     "db:test": "node db/scripts/db.ts test",
+    "db:deploy": "node db/scripts/migrate.ts",
     "check:precache": "pnpm --filter @naqdpos/pos build && node scripts/check-precache.ts",
     "i18n:export-review": "node scripts/urdu-review.ts export",
     "i18n:import-review": "node scripts/urdu-review.ts import",
     "admin:grant": "node db/scripts/admin.ts grant",
-    "admin:revoke": "node db/scripts/admin.ts revoke"
+    "admin:revoke": "node db/scripts/admin.ts revoke",
+    "backup:restore": "node --env-file-if-exists=.env apps/api/scripts/backup-restore.ts",
+    "e2e": "pnpm --filter @naqdpos/e2e e2e"
   },
   "devDependencies": {
     "@eslint/js": "10.0.1",

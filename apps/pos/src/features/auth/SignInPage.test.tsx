@@ -129,7 +129,7 @@ describe('Google button', () => {
   });
 
   it('is shown when Google is on, and starts the redirect through the API', async () => {
-    mocked.config.mockResolvedValue({ google: true });
+    mocked.config.mockResolvedValue({ google: true, files: false });
     mocked.googleSignInUrl.mockResolvedValue('https://accounts.google.test/consent');
     const assign = vi.fn();
     vi.spyOn(window, 'location', 'get').mockReturnValue({

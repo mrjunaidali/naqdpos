@@ -1,0 +1,57 @@
+# Static front ends (deployment §4): apps/pos and apps/admin, one Caddyfile for both.
+# Settings at run time (the host's environment, no rebuild):
+#   PORT          the port to listen on (Railway sets it)
+#   SITE_ROOT     the Vite build (the images use /srv)
+#   API_ORIGIN    the API, e.g. https://api.naqd.pk               (CSP connect-src)
+#   FILES_ORIGIN  object storage downloads/uploads, e.g. https://<account>.r2.cloudflarestorage.com
+#                 (CSP img-src / connect-src; empty = none)
+# TLS ends at the host's edge (Railway / Cloudflare), so Caddy serves plain HTTP inside.
+{
+	admin off
+	auto_https off
+	persist_config off
+}
+
+:{$PORT:8080} {
+	root * {$SITE_ROOT:/srv}
+	encode zstd gzip
+
+	# Security headers on every response. The CSP allows only this site, the API and storage:
+	# no inline scripts or styles (the Vite builds have none; the e2e smoke test checks).
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		X-Content-Type-Options "nosniff"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data: blob: {$FILES_ORIGIN}; font-src 'self'; connect-src 'self' {$API_ORIGIN} {$FILES_ORIGIN}; worker-src 'self'; manifest-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'"
+		-Server
+	}
+
+	# In order: "/" and unknown paths (React Router) become /index.html first, so the cache rules
+	# below see the file that is really served.
+	route {
+		rewrite / /index.html
+		# try_files for pages only: a missing hashed file is a 404, never index.html served as
+		# JavaScript.
+		@page {
+			not path /assets/*
+			file {path} /index.html
+		}
+		rewrite @page {file_match.relative}
+
+		# Must revalidate, or the "New version available" prompt never appears (architecture §6).
+		@nocache path /index.html /sw.js /registerSW.js /manifest.webmanifest
+		header @nocache Cache-Control "no-cache"
+
+		# Hashed file names: cache for a year (only files that exist: never cache a 404).
+		@assets {
+			path /assets/*
+			file
+		}
+		header @assets Cache-Control "public, max-age=31536000, immutable"
+
+		@manifest path *.webmanifest
+		header @manifest Content-Type "application/manifest+json"
+
+		file_server
+	}
+}

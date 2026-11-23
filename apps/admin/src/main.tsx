@@ -1,3 +1,5 @@
+// First: no zod JIT under the strict CSP (see packages/core/src/zodConfig.ts).
+import '@naqdpos/core/zod-config';
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { createBrowserRouter, RouterProvider } from 'react-router';

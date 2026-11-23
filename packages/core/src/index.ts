@@ -6,6 +6,7 @@ export * from './closing.ts';
 export * from './discount.ts';
 export * from './escpos.ts';
 export * from './expenses.ts';
+export * from './files.ts';
 export * from './home.ts';
 export * from './ids.ts';
 export * from './khata.ts';

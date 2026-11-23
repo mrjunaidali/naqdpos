@@ -6,6 +6,9 @@ import type { AuthService, AuthUser } from './auth.ts';
 import type { Db, TxContext } from './db/index.ts';
 import { errorBody } from './errors.ts';
 import type { Logger } from './logger.ts';
+import type { Mailer } from './mailer.ts';
+import type { ObjectStore } from './storage.ts';
+import { fileRoutes } from './routes/files.ts';
 import { configRoutes } from './routes/config.ts';
 import { deviceRoutes } from './routes/devices.ts';
 import { healthRoutes } from './routes/health.ts';
@@ -27,6 +30,12 @@ export interface AppDeps {
   checkDb: () => Promise<boolean>;
   /** MIN_APP_VERSION: older apps get 426 on /sync/*. Unset = accept every version. */
   minAppVersion?: string | undefined;
+  /** Object storage (S3_*); null = file features off (local dev). */
+  files?: ObjectStore | null;
+  /** SMTP mailer (owner invite emails); null = not configured. */
+  mailer?: Mailer | null;
+  /** The shop app's address for invite emails (POS_URL). */
+  posUrl?: string | undefined;
 }
 
 export interface AppEnv {
@@ -91,6 +100,7 @@ export function createApp(deps: AppDeps) {
   app.route('/', adminRoutes(deps));
   app.route('/', firstPinRoutes(deps));
   app.route('/', reportRoutes(deps));
+  app.route('/', fileRoutes(deps));
   app.doc31('/openapi.json', {
     openapi: '3.1.0',
     info: { title: 'NaqdPOS API', version: '0.0.0' },

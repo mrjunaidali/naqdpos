@@ -1,4 +1,4 @@
-import { receiptText } from '@naqdpos/core';
+import { receiptText, withLogo } from '@naqdpos/core';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useLocation, useParams } from 'react-router';
@@ -13,7 +13,8 @@ import {
   savedPrinter,
   type SavedPrinter,
 } from './bluetooth.ts';
-import { receiptToEscpos } from './canvasReceipt.ts';
+import { useShopLogo } from '../features/settings/logo.ts';
+import { loadImage, receiptToEscpos } from './canvasReceipt.ts';
 import { printReceipt } from './printReceipt.ts';
 import { useSaleReceipt } from './receiptData.ts';
 import { ReceiptView } from './ReceiptView.tsx';
@@ -34,6 +35,7 @@ export function ReceiptPage() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string>();
   const canBluetooth = bluetoothSupported();
+  const logo = useShopLogo();
 
   useEffect(() => {
     void savedPrinter().then(setPrinter);
@@ -46,7 +48,7 @@ export function ReceiptPage() {
   ) {
     return <p className="text-muted">{t('receipt.notFound')}</p>;
   }
-  const { doc } = receipt;
+  const doc = withLogo(receipt.doc, Boolean(logo));
 
   async function share() {
     const outcome = await shareReceipt(receiptText(doc), receipt!.customerMobile);
@@ -58,7 +60,13 @@ export function ReceiptPage() {
     setBusy(true);
     setError(undefined);
     try {
-      await printBytes(await receiptToEscpos(doc));
+      const image = logo ? await loadImage(logo).catch(() => null) : null;
+      await printBytes(
+        await receiptToEscpos(
+          doc,
+          image && { image, width: image.naturalWidth, height: image.naturalHeight },
+        ),
+      );
       setPrinter(await savedPrinter());
       showToast(t('receipt.printed'));
     } catch (e) {
@@ -72,7 +80,7 @@ export function ReceiptPage() {
     <section className="mx-auto max-w-md space-y-4 pb-8">
       <h1 className="text-2xl font-bold">{t('receipt.title')}</h1>
       <div className="receipt-print overflow-x-auto rounded-2xl border border-border bg-surface p-3">
-        <ReceiptView doc={doc} />
+        <ReceiptView doc={doc} logoUrl={logo} />
       </div>
       {error && <Alert>{error}</Alert>}
       <Button onClick={() => void share()}>{t('receipt.shareWhatsapp')}</Button>

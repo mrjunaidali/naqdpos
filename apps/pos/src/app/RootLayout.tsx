@@ -37,9 +37,10 @@ export function RootLayout() {
   useSessionCheck();
   const ready = useAppState() === 'ready';
   const { pathname } = useLocation();
-  const shopName = useLiveQuery(async () => {
+  const shop = useLiveQuery(async () => {
     const device = await getStoredDevice();
-    return device ? ((await db.shops.get(device.shop_id))?.name ?? null) : null;
+    const row = device ? await db.shops.get(device.shop_id) : undefined;
+    return row ? { name: row.name, logoPath: row.logo_path } : null;
   });
 
   return (
@@ -50,9 +51,9 @@ export function RootLayout() {
           aria-label={t('nav.home')}
           className="flex min-h-11 min-w-0 flex-1 items-center gap-2 rounded-md text-text"
         >
-          <BrandMark />
+          <BrandMark logoPath={shop?.logoPath ?? null} />
           <span className="min-w-0 truncate text-lg font-semibold">
-            {shopName ?? t('app.name')}
+            {shop?.name ?? t('app.name')}
           </span>
         </Link>
         {ready ? (

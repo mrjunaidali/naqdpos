@@ -11,8 +11,8 @@ const route = createRoute({
   },
 });
 
-export function configRoutes(deps: Pick<AppDeps, 'auth'>) {
+export function configRoutes(deps: Pick<AppDeps, 'auth' | 'files'>) {
   return new OpenAPIHono<AppEnv>().openapi(route, (c) =>
-    c.json({ google: deps.auth.googleEnabled }, 200),
+    c.json({ google: deps.auth.googleEnabled, files: Boolean(deps.files) }, 200),
   );
 }

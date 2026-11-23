@@ -14,13 +14,20 @@ export type ReceiptLine =
   | { kind: 'center'; text: string }
   | { kind: 'item'; name: string; detail: string; amount: string }
   | { kind: 'pair'; label: string; value: string; strong?: boolean }
-  | { kind: 'rule' };
+  | { kind: 'rule' }
+  /** The shop logo (US014): drawn on paper and screen; plain text (WhatsApp) skips it. */
+  | { kind: 'logo' };
 
 export interface ReceiptDoc {
   language: ReceiptLanguage;
   dir: 'ltr' | 'rtl';
   paperWidthMm: PaperWidth;
   lines: ReceiptLine[];
+}
+
+/** The receipt with the shop logo on top, when the device has it (US014). */
+export function withLogo(doc: ReceiptDoc, hasLogo: boolean): ReceiptDoc {
+  return hasLogo ? { ...doc, lines: [{ kind: 'logo' }, ...doc.lines] } : doc;
 }
 
 /** Receipt words in one language: `receipt.<key>` and `unit.<unit>` from the app's i18n. */
@@ -190,6 +197,7 @@ export function receiptFor(input: ReceiptInput): ReceiptDoc {
 /** The plain-text receipt (WhatsApp). */
 export function receiptText(doc: ReceiptDoc): string {
   return doc.lines
+    .filter((line) => line.kind !== 'logo')
     .map((line) => {
       switch (line.kind) {
         case 'title':

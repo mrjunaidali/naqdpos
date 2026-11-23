@@ -64,7 +64,11 @@ export const HealthResponse = z.object({ ok: z.boolean(), db: z.boolean() });
 export type HealthResponse = z.infer<typeof HealthResponse>;
 
 /** GET /config: what the sign-in screen may offer. */
-export const ConfigResponse = z.object({ google: z.boolean() });
+export const ConfigResponse = z.object({
+  google: z.boolean(),
+  /** Object storage is configured: the shop logo can be set (US014). */
+  files: z.boolean().default(false),
+});
 export type ConfigResponse = z.infer<typeof ConfigResponse>;
 
 // --- Rows as the API returns them (bigint columns converted to numbers) ---
@@ -264,6 +268,9 @@ export const API_ERROR_CODES = [
   'code_daily_cap',
   // Admin: a new owner invite after the owner has joined (US012)
   'owner_joined',
+  // Files (architecture §9): storage not configured (local dev), or too many requests
+  'files_disabled',
+  'rate_limited',
   'internal',
 ] as const;
 export const ErrorResponse = z.object({

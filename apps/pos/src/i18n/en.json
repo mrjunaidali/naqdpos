@@ -752,7 +752,20 @@
     "paper": "Paper width",
     "mm": "{{mm}} mm",
     "save": "Save",
-    "logoLater": "Shop logo: coming soon.",
+    "logo": "Logo",
+    "logoHint": "Shown on receipts and at the top of the app. It is made small on this device before it is uploaded.",
+    "logoChoose": "Choose picture",
+    "logoChange": "Change picture",
+    "logoRemove": "Remove logo",
+    "logoUploading": "Uploading…",
+    "logoSaved": "Logo saved",
+    "logoPreview": "Shop logo",
+    "logoOffline": "Connect to the internet to change the logo.",
+    "logoErrors": {
+      "unsupported": "This file is not a picture the device can open. Choose a JPG, PNG or WebP.",
+      "too_big": "This picture cannot be made small enough. Choose a simpler one.",
+      "failed": "The logo could not be uploaded. Try again."
+    },
     "errors": {
       "required": "Required.",
       "tooLong": "Too long.",

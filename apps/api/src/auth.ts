@@ -7,25 +7,9 @@ import { bearer, emailOTP, oneTimeToken, twoFactor } from 'better-auth/plugins';
 import pg from 'pg';
 import type { Env } from './env.ts';
 import type { Logger } from './logger.ts';
+import { codeEmail, type Mailer } from './mailer.ts';
 
 export type SendOtp = (email: string, otp: string, type: string) => Promise<void>;
-
-/**
- * Subject and text of an OTP email. This app uses the plugin's 'email-verification' type only for
- * owner PIN resets (architecture §5), so those mails say "PIN reset code".
- */
-export function otpEmail(type: string, otp: string): { subject: string; text: string } {
-  if (type === 'email-verification') {
-    return {
-      subject: 'NaqdPOS PIN reset code',
-      text: `Your NaqdPOS PIN reset code is ${otp}. It is valid for 5 minutes. If you did not ask to reset your PIN, ignore this email.`,
-    };
-  }
-  return {
-    subject: 'NaqdPOS sign-in code',
-    text: `Your NaqdPOS sign-in code is ${otp}. It is valid for 5 minutes.`,
-  };
-}
 
 export type PinResetCodeCheck = 'ok' | 'invalid' | 'expired' | 'too_many';
 
@@ -136,6 +120,9 @@ export function createAuthPool(connectionString: string): pg.Pool {
 export interface AuthDeps {
   pool: pg.Pool;
   logger: Logger;
+  /** SMTP mailer; null when SMTP is not configured (development only, see env.ts). */
+  mailer?: Mailer | null;
+  /** Tests: capture codes instead of emailing them. */
   sendOtp?: SendOtp;
   /** Tests only: a shorter one-time-token lifetime. */
   oneTimeTokenMinutes?: number;
@@ -150,16 +137,17 @@ function googleKeys(env: Env) {
 export function authOptions(env: Env, deps: AuthDeps) {
   const sendOtp: SendOtp =
     deps.sendOtp ??
-    ((email, otp, type) => {
+    (async (email, otp, type) => {
+      const mail = codeEmail(type, otp);
+      if (deps.mailer) return deps.mailer.send({ to: email, ...mail });
       if (env.NODE_ENV === 'development') {
-        // Development only: there is no SMTP yet (architecture §8), so the code goes to the console.
-        deps.logger.info(
-          { email, otp, type, subject: otpEmail(type, otp).subject },
-          'email OTP (development only)',
-        );
-        return Promise.resolve();
+        // Development without SMTP only: the code goes to the console. Production refuses to
+        // start without SMTP (env.ts), so codes are never logged there.
+        // In the message, not a field: otp fields are redacted (logger.ts).
+        deps.logger.info({ email, type }, `email code (development only): ${otp}`);
+        return;
       }
-      return Promise.reject(new Error('Email OTP: SMTP is not configured yet'));
+      throw new Error('Email OTP: SMTP is not configured');
     });
   const google = googleKeys(env);
 
@@ -169,6 +157,9 @@ export function authOptions(env: Env, deps: AuthDeps) {
     basePath: '/auth',
     secret: env.BETTER_AUTH_SECRET,
     trustedOrigins: env.APP_ORIGINS,
+    // In memory: correct for ONE API instance only. More copies need storage: 'database'
+    // (deployment §5). Code sending has Better Auth's stricter built-in rule on top.
+    rateLimit: { enabled: env.NODE_ENV !== 'test', storage: 'memory', window: 60, max: 100 },
     database: deps.pool,
     ...authSchemaOptions,
     session: {

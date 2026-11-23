@@ -1,0 +1,140 @@
+# CI on every push (deployment §3). Railway's "Wait for CI" deploys main to staging only when this
+# passes; production follows the release branch (release.yml).
+name: CI
+
+on:
+  push:
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  CADDY_VERSION: 2.11.9
+
+jobs:
+  checks:
+    name: Lint, types, unit tests, precache
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm lint
+      - run: pnpm format:check
+      - run: pnpm typecheck
+      - run: pnpm test
+      - run: pnpm check:precache
+
+  db:
+    name: Database, RLS, API and backup/restore tests (Postgres 17)
+    runs-on: ubuntu-24.04
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_PASSWORD: postgres
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U postgres" --health-interval 5s --health-timeout 5s
+          --health-retries 10
+    env:
+      # Owner role of the throwaway CI server; db:create makes naqdpos_dev / naqdpos_test and the app role.
+      DATABASE_ADMIN_URL: postgres://postgres:postgres@localhost:5432/postgres
+    steps:
+      - uses: actions/checkout@v4
+      - name: pg_dump / pg_restore 17 (the restore test runs them)
+        run: |
+          sudo install -d /usr/share/postgresql-common/pgdg
+          sudo curl -fsSL -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc https://www.postgresql.org/media/keys/ACCC4CF8.asc
+          echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" | sudo tee /etc/apt/sources.list.d/pgdg.list
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq postgresql-client-17
+          echo "/usr/lib/postgresql/17/bin" >> "$GITHUB_PATH"
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pg_dump --version
+      - run: pnpm db:create
+      - run: pnpm db:test
+
+  e2e:
+    name: End-to-end smoke (Playwright, real Caddy headers)
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Caddy (official release, checksum checked)
+        run: |
+          base=https://github.com/caddyserver/caddy/releases/download/v${CADDY_VERSION}
+          file=caddy_${CADDY_VERSION}_linux_amd64.tar.gz
+          curl -fsSLO "$base/$file"
+          curl -fsSL "$base/caddy_${CADDY_VERSION}_checksums.txt" | grep " $file\$" | sha512sum -c -
+          mkdir -p "$RUNNER_TEMP/caddy" && tar -xzf "$file" -C "$RUNNER_TEMP/caddy" caddy
+          echo "CADDY_BIN=$RUNNER_TEMP/caddy/caddy" >> "$GITHUB_ENV"
+      - name: Playwright version
+        id: pw
+        run: echo "version=$(pnpm --filter @naqdpos/e2e exec playwright --version | awk '{print $2}')" >> "$GITHUB_OUTPUT"
+      - name: Cache Playwright browsers
+        id: pw-cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ steps.pw.outputs.version }}
+      - if: steps.pw-cache.outputs.cache-hit != 'true'
+        run: pnpm --filter @naqdpos/e2e exec playwright install --with-deps chromium
+      - if: steps.pw-cache.outputs.cache-hit == 'true'
+        run: pnpm --filter @naqdpos/e2e exec playwright install-deps chromium
+      - run: pnpm e2e
+      - if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: |
+            e2e/playwright-report
+            e2e/test-results
+          retention-days: 7
+
+  docker:
+    name: Docker images build (API, worker, static sites)
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: API / worker image, with pg_dump 17 and the migration tool
+        run: |
+          docker build -f apps/api/Dockerfile -t naqdpos-api .
+          docker run --rm naqdpos-api pg_dump --version
+          docker run --rm naqdpos-api node -e "require('node:fs').accessSync('/repo/db/node_modules/dbmate/dist/cli.js')"
+      - name: Static images, headers from the real container
+        run: |
+          for app in pos admin; do
+            docker build -f deploy/static.Dockerfile --build-arg APP=$app \
+              --build-arg VITE_API_URL=https://api.example.test \
+              --build-arg VITE_POS_URL=https://pos.example.test -t naqdpos-$app .
+          done
+          docker run -d --name pos -p 8080:8080 -e PORT=8080 \
+            -e API_ORIGIN=https://api.example.test -e FILES_ORIGIN=https://files.example.test naqdpos-pos
+          for i in $(seq 1 20); do curl -fs -o /dev/null http://localhost:8080/ && break; sleep 1; done
+          headers=$(curl -fsSI http://localhost:8080/sale)
+          echo "$headers"
+          echo "$headers" | grep -qi "content-security-policy: .*connect-src 'self' https://api.example.test https://files.example.test"
+          echo "$headers" | grep -qi "frame-ancestors 'none'"
+          echo "$headers" | grep -qi "strict-transport-security: max-age=31536000"
+          echo "$headers" | grep -qi "cache-control: no-cache"
+          docker rm -f pos

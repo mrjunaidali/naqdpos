@@ -16,6 +16,7 @@ import { Alert, Button } from '../../ui/Button.tsx';
 import { Field } from '../../ui/Field.tsx';
 import { rupeesInput } from '../catalogue/catalogueData.ts';
 import { useActingOwnerId } from '../pin/actingOwner.ts';
+import { LogoField } from './LogoField.tsx';
 import { saveShopProfile } from './shopProfile.ts';
 
 const ERRORS: Record<string, string> = {
@@ -24,7 +25,7 @@ const ERRORS: Record<string, string> = {
   invalid: 'shopProfile.errors.invalid',
 };
 
-/** Settings → Shop (US014, owner): what receipts show. Logo upload comes with object storage. */
+/** Settings → Shop (US014, owner): what receipts show, and the shop logo. */
 export function ShopProfilePage() {
   const shop = useLiveQuery(async () => {
     const device = await getStoredDevice();
@@ -174,7 +175,7 @@ function ShopProfileForm({ shop }: { shop: ShopRow }) {
         inputMode="decimal"
         dir="ltr"
       />
-      <p className="text-sm text-muted">{t('shopProfile.logoLater')}</p>
+      <LogoField shop={shop} actorStaffId={actor} />
       <Button type="submit">{t('shopProfile.save')}</Button>
     </form>
   );

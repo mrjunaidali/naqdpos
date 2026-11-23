@@ -31,6 +31,7 @@ export function NewShopPage() {
     name: string;
     email: string;
     mobile: string;
+    emailed: boolean | undefined;
   }>();
   const set = (key: keyof typeof EMPTY) => (value: string) =>
     setForm((f) => ({ ...f, [key]: value }));
@@ -59,7 +60,7 @@ export function NewShopPage() {
         owner_mobile: mobile,
         owner_email: email,
       });
-      setCreated({ shopId: r.shop_id, name: form.name.trim(), email, mobile });
+      setCreated({ shopId: r.shop_id, name: form.name.trim(), email, mobile, emailed: r.emailed });
     } catch (err) {
       setError(fail(err, 'Could not create the shop.'));
     } finally {
@@ -76,7 +77,12 @@ export function NewShopPage() {
             The owner is invited as <strong>{created.email}</strong>. The invite is valid for 14
             days and links when they first sign in with this email.
           </p>
-          <InviteMessage shopName={created.name} email={created.email} mobile={created.mobile} />
+          <InviteMessage
+            shopName={created.name}
+            email={created.email}
+            mobile={created.mobile}
+            emailed={created.emailed}
+          />
           <div className="flex flex-wrap gap-2">
             <Link to={`/shops/${created.shopId}`} className="underline">
               Open the shop

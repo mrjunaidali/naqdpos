@@ -4,17 +4,21 @@ import { posUrl } from './labels.ts';
 import { Button } from './ui.tsx';
 
 /**
- * The owner invite to send by WhatsApp (no email provider yet, US012): copyable text and a
- * wa.me button for the owner's mobile. The owner signs in with this email; no link or token.
+ * The owner invite to send by WhatsApp (US012): copyable text and a wa.me button for the owner's
+ * mobile. The API also emails it when SMTP is set (`emailed`). The owner signs in with this email;
+ * no link or token.
  */
 export function InviteMessage({
   shopName,
   email,
   mobile,
+  emailed,
 }: {
   shopName: string;
   email: string;
   mobile: string | null;
+  /** After creating an invite: whether the API emailed it. Unknown for a resend. */
+  emailed?: boolean | undefined;
 }) {
   const [copied, setCopied] = useState(false);
   const url = posUrl();
@@ -25,6 +29,16 @@ export function InviteMessage({
         <p role="alert" className="text-sm text-danger">
           VITE_POS_URL is not set, so the message has no app address. Set it in the admin build
           settings.
+        </p>
+      )}
+      {emailed === true && (
+        <p role="status" className="text-sm">
+          Email sent to {email}. You can also send this WhatsApp message.
+        </p>
+      )}
+      {emailed === false && (
+        <p role="status" className="text-sm text-warning-fg">
+          The email was not sent (email is not set up or failed). Send this WhatsApp message.
         </p>
       )}
       <p className="text-sm text-muted">Send this to the owner:</p>
