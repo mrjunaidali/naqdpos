@@ -780,3 +780,38 @@ The admin portal can now onboard a shopkeeper end to end: create the shop, invit
 - Files: the migration, `packages/core/src/api/{admin,schemas}.ts`, `apps/api/src/routes/adminShop.ts`, `apps/admin/src/app/InvitesCard.tsx`, tests in `db/tests/invites-admin-shop.test.ts`, `apps/api/src/invites.db.test.ts`, `apps/admin/src/app/Admin.test.tsx`; architecture §5.
 - Tests: DB 190 (+1: pending → expired → revoked each allow a new invite; after the owner accepts, any new invite is refused and nothing is written; a self-registered shop is refused). API DB 41 (+1: over HTTP with a verified admin session, 200 before joining, 409 `owner_joined` with the message after). Admin 16 (+1: the message is shown).
 - **Follow-up:** second owners (a shop with two owner logins, each with their own staff row and PIN) — not supported yet; needs a decision on the staff row and permissions.
+
+## Step 23 — Reports: dashboard, monthly P&L, products, staff, expenses (US047, US048, US049, US068) (2026-11-23)
+
+Owner reports computed on the server over every device's data, with an offline copy on owner devices only.
+
+**Built**
+- Migration `20261124090000_reports.sql` (functions only, no tables): `report_assert` (owner of the shop, range ≤ 366 days), `report_cost_at`, `report_lines` (net sales with the bill adjustment shared, cost at sale time), `report_grouped`, `report_open_days`, `report_today`, and the four reports `report_summary`, `report_products`, `report_staff`, `report_expenses` (filters; previous period). **`security invoker` plus an explicit owner check**: owners already read every table these use through RLS, so nothing bypasses it, and RLS still limits rows to the caller's shops.
+- `packages/core`:
+  - `reports.ts`: the same formulas (`costAt`, `lineCost`, `valueLines`, `reportSummary`, `productReport`, `staffReport`, `expenseReport`, `openDays`), `profitAndLoss` (the P&L lines), ranges (`rangePreset` with Monday weeks, `previousPeriod`, `validateRange`, `lastOfMonth`) and CSV (`toCsv` with BOM and CRLF, `productsCsv`, `staffCsv`, `expensesCsv`, `pnlCsv`).
+  - Shared fixture `fixtures/report-month.json`: October 2026, two devices, a cost change mid-month, FOC, `by_amount`, a custom item, bill discounts and rounding, khata from September, an expense and its reversal, wastage and unvalued damaged stock, an unclosed day. Core and SQL both match its expected values; it also checks `expenseTotals`, `receivableTotal` and `expectedCash` / `shop_expected_cash`.
+  - `api/reports.ts`: query and response schemas; client methods `reportSummary`, `reportProducts`, `reportStaff`, `reportExpenses`.
+- `apps/api`: `routes/reports.ts` — `GET /reports/{summary,products,staff,expenses}` (`can(role, 'see_reports')`, 400 for a bad range, 403 otherwise, `format=csv` for products, staff and expenses with `text/csv; charset=utf-8` and a file name).
+- `apps/pos`:
+  - Reports in the More sheet / side nav (owners). Routes under `/reports` behind `OwnerPinGate`: Dashboard, Monthly, Products, Staff, Expenses.
+  - Dashboard (US048): range chips (Today, Yesterday, This week, This month, Last month, Custom), net sales, payments by method, profit on items with a cost price (and their sales), sales without a cost price (lines, products, "Add cost prices to see the full profit" → Today's rates on owner devices, the product list on shop devices), expenses, wastage, khata due, top 5 products, "Today (still open)".
+  - Monthly (US047): month picker, the P&L, receivables at month end, the unclosed-days warning, Print (browser print, `report-print`) and CSV.
+  - Products / Staff (US049): sortable tables (tap a header, again to reverse), custom items flagged, CSV.
+  - Expenses (US068): list with range, category, method and staff filters, total for the filter, CSV; monthly view by category against last month. Cashiers keep the Expenses screen (own entries today).
+  - `reportsData.ts`: fetch; on owner devices write the result to Dexie `report_cache` (v14, local only, newest 50) and fall back to it offline or on a network failure ("As of <time> — offline"); shop devices never write it and show "Reports need internet" offline. The cache is emptied on owner → shop mode and on sign-out.
+  - en strings; ur drafts marked `TODO-ur`.
+
+**Tests**: Core 383 (+16: the shared fixture for summary, products, staff, expenses, receivables and expected cash; cost at sale time and before the first cost; bill adjustment shares add up per sale; FOC cost and costed + uncosted = net sales; today still open vs unclosed; P&L with and without uncosted sales; range presets, previous period, validation; CSV escaping and the products CSV). DB 199 (+9: the four functions match the fixture; `shop_expected_cash` on fixture days; expense filters and the previous period of a partial range; today still open; September alone; cashier, rider, outsider and another shop's owner refused by every function; range limits, 366 days allowed). API DB 46 (+5: owner summary; products / staff / expenses CSV with BOM bytes, header, content type and file name; filters reach SQL; cashier, rider and another owner 403, no session 401; range 400). Pos 310 (+12: owner dashboard with cards and cache write; offline from the cache with "as of"; network failure falls back; shop device asks for the owner PIN, never writes the cache, needs internet offline; menu; monthly P&L, unclosed days and CSV; plain "Net" and today still open; sortable products and CSV; staff; expense filters and monthly comparison; cache emptied on mode switch and sign-out).
+
+**Decisions**
+- No "gross profit at least X": profit only on items with a cost price; sales without a cost price shown apart with a link to add costs; Net "excluding sales without a cost price" when there are any.
+- Bill discount and rounding are shared across a sale's lines in proportion to line totals (cumulative rounding), so costed and uncosted sales add up to net sales exactly.
+- Earlier days with activity and no close are "unclosed"; today is "Today (still open)".
+- Reports stay JSON from the API; the app builds CSV with the same core functions, so exports also work offline on owner devices.
+
+**Also fixed**: three existing khata tests were flaky (they failed about half the time on `main` too): a button or heading found by an earlier render was replaced while the list's live queries settled. They now retry inside `waitFor` (`openAddCustomer()` helper).
+
+**Follow-ups**
+- Payables in the monthly report once purchases (E08) exist.
+- Urdu strings for the reports screens (`TODO-ur`).
+- The expense list shows at most 5,000 lines (the total and count cover all); paging if shops ever reach that.

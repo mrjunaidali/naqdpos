@@ -50,10 +50,13 @@
     visibility: hidden;
   }
   .receipt-print,
-  .receipt-print * {
+  .receipt-print *,
+  .report-print,
+  .report-print * {
     visibility: visible;
   }
-  .receipt-print {
+  .receipt-print,
+  .report-print {
     position: absolute;
     inset-inline-start: 0;
     top: 0;

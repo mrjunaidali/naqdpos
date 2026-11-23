@@ -75,10 +75,10 @@ describe('NaqdDb schema', () => {
     }
   });
 
-  it('is version 13 with the tenancy, sync, catalogue, sales and stock tables', async () => {
+  it('is version 14 with the tenancy, sync, catalogue, sales and stock tables and the report cache', async () => {
     const db = track(new NaqdDb('naqdpos-test-schema'));
     await db.open();
-    expect(db.verno).toBe(13);
+    expect(db.verno).toBe(14);
     expect(db.tables.map((table) => table.name).sort()).toEqual([
       'categories',
       'customers',
@@ -95,6 +95,7 @@ describe('NaqdDb schema', () => {
       'product_cost_history',
       'product_costs',
       'products',
+      'report_cache',
       'sale_lines',
       'sales',
       'shops',
@@ -110,6 +111,8 @@ describe('NaqdDb schema', () => {
         .schema.indexes.map((index) => index.name)
         .sort();
     expect(indexNames('outbox')).toEqual(['row_key', 'table']);
+    // Local only (no server table): owner devices keep the last report results (§5).
+    expect(indexNames('report_cache')).toEqual(['saved_at']);
     expect(indexNames('staff_salaries')).toEqual(['server_seq', 'shop_id']);
   });
 
@@ -137,7 +140,7 @@ describe('NaqdDb schema', () => {
 
     const db = track(new NaqdDb(name));
     await db.open();
-    expect(db.verno).toBe(13);
+    expect(db.verno).toBe(14);
     expect(await db.shops.get(SHOP_ID)).toEqual(shop);
     expect(await db.meta.get('device')).toEqual({ key: 'device', value: { id: device.id } });
     expect(await db.outbox.count()).toBe(0);
@@ -203,7 +206,7 @@ describe('NaqdDb schema', () => {
 
     const db = track(new NaqdDb(name));
     await db.open();
-    expect(db.verno).toBe(13);
+    expect(db.verno).toBe(14);
     expect(await db.meta.get('storage_persisted')).toEqual({
       key: 'storage_persisted',
       value: false,

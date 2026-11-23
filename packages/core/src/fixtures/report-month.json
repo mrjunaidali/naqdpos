@@ -1,0 +1,701 @@
+{
+  "description": "Shared by packages/core (reports.ts) and db/tests (report_* SQL functions): October 2026 for one shop, two devices, owner and cashier. Mango cost changes on 15 Oct (cost at sale time); coriander given free (FOC, its cost counts); tomato sold by amount; apple has no cost price; a custom item; bill discounts and rounding shared across lines; khata from September; an expense and its reversal; wastage valued at cost, damaged apple unvalued; every active day closed except 20 Oct. $-values are replaced by the SQL test.",
+  "shop_id": "$shop",
+  "from": "2026-10-01",
+  "to": "2026-10-31",
+  "today": "2026-11-23",
+  "products": [
+    {
+      "id": "019a0000-0000-7000-8000-000000000101",
+      "name": "Mango",
+      "name_ur": "آم",
+      "unit": "kg",
+      "sale_price_paisa": 30000
+    },
+    {
+      "id": "019a0000-0000-7000-8000-000000000102",
+      "name": "Coriander",
+      "name_ur": "دھنیا",
+      "unit": "bundle",
+      "sale_price_paisa": 2000
+    },
+    {
+      "id": "019a0000-0000-7000-8000-000000000103",
+      "name": "Tomato",
+      "name_ur": "ٹماٹر",
+      "unit": "kg",
+      "sale_price_paisa": 8000
+    },
+    {
+      "id": "019a0000-0000-7000-8000-000000000104",
+      "name": "Apple",
+      "name_ur": "سیب",
+      "unit": "kg",
+      "sale_price_paisa": 24000
+    }
+  ],
+  "costs": [
+    {
+      "id": "019a0000-0000-7000-8000-000000000201",
+      "product_id": "019a0000-0000-7000-8000-000000000101",
+      "cost_price_paisa": 20000,
+      "effective_at": "2026-09-01T00:00:00Z"
+    },
+    {
+      "id": "019a0000-0000-7000-8000-000000000202",
+      "product_id": "019a0000-0000-7000-8000-000000000101",
+      "cost_price_paisa": 25000,
+      "effective_at": "2026-10-14T19:00:00Z"
+    },
+    {
+      "id": "019a0000-0000-7000-8000-000000000203",
+      "product_id": "019a0000-0000-7000-8000-000000000102",
+      "cost_price_paisa": 1000,
+      "effective_at": "2026-09-01T00:00:00Z"
+    },
+    {
+      "id": "019a0000-0000-7000-8000-000000000204",
+      "product_id": "019a0000-0000-7000-8000-000000000103",
+      "cost_price_paisa": 6000,
+      "effective_at": "2026-09-01T00:00:00Z"
+    }
+  ],
+  "staff": [
+    { "id": "$owner", "name": "Owner A" },
+    { "id": "$cashier", "name": "Cashier A" }
+  ],
+  "categories": [
+    {
+      "id": "019a0000-0000-7000-8000-000000000a01",
+      "name": "Rent",
+      "name_ur": null,
+      "i18n_key": null
+    },
+    {
+      "id": "019a0000-0000-7000-8000-000000000a02",
+      "name": "Bags",
+      "name_ur": null,
+      "i18n_key": null
+    }
+  ],
+  "customers": [{ "id": "019a0000-0000-7000-8000-000000000901", "mobile": "+923001110001" }],
+  "sales": [
+    {
+      "id": "019a0000-0000-7000-8000-000000000300",
+      "receipt_no": "A1-000001",
+      "business_date": "2026-09-30",
+      "staff_id": "$owner",
+      "device_id": "$devA",
+      "customer_id": "019a0000-0000-7000-8000-000000000901",
+      "subtotal_paisa": 30000,
+      "discount_paisa": 0,
+      "rounding_paisa": 0,
+      "total_paisa": 30000,
+      "created_at": "2026-09-30T06:00:00Z"
+    },
+    {
+      "id": "019a0000-0000-7000-8000-000000000301",
+      "receipt_no": "A1-000002",
+      "business_date": "2026-10-05",
+      "staff_id": "$owner",
+      "device_id": "$devA",
+      "customer_id": null,
+      "subtotal_paisa": 60000,
+      "discount_paisa": 0,
+      "rounding_paisa": 0,
+      "total_paisa": 60000,
+      "created_at": "2026-10-05T05:00:00Z"
+    },
+    {
+      "id": "019a0000-0000-7000-8000-000000000302",
+      "receipt_no": "B1-000001",
+      "business_date": "2026-10-10",
+      "staff_id": "$cashier",
+      "device_id": "$devB",
+      "customer_id": "019a0000-0000-7000-8000-000000000901",
+      "subtotal_paisa": 68000,
+      "discount_paisa": 1000,
+      "rounding_paisa": 0,
+      "total_paisa": 67000,
+      "created_at": "2026-10-10T07:00:00Z"
+    },
+    {
+      "id": "019a0000-0000-7000-8000-000000000303",
+      "receipt_no": "A1-000003",
+      "business_date": "2026-10-16",
+      "staff_id": "$owner",
+      "device_id": "$devA",
+      "customer_id": null,
+      "subtotal_paisa": 59990,
+      "discount_paisa": 0,
+      "rounding_paisa": 10,
+      "total_paisa": 60000,
+      "created_at": "2026-10-16T06:00:00Z"
+    },
+    {
+      "id": "019a0000-0000-7000-8000-000000000304",
+      "receipt_no": "B1-000002",
+      "business_date": "2026-10-20",
+      "staff_id": "$cashier",
+      "device_id": "$devB",
+      "customer_id": null,
+      "subtotal_paisa": 54000,
+      "discount_paisa": 2700,
+      "rounding_paisa": 0,
+      "total_paisa": 51300,
+      "created_at": "2026-10-20T08:00:00Z"
+    }
+  ],
+  "lines": [
+    {
+      "id": "019a0000-0000-7000-8000-000000000400",
+      "sale_id": "019a0000-0000-7000-8000-000000000300",
+      "product_id": "019a0000-0000-7000-8000-000000000101",
+      "name_snapshot": "Mango",
+      "name_ur_snapshot": "آم",
+      "unit_snapshot": "kg",
+      "qty_milli": 1000,
+      "unit_price_paisa": 30000,
+      "discount_paisa": 0,
+      "is_foc": false,
+      "by_amount": false,
+      "line_total_paisa": 30000
+    },
+    {
+      "id": "019a0000-0000-7000-8000-000000000401",
+      "sale_id": "019a0000-0000-7000-8000-000000000301",
+      "product_id": "019a0000-0000-7000-8000-000000000101",
+      "name_snapshot": "Mango",
+      "name_ur_snapshot": "آم",
+      "unit_snapshot": "kg",
+      "qty_milli": 2000,
+      "unit_price_paisa": 30000,
+      "discount_paisa": 0,
+      "is_foc": false,
+      "by_amount": false,
+      "line_total_paisa": 60000
+    },
+    {
+      "id": "019a0000-0000-7000-8000-000000000402",
+      "sale_id": "019a0000-0000-7000-8000-000000000301",
+      "product_id": "019a0000-0000-7000-8000-000000000102",
+      "name_snapshot": "Coriander",
+      "name_ur_snapshot": "دھنیا",
+      "unit_snapshot": "bundle",
+      "qty_milli": 1000,
+      "unit_price_paisa": 2000,
+      "discount_paisa": 0,
+      "is_foc": true,
+      "by_amount": false,
+      "line_total_paisa": 0
+    },
+    {
+      "id": "019a0000-0000-7000-8000-000000000403",
+      "sale_id": "019a0000-0000-7000-8000-000000000302",
+      "product_id": "019a0000-0000-7000-8000-000000000101",
+      "name_snapshot": "Mango",
+      "name_ur_snapshot": "آم",
+      "unit_snapshot": "kg",
+      "qty_milli": 1500,
+      "unit_price_paisa": 30000,
+      "discount_paisa": 5000,
+      "is_foc": false,
+      "by_amount": false,
+      "line_total_paisa": 40000
+    },
+    {
+      "id": "019a0000-0000-7000-8000-000000000404",
+      "sale_id": "019a0000-0000-7000-8000-000000000302",
+      "product_id": "019a0000-0000-7000-8000-000000000103",
+      "name_snapshot": "Tomato",
+      "name_ur_snapshot": "ٹماٹر",
+      "unit_snapshot": "kg",
+      "qty_milli": 1250,
+      "unit_price_paisa": 8000,
+      "discount_paisa": 0,
+      "is_foc": false,
+      "by_amount": true,
+      "line_total_paisa": 10000
+    },
+    {
+      "id": "019a0000-0000-7000-8000-000000000405",
+      "sale_id": "019a0000-0000-7000-8000-000000000302",
+      "product_id": "019a0000-0000-7000-8000-000000000104",
+      "name_snapshot": "Apple",
+      "name_ur_snapshot": "سیب",
+      "unit_snapshot": "kg",
+      "qty_milli": 750,
+      "unit_price_paisa": 24000,
+      "discount_paisa": 0,
+      "is_foc": false,
+      "by_amount": false,
+      "line_total_paisa": 18000
+    },
+    {
+      "id": "019a0000-0000-7000-8000-000000000406",
+      "sale_id": "019a0000-0000-7000-8000-000000000303",
+      "product_id": "019a0000-0000-7000-8000-000000000101",
+      "name_snapshot": "Mango",
+      "name_ur_snapshot": "آم",
+      "unit_snapshot": "kg",
+      "qty_milli": 333,
+      "unit_price_paisa": 30000,
+      "discount_paisa": 0,
+      "is_foc": false,
+      "by_amount": false,
+      "line_total_paisa": 9990
+    },
+    {
+      "id": "019a0000-0000-7000-8000-000000000407",
+      "sale_id": "019a0000-0000-7000-8000-000000000303",
+      "product_id": null,
+      "name_snapshot": "Basket ",
+      "name_ur_snapshot": null,
+      "unit_snapshot": "piece",
+      "qty_milli": 1000,
+      "unit_price_paisa": 50000,
+      "discount_paisa": 0,
+      "is_foc": false,
+      "by_amount": false,
+      "line_total_paisa": 50000
+    },
+    {
+      "id": "019a0000-0000-7000-8000-000000000408",
+      "sale_id": "019a0000-0000-7000-8000-000000000304",
+      "product_id": "019a0000-0000-7000-8000-000000000104",
+      "name_snapshot": "Apple",
+      "name_ur_snapshot": "سیب",
+      "unit_snapshot": "kg",
+      "qty_milli": 1000,
+      "unit_price_paisa": 24000,
+      "discount_paisa": 0,
+      "is_foc": false,
+      "by_amount": false,
+      "line_total_paisa": 24000
+    },
+    {
+      "id": "019a0000-0000-7000-8000-000000000409",
+      "sale_id": "019a0000-0000-7000-8000-000000000304",
+      "product_id": "019a0000-0000-7000-8000-000000000101",
+      "name_snapshot": "Mango",
+      "name_ur_snapshot": "آم",
+      "unit_snapshot": "kg",
+      "qty_milli": 1000,
+      "unit_price_paisa": 30000,
+      "discount_paisa": 0,
+      "is_foc": false,
+      "by_amount": false,
+      "line_total_paisa": 30000
+    }
+  ],
+  "payments": [
+    {
+      "id": "019a0000-0000-7000-8000-000000000500",
+      "business_date": "2026-09-30",
+      "kind": "sale",
+      "sale_id": "019a0000-0000-7000-8000-000000000300",
+      "customer_id": null,
+      "method_code": "cash",
+      "amount_paisa": 25000,
+      "staff_id": "$owner",
+      "device_id": "$devA",
+      "created_at": "2026-09-30T06:00:00Z"
+    },
+    {
+      "id": "019a0000-0000-7000-8000-000000000501",
+      "business_date": "2026-10-05",
+      "kind": "sale",
+      "sale_id": "019a0000-0000-7000-8000-000000000301",
+      "customer_id": null,
+      "method_code": "cash",
+      "amount_paisa": 60000,
+      "staff_id": "$owner",
+      "device_id": "$devA",
+      "created_at": "2026-10-05T05:00:00Z"
+    },
+    {
+      "id": "019a0000-0000-7000-8000-000000000502",
+      "business_date": "2026-10-10",
+      "kind": "sale",
+      "sale_id": "019a0000-0000-7000-8000-000000000302",
+      "customer_id": null,
+      "method_code": "jazzcash",
+      "amount_paisa": 30000,
+      "staff_id": "$cashier",
+      "device_id": "$devB",
+      "created_at": "2026-10-10T07:00:00Z"
+    },
+    {
+      "id": "019a0000-0000-7000-8000-000000000503",
+      "business_date": "2026-10-16",
+      "kind": "sale",
+      "sale_id": "019a0000-0000-7000-8000-000000000303",
+      "customer_id": null,
+      "method_code": "cash",
+      "amount_paisa": 60000,
+      "staff_id": "$owner",
+      "device_id": "$devA",
+      "created_at": "2026-10-16T06:00:00Z"
+    },
+    {
+      "id": "019a0000-0000-7000-8000-000000000504",
+      "business_date": "2026-10-20",
+      "kind": "sale",
+      "sale_id": "019a0000-0000-7000-8000-000000000304",
+      "customer_id": null,
+      "method_code": "cash",
+      "amount_paisa": 51300,
+      "staff_id": "$cashier",
+      "device_id": "$devB",
+      "created_at": "2026-10-20T08:00:00Z"
+    },
+    {
+      "id": "019a0000-0000-7000-8000-000000000505",
+      "business_date": "2026-10-25",
+      "kind": "khata_receipt",
+      "sale_id": null,
+      "customer_id": "019a0000-0000-7000-8000-000000000901",
+      "method_code": "cash",
+      "amount_paisa": 20000,
+      "staff_id": "$owner",
+      "device_id": "$devA",
+      "created_at": "2026-10-25T09:00:00Z"
+    }
+  ],
+  "khata": [
+    {
+      "id": "019a0000-0000-7000-8000-000000000600",
+      "customer_id": "019a0000-0000-7000-8000-000000000901",
+      "business_date": "2026-09-30",
+      "type": "credit_sale",
+      "amount_paisa": 5000,
+      "sale_id": "019a0000-0000-7000-8000-000000000300",
+      "payment_id": null,
+      "staff_id": "$owner",
+      "device_id": "$devA",
+      "created_at": "2026-09-30T06:00:00Z"
+    },
+    {
+      "id": "019a0000-0000-7000-8000-000000000601",
+      "customer_id": "019a0000-0000-7000-8000-000000000901",
+      "business_date": "2026-10-10",
+      "type": "credit_sale",
+      "amount_paisa": 37000,
+      "sale_id": "019a0000-0000-7000-8000-000000000302",
+      "payment_id": null,
+      "staff_id": "$cashier",
+      "device_id": "$devB",
+      "created_at": "2026-10-10T07:00:00Z"
+    },
+    {
+      "id": "019a0000-0000-7000-8000-000000000602",
+      "customer_id": "019a0000-0000-7000-8000-000000000901",
+      "business_date": "2026-10-25",
+      "type": "payment",
+      "amount_paisa": -20000,
+      "sale_id": null,
+      "payment_id": "019a0000-0000-7000-8000-000000000505",
+      "staff_id": "$owner",
+      "device_id": "$devA",
+      "created_at": "2026-10-25T09:00:00Z"
+    }
+  ],
+  "movements": [
+    {
+      "id": "019a0000-0000-7000-8000-000000000701",
+      "product_id": "019a0000-0000-7000-8000-000000000101",
+      "business_date": "2026-10-05",
+      "qty_milli": -2000,
+      "reason": "sale",
+      "ref_id": "019a0000-0000-7000-8000-000000000301",
+      "staff_id": "$owner",
+      "device_id": "$devA",
+      "created_at": "2026-10-05T05:00:00Z"
+    },
+    {
+      "id": "019a0000-0000-7000-8000-000000000702",
+      "product_id": "019a0000-0000-7000-8000-000000000101",
+      "business_date": "2026-10-21",
+      "qty_milli": -500,
+      "reason": "wastage",
+      "ref_id": null,
+      "staff_id": "$cashier",
+      "device_id": "$devB",
+      "created_at": "2026-10-21T10:00:00Z"
+    },
+    {
+      "id": "019a0000-0000-7000-8000-000000000703",
+      "product_id": "019a0000-0000-7000-8000-000000000104",
+      "business_date": "2026-10-21",
+      "qty_milli": -1000,
+      "reason": "damaged",
+      "ref_id": null,
+      "staff_id": "$cashier",
+      "device_id": "$devB",
+      "created_at": "2026-10-21T10:05:00Z"
+    }
+  ],
+  "expenses": [
+    {
+      "id": "019a0000-0000-7000-8000-000000000800",
+      "business_date": "2026-09-01",
+      "category_id": "019a0000-0000-7000-8000-000000000a01",
+      "amount_paisa": 2500000,
+      "paid_method_code": "cash",
+      "note": null,
+      "payee": "Landlord",
+      "staff_id": "$owner",
+      "device_id": "$devA",
+      "reverses_expense_id": null,
+      "reversal_reason": null,
+      "created_at": "2026-09-01T05:00:00Z"
+    },
+    {
+      "id": "019a0000-0000-7000-8000-000000000801",
+      "business_date": "2026-10-01",
+      "category_id": "019a0000-0000-7000-8000-000000000a01",
+      "amount_paisa": 2500000,
+      "paid_method_code": "cash",
+      "note": "October",
+      "payee": "Landlord",
+      "staff_id": "$owner",
+      "device_id": "$devA",
+      "reverses_expense_id": null,
+      "reversal_reason": null,
+      "created_at": "2026-10-01T05:00:00Z"
+    },
+    {
+      "id": "019a0000-0000-7000-8000-000000000802",
+      "business_date": "2026-10-12",
+      "category_id": "019a0000-0000-7000-8000-000000000a02",
+      "amount_paisa": 50000,
+      "paid_method_code": "cash",
+      "note": "Bags, \"large\"",
+      "payee": null,
+      "staff_id": "$cashier",
+      "device_id": "$devB",
+      "reverses_expense_id": null,
+      "reversal_reason": null,
+      "created_at": "2026-10-12T05:00:00Z"
+    },
+    {
+      "id": "019a0000-0000-7000-8000-000000000803",
+      "business_date": "2026-10-12",
+      "category_id": "019a0000-0000-7000-8000-000000000a02",
+      "amount_paisa": -50000,
+      "paid_method_code": "cash",
+      "note": null,
+      "payee": null,
+      "staff_id": "$owner",
+      "device_id": "$devA",
+      "reverses_expense_id": "019a0000-0000-7000-8000-000000000802",
+      "reversal_reason": "Wrong amount",
+      "created_at": "2026-10-12T09:00:00Z"
+    },
+    {
+      "id": "019a0000-0000-7000-8000-000000000804",
+      "business_date": "2026-10-18",
+      "category_id": "019a0000-0000-7000-8000-000000000a02",
+      "amount_paisa": 30000,
+      "paid_method_code": "jazzcash",
+      "note": null,
+      "payee": null,
+      "staff_id": "$cashier",
+      "device_id": "$devB",
+      "reverses_expense_id": null,
+      "reversal_reason": null,
+      "created_at": "2026-10-18T05:00:00Z"
+    }
+  ],
+  "closed_dates": [
+    "2026-09-01",
+    "2026-09-30",
+    "2026-10-01",
+    "2026-10-05",
+    "2026-10-10",
+    "2026-10-12",
+    "2026-10-16",
+    "2026-10-18",
+    "2026-10-21",
+    "2026-10-25"
+  ],
+  "expected": {
+    "summary": {
+      "from": "2026-10-01",
+      "to": "2026-10-31",
+      "sales_count": 4,
+      "gross_sales_paisa": 246990,
+      "line_discount_paisa": 5000,
+      "bill_discount_paisa": 3700,
+      "rounding_paisa": 10,
+      "net_sales_paisa": 238300,
+      "payments_by_method": [
+        { "key": "cash", "amount_paisa": 171300 },
+        { "key": "jazzcash", "amount_paisa": 30000 }
+      ],
+      "khata_receipts_by_method": [{ "key": "cash", "amount_paisa": 20000 }],
+      "khata_given_paisa": 37000,
+      "khata_received_paisa": 20000,
+      "foc_lines": 1,
+      "foc_value_paisa": 2000,
+      "costed_sales_paisa": 147757,
+      "cost_of_goods_paisa": 111825,
+      "costed_profit_paisa": 35932,
+      "uncosted_sales_paisa": 90543,
+      "uncosted_lines": 3,
+      "uncosted_products": 2,
+      "expenses_total_paisa": 2530000,
+      "expenses_by_category": [
+        {
+          "key": "019a0000-0000-7000-8000-000000000a01",
+          "amount_paisa": 2500000,
+          "name": "Rent",
+          "name_ur": null,
+          "i18n_key": null
+        },
+        {
+          "key": "019a0000-0000-7000-8000-000000000a02",
+          "amount_paisa": 30000,
+          "name": "Bags",
+          "name_ur": null,
+          "i18n_key": null
+        }
+      ],
+      "wastage_value_paisa": 12500,
+      "wastage_unvalued_lines": 1,
+      "net_paisa": -2506568,
+      "receivables_paisa": 22000,
+      "receivable_customers": 1,
+      "unclosed_days": ["2026-10-20"],
+      "today_open": false
+    },
+    "products": [
+      {
+        "key": "019a0000-0000-7000-8000-000000000101",
+        "name": "Mango",
+        "custom": false,
+        "lines": 4,
+        "qty_milli": 4833,
+        "foc_qty_milli": 0,
+        "sales_paisa": 137904,
+        "costed_sales_paisa": 137904,
+        "cost_paisa": 103325,
+        "profit_paisa": 34579,
+        "uncosted_sales_paisa": 0
+      },
+      {
+        "key": "custom:basket",
+        "name": "Basket",
+        "custom": true,
+        "lines": 1,
+        "qty_milli": 1000,
+        "foc_qty_milli": 0,
+        "sales_paisa": 50008,
+        "costed_sales_paisa": 0,
+        "cost_paisa": 0,
+        "profit_paisa": 0,
+        "uncosted_sales_paisa": 50008
+      },
+      {
+        "key": "019a0000-0000-7000-8000-000000000104",
+        "name": "Apple",
+        "custom": false,
+        "lines": 2,
+        "qty_milli": 1750,
+        "foc_qty_milli": 0,
+        "sales_paisa": 40535,
+        "costed_sales_paisa": 0,
+        "cost_paisa": 0,
+        "profit_paisa": 0,
+        "uncosted_sales_paisa": 40535
+      },
+      {
+        "key": "019a0000-0000-7000-8000-000000000103",
+        "name": "Tomato",
+        "custom": false,
+        "lines": 1,
+        "qty_milli": 1250,
+        "foc_qty_milli": 0,
+        "sales_paisa": 9853,
+        "costed_sales_paisa": 9853,
+        "cost_paisa": 7500,
+        "profit_paisa": 2353,
+        "uncosted_sales_paisa": 0
+      },
+      {
+        "key": "019a0000-0000-7000-8000-000000000102",
+        "name": "Coriander",
+        "custom": false,
+        "lines": 1,
+        "qty_milli": 1000,
+        "foc_qty_milli": 1000,
+        "sales_paisa": 0,
+        "costed_sales_paisa": 0,
+        "cost_paisa": 1000,
+        "profit_paisa": -1000,
+        "uncosted_sales_paisa": 0
+      }
+    ],
+    "staff": [
+      {
+        "staff_id": "$owner",
+        "name": "Owner A",
+        "sales_count": 2,
+        "sales_paisa": 120000,
+        "discount_paisa": 0,
+        "foc_value_paisa": 2000
+      },
+      {
+        "staff_id": "$cashier",
+        "name": "Cashier A",
+        "sales_count": 2,
+        "sales_paisa": 118300,
+        "discount_paisa": 8700,
+        "foc_value_paisa": 0
+      }
+    ],
+    "expenses": {
+      "line_ids": [
+        "019a0000-0000-7000-8000-000000000804",
+        "019a0000-0000-7000-8000-000000000803",
+        "019a0000-0000-7000-8000-000000000802",
+        "019a0000-0000-7000-8000-000000000801"
+      ],
+      "total_paisa": 2530000,
+      "by_category": [
+        { "key": "019a0000-0000-7000-8000-000000000a01", "amount_paisa": 2500000 },
+        { "key": "019a0000-0000-7000-8000-000000000a02", "amount_paisa": 30000 }
+      ],
+      "by_method": [
+        { "key": "cash", "amount_paisa": 2500000 },
+        { "key": "jazzcash", "amount_paisa": 30000 }
+      ],
+      "previous": {
+        "from": "2026-09-01",
+        "to": "2026-09-30",
+        "total_paisa": 2500000,
+        "by_category": [{ "key": "019a0000-0000-7000-8000-000000000a01", "amount_paisa": 2500000 }]
+      }
+    },
+    "expected_cash": [
+      {
+        "business_date": "2026-10-05",
+        "opening_paisa": 0,
+        "withdrawal_paisa": 0,
+        "expected_paisa": 60000
+      },
+      {
+        "business_date": "2026-10-12",
+        "opening_paisa": 10000,
+        "withdrawal_paisa": 0,
+        "expected_paisa": 10000
+      },
+      {
+        "business_date": "2026-10-25",
+        "opening_paisa": 0,
+        "withdrawal_paisa": 5000,
+        "expected_paisa": 15000
+      }
+    ]
+  }
+}

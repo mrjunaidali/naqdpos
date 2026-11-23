@@ -70,6 +70,7 @@ As an owner, I see where money goes.
 - List view filtered by date range, category, method and staff, newest first, with the total for the filter.
 - Monthly view: total by category, the change against last month, and the expense lines in the monthly profit & loss.
 - Export the filtered list as CSV (owner only).
+- **Built (Step 23, 23 Nov 2026):** Reports → Expenses. The list comes from `report_expenses` (all devices; newest first; at most 5,000 lines with the full count and total) with date range, category, method and staff filters, and CSV. The monthly view shows each category against the previous calendar month with the change. The monthly P&L lists expenses by category, net of reversals. Cashiers keep the Expenses screen with their own entries for today. Owner devices can show the last results offline.
 
 ### US069 (EXP-6) Bill photo (Release 2)
 As an owner, I attach a photo of the bill or receipt.

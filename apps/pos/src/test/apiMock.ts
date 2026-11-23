@@ -39,6 +39,10 @@ export const api = {
   adminSaveCategory: vi.fn(),
   adminSaveStaff: vi.fn(),
   setFirstPin: vi.fn(),
+  reportSummary: vi.fn(),
+  reportProducts: vi.fn(),
+  reportStaff: vi.fn(),
+  reportExpenses: vi.fn(),
 } satisfies Record<keyof ApiClient, Mock>;
 
 /** apiWithToken(token) returns the same mocks; check which token was used via its calls. */

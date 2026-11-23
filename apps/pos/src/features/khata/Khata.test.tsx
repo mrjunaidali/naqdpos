@@ -281,11 +281,23 @@ describe('receive payment (US040)', () => {
   });
 });
 
+/**
+ * Opens Add customer on the khata list. The list re-renders while its live queries settle, so a
+ * button found by an earlier render can be detached when clicked: retry until the form shows.
+ */
+async function openAddCustomer() {
+  await waitFor(() => {
+    if (!screen.queryByLabelText('Mobile number'))
+      fireEvent.click(screen.getByRole('button', { name: 'Add customer' }));
+    expect(screen.getByLabelText('Mobile number')).toBeInTheDocument();
+  });
+}
+
 describe('add customer and opening balance (US080)', () => {
   it('Khata → Add customer saves the customer and opens their page; an existing mobile opens it', async () => {
     await seedShop();
     const { router } = renderAt('/khata');
-    fireEvent.click(await screen.findByRole('button', { name: 'Add customer' }));
+    await openAddCustomer();
     fireEvent.change(screen.getByLabelText('Mobile number'), { target: { value: '0300 1234567' } });
     fireEvent.change(screen.getByLabelText('Address (optional)'), {
       target: { value: 'Street 5' },
@@ -296,7 +308,7 @@ describe('add customer and opening balance (US080)', () => {
     expect((await db.customers.get(id!))?.address).toBe('Street 5');
 
     await router.navigate('/khata');
-    fireEvent.click(await screen.findByRole('button', { name: 'Add customer' }));
+    await openAddCustomer();
     fireEvent.change(screen.getByLabelText('Mobile number'), {
       target: { value: '+92 300 1234567' },
     });
@@ -309,7 +321,7 @@ describe('add customer and opening balance (US080)', () => {
     await seedShop();
     await writeCurrentStaffId(STAFF_ID);
     const { router } = renderAt('/khata');
-    fireEvent.click(await screen.findByRole('button', { name: 'Add customer' }));
+    await openAddCustomer();
     fireEvent.change(screen.getByLabelText('Mobile number'), { target: { value: '0300 1234567' } });
     fireEvent.change(screen.getByLabelText('Name (optional)'), { target: { value: 'Ali' } });
     fireEvent.change(screen.getByLabelText('Opening balance (from your paper khata)'), {
@@ -325,17 +337,23 @@ describe('add customer and opening balance (US080)', () => {
       note: 'Opening balance',
       staff_id: STAFF_ID,
     });
-    expect(await screen.findByText('Rs 1200', { selector: '.text-3xl' })).toBeInTheDocument();
+    await waitFor(() =>
+      expect(screen.getByText('Rs 1200', { selector: '.text-3xl' })).toBeInTheDocument(),
+    );
     await router.navigate('/khata');
-    expect(await screen.findByText('Total receivable')).toBeInTheDocument();
-    await waitFor(() => expect(screen.getByRole('link', { name: 'Call Ali' })).toBeInTheDocument());
+    // The list re-renders as its live queries settle: check inside waitFor, not on a node found
+    // by an earlier render (it can be replaced before the assertion runs).
+    await waitFor(() => {
+      expect(screen.getByText('Total receivable')).toBeInTheDocument();
+      expect(screen.getByRole('link', { name: 'Call Ali' })).toBeInTheDocument();
+    });
   });
 
   it('a cashier entering an opening balance is asked for the owner PIN', async () => {
     await seedShop('shop');
     await writeCurrentStaffId(CASHIER);
     renderAt('/khata');
-    fireEvent.click(await screen.findByRole('button', { name: 'Add customer' }));
+    await openAddCustomer();
     fireEvent.change(screen.getByLabelText('Mobile number'), { target: { value: '0300 1234567' } });
     fireEvent.change(screen.getByLabelText('Opening balance (from your paper khata)'), {
       target: { value: '500' },

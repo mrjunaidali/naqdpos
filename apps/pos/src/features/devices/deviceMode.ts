@@ -24,12 +24,14 @@ export async function changeDeviceMode(mode: SetupMode): Promise<DeviceRow> {
   const row = await api.setDeviceMode(device.id, mode);
 
   const ownerOnly = OWNER_DEVICE_TABLES.map((name) => db.table(name));
-  await db.transaction('rw', [db.devices, db.meta, ...ownerOnly], async () => {
+  await db.transaction('rw', [db.devices, db.meta, db.report_cache, ...ownerOnly], async () => {
     await db.devices.put(row);
     const stored: StoredDevice = { ...device, mode: row.mode };
     await db.meta.put({ key: META_KEYS.DEVICE, value: stored });
     if (row.mode !== 'owner') {
       for (const table of ownerOnly) await table.clear();
+      // Cached reports hold costs and profit: owner devices only (architecture §5).
+      await db.report_cache.clear();
     }
     // Pull everything again under the new mode (puts are idempotent).
     await db.meta.put({ key: SYNC_META.CURSOR, value: 0 });

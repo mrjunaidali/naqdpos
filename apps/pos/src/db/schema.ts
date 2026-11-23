@@ -24,6 +24,15 @@ import type {
 } from '@naqdpos/core';
 import { Dexie, type EntityTable } from 'dexie';
 
+/** A cached report result (owner devices only). */
+export interface ReportCacheRow {
+  /** report kind + range + filters, e.g. summary:<shop>:2026-10-01:2026-10-31 */
+  key: string;
+  /** When the server answered (the "as of" time). */
+  saved_at: string;
+  value: unknown;
+}
+
 /** Device-local key/value settings (e.g. `storage_persisted`, architecture §6). Never synced. */
 export interface MetaRow {
   key: string;
@@ -82,6 +91,7 @@ export class NaqdDb extends Dexie {
   declare product_cost_history: EntityTable<ProductCostHistoryRow, 'id'>;
   declare outbox: EntityTable<OutboxEntry, 'id'>;
   declare sync_errors: EntityTable<SyncErrorRow, 'id'>;
+  declare report_cache: EntityTable<ReportCacheRow, 'key'>;
 
   constructor(name: string = DB_NAME) {
     super(name);
@@ -173,6 +183,12 @@ export class NaqdDb extends Dexie {
     // Daily closing (migration 20261123090000_day_closes).
     this.version(13).stores({
       day_closes: 'id, shop_id, business_date, server_seq',
+    });
+    // Owner reports (US047–US049, US068): the last results for offline viewing. Local only (no
+    // server table), written only on owner-mode devices, emptied on a switch to shop mode and on
+    // sign-out (architecture §5).
+    this.version(14).stores({
+      report_cache: 'key, saved_at',
     });
   }
 }

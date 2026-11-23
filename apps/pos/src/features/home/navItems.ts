@@ -24,6 +24,7 @@ export function moreItems(role: Role | null): NavItem[] {
   if (can(role, 'record_wastage')) items.push({ key: 'stock', to: '/stock' });
   if (can(role, 'add_expense')) items.push({ key: 'expenses', to: '/expenses' });
   if (can(role, 'close_day')) items.push({ key: 'closeDay', to: '/closing' });
+  if (can(role, 'see_reports')) items.push({ key: 'reports', to: '/reports' });
   if (can(role, 'manage_staff')) items.push({ key: 'staff', to: '/staff' });
   items.push({ key: 'sync', to: '/sync' }, { key: 'settings', to: '/settings' });
   return items;

@@ -267,7 +267,8 @@
     "closeDay": "TODO-ur دن بند",
     "staff": "TODO-ur عملہ",
     "sync": "TODO-ur سنک",
-    "settings": "TODO-ur سیٹنگز"
+    "settings": "TODO-ur سیٹنگز",
+    "reports": "TODO-ur رپورٹس"
   },
   "unit": {
     "kg": "کلو",
@@ -917,5 +918,100 @@
     "ios": "TODO-ur شیئر دبائیں، پھر “Add to Home Screen”۔",
     "mac_safari": "TODO-ur سفاری میں File → Add to Dock چنیں۔",
     "firefox_desktop": "TODO-ur فائر فاکس ایپ انسٹال نہیں کرتا۔ انسٹال کے لیے کروم یا ایج میں کھولیں۔"
+  },
+  "reports": {
+    "title": "TODO-ur رپورٹس",
+    "range": "TODO-ur تاریخیں",
+    "preset": {
+      "today": "TODO-ur آج",
+      "yesterday": "TODO-ur کل",
+      "this_week": "TODO-ur اس ہفتے",
+      "this_month": "TODO-ur اس مہینے",
+      "last_month": "TODO-ur پچھلے مہینے",
+      "custom": "TODO-ur اپنی تاریخیں"
+    },
+    "from": "TODO-ur سے",
+    "to": "TODO-ur تک",
+    "needsInternet": "TODO-ur رپورٹس کے لیے انٹرنیٹ چاہیے۔",
+    "error": "TODO-ur رپورٹ نہیں کھل سکی۔ دوبارہ کوشش کریں۔",
+    "asOfOffline": "TODO-ur {{time}} تک کی — آف لائن",
+    "empty": "TODO-ur اس مدت میں کچھ نہیں۔",
+    "tab": {
+      "dashboard": "TODO-ur خلاصہ",
+      "monthly": "TODO-ur ماہانہ",
+      "products": "TODO-ur اشیاء",
+      "staff": "TODO-ur عملہ",
+      "expenses": "TODO-ur خرچے"
+    },
+    "netSales": "TODO-ur کل سیل",
+    "todayOpen": "TODO-ur آج (ابھی کھلا ہے)",
+    "payments": "TODO-ur ادائیگیاں",
+    "khataGiven": "TODO-ur کھاتے پر دیا",
+    "profit": "TODO-ur منافع",
+    "costedProfit": "TODO-ur قیمتِ خرید والی اشیاء پر منافع",
+    "costedSales": "TODO-ur ان اشیاء کی سیل",
+    "expensesAndWastage": "TODO-ur خرچے اور ضیاع",
+    "expenses": "TODO-ur خرچے",
+    "wastage": "TODO-ur ضیاع کی مالیت",
+    "khataDue": "TODO-ur کھاتے کی وصولی",
+    "receivables": "TODO-ur گاہکوں کے ذمے",
+    "receivableCustomers_one": "TODO-ur {{count}} گاہک کے ذمے",
+    "receivableCustomers_other": "TODO-ur {{count}} گاہکوں کے ذمے",
+    "khataReceived": "TODO-ur کھاتے کی وصولی ملی",
+    "topProducts": "TODO-ur سب سے زیادہ بکنے والی 5 اشیاء",
+    "custom": "TODO-ur الگ آئٹم",
+    "uncostedSales": "TODO-ur قیمتِ خرید کے بغیر سیل",
+    "uncostedCount": "TODO-ur {{lines}} لائنیں، {{products}} اشیاء",
+    "addCostPrices": "TODO-ur پورا منافع دیکھنے کے لیے قیمتِ خرید ڈالیں",
+    "month": "TODO-ur مہینہ",
+    "unclosedDays": "TODO-ur یہ دن ابھی بند نہیں ہوئے: {{days}}۔ ٹوٹل پھر بھی دکھائے گئے ہیں۔",
+    "pnlTitle": "TODO-ur نفع و نقصان — {{month}}",
+    "pnl": {
+      "gross_sales": "TODO-ur سیل",
+      "discounts": "TODO-ur رعایت",
+      "rounding": "TODO-ur راؤنڈنگ",
+      "net_sales": "TODO-ur کل سیل",
+      "uncosted_sales": "TODO-ur قیمتِ خرید کے بغیر سیل",
+      "costed_sales": "TODO-ur قیمتِ خرید والی سیل",
+      "cost_of_goods": "TODO-ur مال کی لاگت",
+      "gross_profit": "TODO-ur مجموعی منافع (قیمتِ خرید والی اشیاء)",
+      "expenses_total": "TODO-ur کل خرچے",
+      "wastage": "TODO-ur ضیاع کی مالیت",
+      "net": "TODO-ur خالص",
+      "netExcluding": "TODO-ur خالص (قیمتِ خرید کے بغیر سیل کے علاوہ)"
+    },
+    "receivablesAtEnd": "TODO-ur مہینے کے آخر میں گاہکوں کے ذمے",
+    "print": "TODO-ur پرنٹ",
+    "csv": "TODO-ur CSV ڈاؤن لوڈ",
+    "col": {
+      "product": "TODO-ur چیز",
+      "qty": "TODO-ur مقدار",
+      "sales": "TODO-ur سیل",
+      "cost": "TODO-ur لاگت",
+      "profit": "TODO-ur منافع",
+      "uncosted": "TODO-ur قیمتِ خرید نہیں",
+      "staff": "TODO-ur عملہ",
+      "salesCount": "TODO-ur بل",
+      "discounts": "TODO-ur رعایت",
+      "foc": "TODO-ur مفت اشیاء"
+    },
+    "expenseView": "TODO-ur خرچوں کا انداز",
+    "expenseViews": {
+      "list": "TODO-ur فہرست",
+      "month": "TODO-ur ماہانہ"
+    },
+    "all": "TODO-ur سب",
+    "filter": {
+      "category": "TODO-ur قسم",
+      "method": "TODO-ur ادائیگی",
+      "staff": "TODO-ur عملہ"
+    },
+    "expenseTotal_one": "TODO-ur کل ({{count}} اندراج)",
+    "expenseTotal_other": "TODO-ur کل ({{count}} اندراجات)",
+    "reversal": "TODO-ur واپسی",
+    "byCategoryVsLast": "TODO-ur قسم کے لحاظ سے، پچھلے مہینے کے مقابلے میں",
+    "thisMonth": "TODO-ur اس مہینے",
+    "lastMonth": "TODO-ur پچھلے مہینے",
+    "change": "TODO-ur فرق"
   }
 }

@@ -8,6 +8,11 @@ import { SignInGate } from './features/auth/SignInGate.tsx';
 import { CatalogueLayout } from './features/catalogue/CatalogueLayout.tsx';
 import { DeviceModePage } from './features/devices/DeviceModePage.tsx';
 import { OwnerPinGate } from './features/pin/OwnerPinGate.tsx';
+import { DashboardPage } from './features/reports/DashboardPage.tsx';
+import { ExpensesReportPage } from './features/reports/ExpensesReportPage.tsx';
+import { MonthlyPage } from './features/reports/MonthlyPage.tsx';
+import { ProductsReportPage, StaffReportPage } from './features/reports/ProductsStaffPages.tsx';
+import { ReportsLayout } from './features/reports/ReportsLayout.tsx';
 import { CategoriesPage } from './features/catalogue/CategoriesPage.tsx';
 import { PresetPickerPage } from './features/catalogue/PresetPickerPage.tsx';
 import { ProductFormPage } from './features/catalogue/ProductFormPage.tsx';
@@ -297,6 +302,25 @@ export const routes: RouteObject[] = [
           { path: 'presets', element: <PresetPickerPage /> },
           { path: 'rates', element: <TodaysRatesPage /> },
           { path: ':productId', element: <ProductFormPage /> },
+        ],
+      },
+      {
+        // Owner reports (US047–US049, US068): owners only, from the server; the owner PIN on shop
+        // devices (OwnerPinGate), cached for offline viewing only on owner devices (reportsData.ts).
+        path: 'reports',
+        element: (
+          <Gate state="ready">
+            <OwnerPinGate>
+              <ReportsLayout />
+            </OwnerPinGate>
+          </Gate>
+        ),
+        children: [
+          { index: true, element: <DashboardPage /> },
+          { path: 'monthly', element: <MonthlyPage /> },
+          { path: 'products', element: <ProductsReportPage /> },
+          { path: 'staff', element: <StaffReportPage /> },
+          { path: 'expenses', element: <ExpensesReportPage /> },
         ],
       },
       { path: '*', element: <NotFoundPage /> },

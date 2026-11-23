@@ -2,6 +2,15 @@
 // with the shared schemas, so a server change that breaks the contract fails loudly here.
 import { z } from 'zod';
 import {
+  ExpenseReportQuery,
+  ExpenseReportSchema,
+  ProductReportSchema,
+  ReportQuery,
+  reportQueryString,
+  ReportSummarySchema,
+  StaffReportSchema,
+} from './reports.ts';
+import {
   AdminCatalogue,
   AdminCategoryInput,
   AdminCreateShopRequest,
@@ -276,6 +285,32 @@ export function createApiClient(options: ApiClientOptions) {
       request('POST', `/staff/${encodeURIComponent(staffId)}/first-pin`, SuccessResponse, {
         pin_hash: pinHash,
       }),
+
+    // Owner reports (JSON; the app builds CSV from it with the same core functions as the API).
+    reportSummary: async (query: ReportQuery) =>
+      request(
+        'GET',
+        `/reports/summary${reportQueryString(ReportQuery.parse(query))}`,
+        ReportSummarySchema,
+      ),
+    reportProducts: async (query: ReportQuery) =>
+      request(
+        'GET',
+        `/reports/products${reportQueryString(ReportQuery.parse(query))}`,
+        ProductReportSchema,
+      ),
+    reportStaff: async (query: ReportQuery) =>
+      request(
+        'GET',
+        `/reports/staff${reportQueryString(ReportQuery.parse(query))}`,
+        StaffReportSchema,
+      ),
+    reportExpenses: async (query: ExpenseReportQuery) =>
+      request(
+        'GET',
+        `/reports/expenses${reportQueryString(ExpenseReportQuery.parse(query))}`,
+        ExpenseReportSchema,
+      ),
 
     /** Sends up to 200 outbox entries (architecture §4). */
     syncPush: async (input: SyncPushRequest) =>

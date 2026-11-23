@@ -18,6 +18,7 @@ export * from './presets/freshProduce.ts';
 export * from './productImport.ts';
 export * from './qty.ts';
 export * from './receipt.ts';
+export * from './reports.ts';
 export * from './sale.ts';
 export * from './search.ts';
 export * from './shopProfile.ts';

@@ -31,7 +31,7 @@ Build in this order, not in ID order. "Sheet step" is the step number in the ori
 | 11 | Expenses | US065, US046, US066 | 30a, 31, 31a | Done (Step 17) |
 | 12 | Daily closing | US044, US045, US067 | 32, 33, 33a | Done (Step 18) |
 | 13 | Admin portal | US010, US011, US012, US013 | 34, 35, 7, 36 | Done (Steps 21–22) |
-| 14 | Reports | US047, US048, US049, US068 | 37, 38, 39, 39a | To do |
+| 14 | Reports | US047, US048, US049, US068 | 37, 38, 39, 39a | Done (Step 23) |
 | 15 | Urdu complete, backups | US009, US008 | 40, 41 | To do |
 | 16 | Self-registration and trial | US073–US077 | — | Proposed (see `docs/features/self-registration.md`) |
 | — | **R1 pilot** | | | |
@@ -361,7 +361,7 @@ Build in this order, not in ID order. "Sheet step" is the step number in the ori
 
 **US067** · Must · 2 · R1 · Done (EXP-4) — Expenses in closing: expected cash subtracts cash expenses net of reversals and the owner withdrawal; closing lists expenses by category; WhatsApp summary includes total expenses.
 
-**US068** · Should · 5 · R1 · To do (EXP-5) — Expense list with filters and total; monthly view by category vs last month; lines in the monthly P&L; CSV for owners; cashiers see only their own entries for today.
+**US068** · Should · 5 · R1 · Done (Step 23; EXP-5) — Expense list with filters and total; monthly view by category vs last month; lines in the monthly P&L; CSV for owners; cashiers see only their own entries for today.
 
 **US069** · Could · 3 · R2 · To do (EXP-6) — Bill photo: compress to ~300 KB, keep locally, upload via pre-signed URL to `bill-photos/<shop_id>/<expense_id>.jpg`, then write an `expense_attachments` row; saving never waits for upload.
 
@@ -371,17 +371,18 @@ Build in this order, not in ID order. "Sheet step" is the step number in the ori
 
 ### F25 · Monthly closing (R1)
 
-**US047** · Must · 5 · To do — As a shop owner, I want a monthly close with sales, cost, gross profit, expenses and receivables, so that I know if I made money.
-- Built from locked daily closes; cost at time of sale (`price_history` / `product_costs`); wastage value; receivables at month end
-- Owner-only API report (SQL function); CSV and printable/PDF; adds payables once E08 is live
+**US047** · Must · 5 · Done (Step 23) — As a shop owner, I want a monthly close with sales, cost, gross profit, expenses and receivables, so that I know if I made money.
+- Calendar month by business date; days with activity that are not closed are listed as a warning (totals still show); today is "still open" — *done*
+- Cost at time of sale (`product_cost_history`); sales without a cost price shown apart, never in profit; wastage value; receivables at month end — *done*
+- Owner-only API report (SQL function); CSV and printable (browser print) — *done*; payables once E08 is live
 
 ### F26 · Owner reports (R1)
 
-**US048** · Should · 5 · To do — As a shop owner, I want a dashboard with today's sales, top items and khata due, so that I can check my shop from anywhere.
-- Owner only; data from an owner-only report route; last result cached for offline viewing; date range filter
-- Home screen layout per `docs/design-theme.md` (hero card, stat cards, action tiles, recent list)
+**US048** · Should · 5 · Done (Step 23) — As a shop owner, I want a dashboard with today's sales, top items and khata due, so that I can check my shop from anywhere.
+- Owner only; data from an owner-only report route; last result cached for offline viewing on owner devices only; date range filter (Today, Yesterday, This week, This month, Last month, Custom) — *done*
+- Home screen layout per `docs/design-theme.md` (hero card, stat cards, action tiles, recent list) — Home stays on device data (Step 20); the dashboard is Reports → Dashboard with the same cards
 
-**US049** · Should · 3 · To do — As a shop owner, I want sales by product and by staff for any date range.
+**US049** · Should · 3 · Done (Step 23) — As a shop owner, I want sales by product and by staff for any date range.
 - Qty, value and profit per product; sales per staff; custom items flagged; CSV export; owner-only routes
 
 ---

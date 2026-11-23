@@ -267,7 +267,8 @@
     "closeDay": "Close day",
     "staff": "Staff",
     "sync": "Sync",
-    "settings": "Settings"
+    "settings": "Settings",
+    "reports": "Reports"
   },
   "unit": {
     "kg": "kg",
@@ -917,5 +918,100 @@
     "ios": "Tap Share, then “Add to Home Screen”.",
     "mac_safari": "In Safari choose File → Add to Dock.",
     "firefox_desktop": "Firefox cannot install apps. Open NaqdPOS in Chrome or Edge to install it."
+  },
+  "reports": {
+    "title": "Reports",
+    "range": "Date range",
+    "preset": {
+      "today": "Today",
+      "yesterday": "Yesterday",
+      "this_week": "This week",
+      "this_month": "This month",
+      "last_month": "Last month",
+      "custom": "Custom"
+    },
+    "from": "From",
+    "to": "To",
+    "needsInternet": "Reports need internet.",
+    "error": "Could not load the report. Try again.",
+    "asOfOffline": "As of {{time}} — offline",
+    "empty": "Nothing in this period.",
+    "tab": {
+      "dashboard": "Dashboard",
+      "monthly": "Monthly",
+      "products": "Products",
+      "staff": "Staff",
+      "expenses": "Expenses"
+    },
+    "netSales": "Net sales",
+    "todayOpen": "Today (still open)",
+    "payments": "Payments",
+    "khataGiven": "Given on khata",
+    "profit": "Profit",
+    "costedProfit": "Profit on items with a cost price",
+    "costedSales": "Sales of those items",
+    "expensesAndWastage": "Expenses and wastage",
+    "expenses": "Expenses",
+    "wastage": "Wastage value",
+    "khataDue": "Khata due",
+    "receivables": "Customers owe",
+    "receivableCustomers_one": "{{count}} customer owes",
+    "receivableCustomers_other": "{{count}} customers owe",
+    "khataReceived": "Khata received",
+    "topProducts": "Top 5 products",
+    "custom": "custom item",
+    "uncostedSales": "Sales without a cost price",
+    "uncostedCount": "{{lines}} lines, {{products}} products",
+    "addCostPrices": "Add cost prices to see the full profit",
+    "month": "Month",
+    "unclosedDays": "These days are not closed yet: {{days}}. Totals still show.",
+    "pnlTitle": "Profit and loss — {{month}}",
+    "pnl": {
+      "gross_sales": "Sales",
+      "discounts": "Discounts",
+      "rounding": "Rounding",
+      "net_sales": "Net sales",
+      "uncosted_sales": "Sales without a cost price",
+      "costed_sales": "Sales with a cost price",
+      "cost_of_goods": "Cost of goods",
+      "gross_profit": "Gross profit (items with a cost price)",
+      "expenses_total": "Expenses total",
+      "wastage": "Wastage value",
+      "net": "Net",
+      "netExcluding": "Net (excluding sales without a cost price)"
+    },
+    "receivablesAtEnd": "Customers owe at month end",
+    "print": "Print",
+    "csv": "Download CSV",
+    "col": {
+      "product": "Product",
+      "qty": "Qty",
+      "sales": "Sales",
+      "cost": "Cost",
+      "profit": "Profit",
+      "uncosted": "No cost price",
+      "staff": "Staff",
+      "salesCount": "Bills",
+      "discounts": "Discounts",
+      "foc": "Free items"
+    },
+    "expenseView": "Expense view",
+    "expenseViews": {
+      "list": "List",
+      "month": "By month"
+    },
+    "all": "All",
+    "filter": {
+      "category": "Category",
+      "method": "Paid by",
+      "staff": "Staff"
+    },
+    "expenseTotal_one": "Total ({{count}} entry)",
+    "expenseTotal_other": "Total ({{count}} entries)",
+    "reversal": "reversal",
+    "byCategoryVsLast": "By category, against last month",
+    "thisMonth": "This month",
+    "lastMonth": "Last month",
+    "change": "Change"
   }
 }

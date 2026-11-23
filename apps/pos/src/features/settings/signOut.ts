@@ -20,5 +20,7 @@ export async function signOutOnDevice(): Promise<void> {
   } catch {
     // Offline or already gone: signing out on the device is what matters.
   }
+  // Cached reports belong to the signed-in owner.
+  await db.report_cache.clear();
   await clearSession();
 }

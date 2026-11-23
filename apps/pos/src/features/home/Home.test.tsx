@@ -271,6 +271,7 @@ describe('navigation', () => {
       'stock',
       'expenses',
       'closeDay',
+      'reports',
       'staff',
       'sync',
       'settings',
