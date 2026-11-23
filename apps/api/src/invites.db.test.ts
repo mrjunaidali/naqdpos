@@ -139,4 +139,38 @@ describe('invited owner', () => {
     });
     expect(res.status).toBe(403);
   });
+
+  it('a new invite is refused once the owner has joined (409 owner_joined), allowed before', async () => {
+    // A verified admin session: admin, 2FA on, this session passed TOTP (Step 21 rules).
+    const adminEmail = `admin-${randomUUID()}@example.test`;
+    const adminToken = await signIn(adminEmail);
+    const { rows } = await owner.query<{ user_id: string; session_id: string }>(
+      `select u.id user_id, s.id session_id from users u join sessions s on s.user_id = u.id
+       where u.email = $1`,
+      [adminEmail],
+    );
+    const { user_id, session_id } = rows[0]!;
+    await owner.query('insert into platform_admins (user_id) values ($1)', [user_id]);
+    await owner.query('update users set two_factor_enabled = true where id = $1', [user_id]);
+    await owner.query('insert into admin_session_2fa (session_id) values ($1)', [session_id]);
+    const invite = (shopId: string, email: string) =>
+      app.request(`/admin/shops/${shopId}/invites`, {
+        method: 'POST',
+        headers: bearer(adminToken),
+        body: JSON.stringify({ email }),
+      });
+
+    const email = `joins-${randomUUID()}@example.test`;
+    const shop = await adminCreatesShop(email);
+    // Not joined yet: a new invite (e.g. a corrected email) is fine.
+    expect((await invite(shop.shop_id, email)).status).toBe(200);
+
+    await me(await signIn(email)); // accepts the invite
+    const refused = await invite(shop.shop_id, `second-${randomUUID()}@example.test`);
+    expect(refused.status).toBe(409);
+    expect(await refused.json()).toEqual({
+      error: 'owner_joined',
+      message: "The owner has already joined this shop. Adding a second owner isn't supported yet.",
+    });
+  });
 });

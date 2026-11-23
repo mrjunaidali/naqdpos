@@ -315,6 +315,31 @@ describe('new shop and invites (US012)', () => {
   });
 });
 
+describe('new invite after the owner joined', () => {
+  it('shows "The owner has already joined this shop…"', async () => {
+    setToken('tok-1');
+    api.adminMe.mockResolvedValue({ email: 'me@x.test', state: 'ok' });
+    api.adminCatalogue.mockResolvedValue({
+      ...catalogue,
+      invites: [
+        { ...catalogue.invites[0]!, status: 'accepted', accepted_at: '2026-11-21T00:00:00Z' },
+      ],
+    });
+    const { ApiError } = await vi.importActual<typeof import('@naqdpos/core')>('@naqdpos/core');
+    api.adminCreateInvite.mockRejectedValueOnce(new ApiError(409, 'owner_joined'));
+    start(`/shops/${SHOP}`);
+    fireEvent.change(await screen.findByLabelText('Invite owner email'), {
+      target: { value: 'second@example.test' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'New invite' }));
+    expect(
+      await screen.findByText(
+        "The owner has already joined this shop. Adding a second owner isn't supported yet.",
+      ),
+    ).toBeInTheDocument();
+  });
+});
+
 describe('act as shop (US013)', () => {
   beforeEach(() => {
     setToken('tok-1');

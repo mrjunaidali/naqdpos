@@ -1,4 +1,4 @@
-import type { AdminCatalogue } from '@naqdpos/core';
+import { OWNER_JOINED_MESSAGE, type AdminCatalogue } from '@naqdpos/core';
 import { useState } from 'react';
 import { api } from '../api/index.ts';
 import { useFailure, when } from './adminContext.ts';
@@ -33,13 +33,14 @@ export function InvitesCard({
   const pending = catalogue.invites.some((i) => i.status === 'pending');
 
   async function run(action: () => Promise<unknown>, fallback: string) {
+    // owner_joined: the owner already linked; a second owner is not supported yet.
     setBusy(true);
     setError(undefined);
     try {
       await action();
       reload();
     } catch (e) {
-      setError(fail(e, fallback));
+      setError(fail(e, fallback, { owner_joined: OWNER_JOINED_MESSAGE }));
     } finally {
       setBusy(false);
     }

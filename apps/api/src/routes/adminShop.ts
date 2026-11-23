@@ -14,6 +14,7 @@ import {
   AdminStaffInput,
   ErrorResponse,
   IdResponse,
+  OWNER_JOINED_MESSAGE,
 } from '@naqdpos/core';
 import { sql, type RawBuilder } from 'kysely';
 import { z } from 'zod';
@@ -127,6 +128,8 @@ export function registerAdminShopRoutes(app: OpenAPIHono<AdminEnv>, deps: Pick<A
     } catch (error) {
       const code = pgCode(error) ?? '';
       if (code === '42501') return { ok: false, status: 403, body: errorBody('forbidden') };
+      if (code === 'NQ001')
+        return { ok: false, status: 409, body: errorBody('owner_joined', OWNER_JOINED_MESSAGE) };
       if (code === 'P0002') return { ok: false, status: 404, body: errorBody('not_found') };
       if (code === '23505') return { ok: false, status: 409, body: errorBody('conflict') };
       if (code.startsWith('22') || code.startsWith('23'))

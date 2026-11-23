@@ -153,6 +153,10 @@ export const AdminCreateShopResponse = z.object({
   invite_id: z.uuid(),
 });
 
+/** 409 owner_joined from POST /admin/shops/{id}/invites (shown in the admin portal). */
+export const OWNER_JOINED_MESSAGE =
+  "The owner has already joined this shop. Adding a second owner isn't supported yet.";
+
 export const AdminInviteRequest = z.object({ email: z.email() });
 
 export const AdminInvite = z.object({

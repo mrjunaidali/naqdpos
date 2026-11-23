@@ -185,6 +185,44 @@ describe('admin_create_shop and invites', () => {
     ).toBe('23505');
   });
 
+  it('a new invite: allowed while the owner row is unlinked (pending, expired, revoked), refused once joined', async () => {
+    const email = `again-${randomUUID()}@example.test`;
+    const r = await createShop(email);
+    const invite = (to: string) =>
+      committed<{ id: string }>(adminUser, 'select admin_create_invite($1, $2) id', [
+        r.shop_id,
+        to,
+      ]);
+    await invite(email); // pending → replaced
+    await admin.query(
+      `update invites set expires_at = now() - interval '1 minute' where shop_id = $1`,
+      [r.shop_id],
+    );
+    const [fresh] = await invite(email); // expired → new
+    await committed(adminUser, 'select admin_revoke_invite($1)', [fresh!.id]);
+    await invite(`fixed-${email}`); // revoked → new (corrected email)
+
+    const owner = await newUser(`fixed-${email}`);
+    await committed(owner, 'select accept_invites()');
+    const before = await admin.query<{ n: number }>(
+      'select count(*)::int n from invites where shop_id = $1',
+      [r.shop_id],
+    );
+    expect(await fails(invite(`second-${email}`))).toBe('NQ001');
+    expect(await fails(invite(`fixed-${email}`))).toBe('NQ001');
+    const after = await admin.query<{ n: number }>(
+      'select count(*)::int n from invites where shop_id = $1',
+      [r.shop_id],
+    );
+    expect(after.rows[0]!.n).toBe(before.rows[0]!.n);
+    // A self-registered shop's owner is linked from the start.
+    expect(
+      await fails(
+        committed(adminUser, 'select admin_create_invite($1, $2)', [f.shopA, 'x@example.test']),
+      ),
+    ).toBe('NQ001');
+  });
+
   it('an existing owner accepts a second invite and owns both shops', async () => {
     const email = `two-${randomUUID()}@example.test`;
     const first = await createShop(email, 'First');

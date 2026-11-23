@@ -262,6 +262,8 @@ export const API_ERROR_CODES = [
   'too_many_attempts',
   'code_cooldown',
   'code_daily_cap',
+  // Admin: a new owner invite after the owner has joined (US012)
+  'owner_joined',
   'internal',
 ] as const;
 export const ErrorResponse = z.object({

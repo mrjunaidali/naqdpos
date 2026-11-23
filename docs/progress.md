@@ -770,5 +770,13 @@ The admin portal can now onboard a shopkeeper end to end: create the shop, invit
 **Follow-ups**
 - Email the invite when an SMTP provider is chosen (architecture §8).
 - Urdu strings for the new POS screens (`TODO-ur`).
-- If an invite for a different email is accepted after the owner row is already linked to another user, the membership is created but the staff row keeps its first link (re-pointing an owner row is not offered yet).
+- ~~An invite for a different email after the owner joined gave owner access without the staff link~~ — fixed below (refused).
 - Admins can set but not clear a product's cost price.
+
+### Fix — refuse a new invite once the owner has joined (US012) (2026-11-23)
+
+- Migration `20261123170000_invite_owner_joined.sql`: `admin_create_invite` raises SQLSTATE `NQ001` when the shop's owner staff row has `membership_user_id` set. Pending, expired or revoked invites for an unlinked owner row still allow a new invite.
+- API: `NQ001` → 409 `owner_joined` with the message "The owner has already joined this shop. Adding a second owner isn't supported yet." (`OWNER_JOINED_MESSAGE` in core; new code in `API_ERROR_CODES`). The admin portal's invite card shows it.
+- Files: the migration, `packages/core/src/api/{admin,schemas}.ts`, `apps/api/src/routes/adminShop.ts`, `apps/admin/src/app/InvitesCard.tsx`, tests in `db/tests/invites-admin-shop.test.ts`, `apps/api/src/invites.db.test.ts`, `apps/admin/src/app/Admin.test.tsx`; architecture §5.
+- Tests: DB 190 (+1: pending → expired → revoked each allow a new invite; after the owner accepts, any new invite is refused and nothing is written; a self-registered shop is refused). API DB 41 (+1: over HTTP with a verified admin session, 200 before joining, 409 `owner_joined` with the message after). Admin 16 (+1: the message is shown).
+- **Follow-up:** second owners (a shop with two owner logins, each with their own staff row and PIN) — not supported yet; needs a decision on the staff row and permissions.
