@@ -1,6 +1,6 @@
 // `pnpm backup:restore <key> <target DATABASE_URL>` (docs/runbook.md): downloads one backup from
 // the backups bucket, decrypts it and restores it into an EMPTY database, then prints row counts.
-// Needs BACKUP_S3_* and BACKUP_ENCRYPTION_KEY (from .env or the shell) and pg_restore 17+ on PATH
+// Needs BACKUP_S3_* and BACKUP_ENCRYPTION_KEY (from .env or the shell) and pg_restore 18+ on PATH
 // or in PG_BIN_DIR. `pnpm backup:restore --list` shows the stored backups.
 import { parseBackupKey } from '../src/backup/backup.ts';
 import { restoreBackup } from '../src/backup/job.ts';

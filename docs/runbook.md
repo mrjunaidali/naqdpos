@@ -47,7 +47,7 @@ Railway → `worker` → **Restart** does not start a backup. Instead, on a PC:
 pg_dump --format=custom --no-password -d '<public URL>' -f before-change.dump
 ```
 
-(pg_dump 17 or newer.) Keep the file encrypted (e.g. in the password manager's file storage) and delete it when no longer needed: it holds every shop's data.
+(pg_dump 18 or newer.) Keep the file encrypted (e.g. in the password manager's file storage) and delete it when no longer needed: it holds every shop's data.
 
 ### 3.2 Changing the encryption key
 
@@ -59,7 +59,7 @@ pg_dump --format=custom --no-password -d '<public URL>' -f before-change.dump
 
 Once a month (first working day), and once on staging before the pilot. Takes about 15 minutes. It proves that last night's backup can be downloaded, decrypted and restored, and that the data is there.
 
-1. **Settings on the PC:** in `.env` (or the shell) set that environment's `BACKUP_S3_ENDPOINT`, `BACKUP_S3_REGION`, `BACKUP_S3_BUCKET`, `BACKUP_S3_ACCESS_KEY_ID`, `BACKUP_S3_SECRET_ACCESS_KEY` and `BACKUP_ENCRYPTION_KEY` (from the password manager). `pg_restore` 17 or newer on `PATH`, or `PG_BIN_DIR` set (Windows: `C:\Program Files\PostgreSQL\18\bin`).
+1. **Settings on the PC:** in `.env` (or the shell) set that environment's `BACKUP_S3_ENDPOINT`, `BACKUP_S3_REGION`, `BACKUP_S3_BUCKET`, `BACKUP_S3_ACCESS_KEY_ID`, `BACKUP_S3_SECRET_ACCESS_KEY` and `BACKUP_ENCRYPTION_KEY` (from the password manager). `pg_restore` 18 or newer on `PATH`, or `PG_BIN_DIR` set (Windows: `C:\Program Files\PostgreSQL\18\bin`).
 2. **A scratch database** on the PC's own Postgres, plus the app role it grants to:
    ```sh
    psql -U postgres -c "create database naqdpos_restore_drill"
@@ -85,7 +85,7 @@ If anything fails, treat it as an incident (§5): backups that can't be restored
 ## 5. Disaster restore (the production database is lost or damaged)
 
 1. **Stop writes**: Railway → `api` and `worker` → scale to 0 / remove the deployment. Shop devices keep selling offline; their outboxes keep every change (architecture §4) and push them once the API is back.
-2. **New database**: in the same environment add a new PostgreSQL **17** service (or fix the old one). Create the app role on it: `create role naqdpos_app nologin;`.
+2. **New database**: in the same environment add a new PostgreSQL **18** service (or fix the old one). Create the app role on it: `create role naqdpos_app nologin;`.
 3. **Restore** the newest good backup into it (it must be empty):
    ```sh
    pnpm backup:restore backups/daily/<date>.dump.enc '<new database public URL>'
@@ -104,6 +104,6 @@ If anything fails, treat it as an incident (§5): backups that can't be restored
 | Nobody receives sign-in codes | API log: `SMTP check failed` / `email sent` lines; Resend dashboard → Logs | Fix `SMTP_*`; check the domain is still verified; check the Resend daily limit |
 | Invite shows "The email was not sent" | Same as above | The WhatsApp text in the portal always works |
 | Logo upload fails | Browser console: CORS error → R2 CORS policy (deployment §6 step 2); CSP error → `FILES_ORIGIN` on the `pos` service | Fix and retry; the old logo stays until a new one is saved |
-| Worker: `backup failed` | The log line has the step (`pg_dump failed …`, storage error) | `pg_dump` version vs Postgres version (must be ≥ 17); backup token scope; bucket name |
+| Worker: `backup failed` | The log line has the step (`pg_dump failed …`, storage error) | `pg_dump` version vs Postgres version (must be ≥ 18); backup token scope; bucket name |
 | A deploy is stuck in pre-deploy | Railway deploy logs: `db:deploy: migrations failed` with dbmate's message | Fix the migration in a new migration (never edit an old one); the old version keeps running meanwhile |
 | Apps show "Update required to sync" | `MIN_APP_VERSION` on `api` | Unset it unless a breaking sync change was released (architecture §4) |

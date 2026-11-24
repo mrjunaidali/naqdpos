@@ -5,11 +5,12 @@
 #   worker       node src/worker.ts                     (pg-boss jobs: nightly backup)
 #   pre-deploy   node /repo/db/scripts/migrate.ts       (migrations with DATABASE_ADMIN_URL)
 # All settings come from environment variables at run time (deployment §2).
-FROM node:24-alpine
+# Alpine pinned to 3.24: it ships postgresql18-client, and a silent base change can't swap it.
+FROM node:24-alpine3.24
 
-# pg_dump / pg_restore must be at least the server's major version (Postgres 17, deployment §1).
-RUN apk add --no-cache postgresql17-client \
-  && pg_dump --version | grep -q ' 17\.'
+# pg_dump / pg_restore must be at least the server's major version (Postgres 18, deployment §1).
+RUN apk add --no-cache postgresql18-client \
+  && pg_dump --version | grep -q ' 18\.'
 
 RUN corepack enable
 WORKDIR /repo

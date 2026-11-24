@@ -21,6 +21,7 @@ Own backend on open standards. Every part is configured by environment variables
 
 - The UI only reads from Dexie. The sync engine moves data between Dexie and the API.
 - Apps know one setting, `VITE_API_URL`. The API knows `DATABASE_URL`, `S3_*`, `SMTP_*` and auth secrets. Nothing else is hard-wired.
+- The database is plain **PostgreSQL 18** (no vendor extensions; deployment §1, §3). SQL must also run on 17 while dev PCs still have it; CI on 18 is the reference.
 - The API is stateless (sessions live in Postgres), so it can run as many copies as needed behind a load balancer.
 - The admin portal uses the same API (`/admin/*` routes), online only.
 

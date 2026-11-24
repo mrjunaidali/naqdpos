@@ -27,7 +27,7 @@ Day-to-day operations (backups, restore drill, first-time database steps, incide
 | `apps/admin` | Static SPA, same image with `APP=admin` | Railway service `admin` | Same as above |
 | `apps/api` (API) | Docker image `apps/api/Dockerfile`, Node 24 + Hono | Railway service `api` | Render, Fly, any VPS, AWS/Azure container services |
 | `apps/api` (worker) | Same image, `node src/worker.ts` (pg-boss: nightly backup) | Railway service `worker` | Same as API |
-| Database | PostgreSQL **17** | Railway Postgres (one per environment) | Neon, AWS RDS, DigitalOcean, own server |
+| Database | PostgreSQL **18** | Railway Postgres (one per environment) | Neon, AWS RDS, DigitalOcean, own server |
 | Files | S3 API: bucket per environment (shop logos; bill photos later) | Cloudflare R2 | AWS S3, Backblaze B2, MinIO |
 | Backups | S3 API: a **separate** bucket per environment, own token | Cloudflare R2 | Any S3 storage |
 | Email | SMTP (sign-in codes, PIN reset codes, owner invites) | Resend (SMTP relay) | Any SMTP provider |
@@ -76,15 +76,16 @@ Moving a part = changing its settings. Nothing host-specific is in code. Secrets
 
 | Env | Database | API / worker | Front ends | Deploys from |
 | --- | --- | --- | --- | --- |
-| Local | Postgres on the PC (`naqdpos_dev`, `naqdpos_test`) | `pnpm --filter @naqdpos/api dev`; worker `pnpm --filter @naqdpos/api worker:dev` | `pnpm --filter @naqdpos/pos dev` (5173), `pnpm --filter @naqdpos/admin dev` (5174) | — |
-| Staging | Railway Postgres 17 (staging environment) | Railway `api`, `worker` | `staging-pos.`, `staging-admin.` | branch `main`, after CI passes |
-| Production | Railway Postgres 17 (production environment) | Railway `api`, `worker` | `pos.`, `admin.` | branch `release`, moved to each `v*` tag |
+| Local | Postgres on the PC (`naqdpos_dev`, `naqdpos_test`; 17 or 18, see below) | `pnpm --filter @naqdpos/api dev`; worker `pnpm --filter @naqdpos/api worker:dev` | `pnpm --filter @naqdpos/pos dev` (5173), `pnpm --filter @naqdpos/admin dev` (5174) | — |
+| Staging | Railway Postgres 18 (staging environment) | Railway `api`, `worker` | `staging-pos.`, `staging-admin.` | branch `main`, after CI passes |
+| Production | Railway Postgres 18 (production environment) | Railway `api`, `worker` | `pos.`, `admin.` | branch `release`, moved to each `v*` tag |
 
+- **Postgres version:** staging and production run **PostgreSQL 18** (Railway's template default), and CI runs 18, so **CI is the reference**. A dev PC may stay on Postgres 17 for now: our SQL uses nothing that differs between 17 and 18. For a restore from staging or production on a PC you need `pg_restore` 18 (runbook §4).
 - **CI** (`.github/workflows/ci.yml`, every push and pull request):
   - `checks`: install, lint, format check, typecheck, unit tests, `check:precache`.
-  - `db`: a Postgres 17 service and the PGDG `postgresql-client-17` on the runner, then `pnpm db:create` + `pnpm db:test` (RLS and SQL tests, API database tests, the backup → restore test with real `pg_dump` / `pg_restore`).
+  - `db`: a Postgres 18 service and the PGDG `postgresql-client-18` on the runner, then `pnpm db:create` + `pnpm db:test` (RLS and SQL tests, API database tests, the backup → restore test with real `pg_dump` / `pg_restore`).
   - `e2e`: Playwright smoke test (§4) against the real builds behind Caddy with `deploy/Caddyfile`; browsers cached with `actions/cache`.
-  - `docker`: builds the API image (checks `pg_dump` 17 and the migration tool are inside) and both static images, starts the POS image and checks its headers.
+  - `docker`: builds the API image (checks `pg_dump` 18 and the migration tool are inside) and both static images, starts the POS image and checks its headers.
 - **Staging deploys `main`**: in Railway, each staging service's source is the GitHub repo, branch `main`, with **"Wait for CI"** on, so a red CI never deploys.
 - **Production deploys release tags**: Railway can't follow tags, so the production services track the branch **`release`**, and `.github/workflows/release.yml` moves `release` to the commit of every pushed `v*` tag (only tags on `main`). To release: `git tag v1.2.0 && git push origin v1.2.0`. Nobody pushes to `release` by hand. Optionally protect `release` in GitHub so only the Actions bot may push.
 - **Migrations**: the API service's **pre-deploy command** (`node /repo/db/scripts/migrate.ts`, i.e. `pnpm db:deploy`) runs `dbmate up` with `DATABASE_ADMIN_URL` before each new API version starts; a failed migration stops the deploy and the old version keeps running. Staging gets every migration before production. The database must always be rebuildable from `db/migrations`.
@@ -117,7 +118,7 @@ Both apps use **`deploy/static.Dockerfile`** (build arg `APP=pos|admin`): a Node
 - **Health:** `GET /health` checks DB connectivity; Railway's healthcheck uses it on deploy and restarts on failure. The static sites are checked on `/`.
 - **Logs:** pino JSON logs to stdout; Railway keeps them. Never logged: tokens, PINs, PIN hashes, codes, passwords, connection strings (logger redaction, tested). Email logs show recipient and subject only.
 - **Scaling path:** more API copies (first: shared rate-limit storage, §2) → PgBouncer (transaction mode) in front of Postgres → bigger Postgres → read replica for reports. `set_config(..., true)` is transaction-scoped, so it is safe with transaction pooling.
-- **Moving hosts:** (1) create the new Postgres 17, (2) restore the latest backup into it (`pnpm backup:restore`, runbook), (3) copy storage objects by key (`rclone copy` between S3 endpoints), (4) point `DATABASE_URL` / `DATABASE_ADMIN_URL` / `S3_*` / `BACKUP_S3_*` at the new places, (5) deploy the same images, (6) change DNS. Keep the old host read-only until the new one is verified.
+- **Moving hosts:** (1) create the new Postgres 18, (2) restore the latest backup into it (`pnpm backup:restore`, runbook), (3) copy storage objects by key (`rclone copy` between S3 endpoints), (4) point `DATABASE_URL` / `DATABASE_ADMIN_URL` / `S3_*` / `BACKUP_S3_*` at the new places, (5) deploy the same images, (6) change DNS. Keep the old host read-only until the new one is verified.
 
 ## 6. Setup, step by step
 
@@ -153,7 +154,7 @@ Records are added in steps 3 (Resend) and 6 (Railway domains). Use **DNS only (g
 ### 4. Railway project, environments and services
 
 1. railway.com → **New project** `naqdpos` → connect the GitHub repo. In project settings create two **environments**: `staging` and `production`.
-2. In **each** environment add a **PostgreSQL** database (name the service `Postgres`). It must be **version 17**: check the template's image tag before creating it, and afterwards in the database's Query tab: `select version();`. (`pg_dump` in the image is 17; it can dump 17 or older, not newer.)
+2. In **each** environment add a **PostgreSQL** database (name the service `Postgres`). It must be **version 18** (Railway's PostgreSQL template default; staging runs 18.7): check the template's image tag before creating it, and afterwards in the database's Query tab: `select version();` must say `PostgreSQL 18.x`. (`pg_dump` in the image is 18; it can dump 18 or older, not newer.)
 3. In each environment create four services from the GitHub repo. For every service: **Root directory empty** (the Dockerfiles need the whole repo), **Config file path** as below, **branch** `main` in staging and `release` in production, and **"Wait for CI" on**.
 
    | Service | Config file path | Public networking |

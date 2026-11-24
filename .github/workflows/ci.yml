@@ -35,11 +35,11 @@ jobs:
       - run: pnpm check:precache
 
   db:
-    name: Database, RLS, API and backup/restore tests (Postgres 17)
+    name: Database, RLS, API and backup/restore tests (Postgres 18)
     runs-on: ubuntu-24.04
     services:
       postgres:
-        image: postgres:17
+        image: postgres:18
         env:
           POSTGRES_PASSWORD: postgres
         ports: ['5432:5432']
@@ -51,21 +51,21 @@ jobs:
       DATABASE_ADMIN_URL: postgres://postgres:postgres@localhost:5432/postgres
     steps:
       - uses: actions/checkout@v4
-      - name: pg_dump / pg_restore 17 (the restore test runs them)
+      - name: pg_dump / pg_restore 18 (the restore test runs them)
         run: |
           sudo install -d /usr/share/postgresql-common/pgdg
           sudo curl -fsSL -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc https://www.postgresql.org/media/keys/ACCC4CF8.asc
           echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" | sudo tee /etc/apt/sources.list.d/pgdg.list
           sudo apt-get update -qq
-          sudo apt-get install -y -qq postgresql-client-17
-          echo "/usr/lib/postgresql/17/bin" >> "$GITHUB_PATH"
+          sudo apt-get install -y -qq postgresql-client-18
+          echo "/usr/lib/postgresql/18/bin" >> "$GITHUB_PATH"
       - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 24
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - run: pg_dump --version
+      - run: pg_dump --version | grep ' 18\.'
       - run: pnpm db:create
       - run: pnpm db:test
 
@@ -116,10 +116,10 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
-      - name: API / worker image, with pg_dump 17 and the migration tool
+      - name: API / worker image, with pg_dump 18 and the migration tool
         run: |
           docker build -f apps/api/Dockerfile -t naqdpos-api .
-          docker run --rm naqdpos-api pg_dump --version
+          docker run --rm naqdpos-api pg_dump --version | grep ' 18\.'
           docker run --rm naqdpos-api node -e "require('node:fs').accessSync('/repo/db/node_modules/dbmate/dist/cli.js')"
       - name: Static images, headers from the real container
         run: |
