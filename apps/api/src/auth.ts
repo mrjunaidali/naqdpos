@@ -1,13 +1,33 @@
 // Better Auth (architecture §5): Google sign-in, email OTP (typed 6-digit code), TOTP two-factor,
 // bearer session tokens for the installed PWA, and single-use tokens to hand a Google sign-in
 // back to the app. Users and sessions are rows in our Postgres.
+import { AsyncLocalStorage } from 'node:async_hooks';
+import { EMAIL_SEND_FAILED } from '@naqdpos/core';
 import { betterAuth, type BetterAuthOptions } from 'better-auth';
-import { isAPIError } from 'better-auth/api';
+import { APIError, isAPIError } from 'better-auth/api';
 import { bearer, emailOTP, oneTimeToken, twoFactor } from 'better-auth/plugins';
 import pg from 'pg';
 import type { Env } from './env.ts';
 import type { Logger } from './logger.ts';
-import { codeEmail, type Mailer } from './mailer.ts';
+import { codeEmail, maskEmail, type Mailer } from './mailer.ts';
+
+const SEND_FAILED_MESSAGE = "Couldn't send the code, try again";
+
+/**
+ * Per request (never shared between requests, so the API stays stateless): set when a code
+ * email failed, because Better Auth swallows errors from sendVerificationOTP.
+ */
+const sendFailures = new AsyncLocalStorage<{ failed: boolean }>();
+
+const sendFailedError = () =>
+  new APIError('SERVICE_UNAVAILABLE', { code: EMAIL_SEND_FAILED, message: SEND_FAILED_MESSAGE });
+
+/** Runs `fn` with a fresh send-failure mark; reports whether a code email failed. */
+async function trackSend<T>(fn: () => Promise<T>): Promise<{ value: T; sendFailed: boolean }> {
+  const mark = { failed: false };
+  const value = await sendFailures.run(mark, fn);
+  return { value, sendFailed: mark.failed };
+}
 
 export type SendOtp = (email: string, otp: string, type: string) => Promise<void>;
 
@@ -120,7 +140,7 @@ export function createAuthPool(connectionString: string): pg.Pool {
 export interface AuthDeps {
   pool: pg.Pool;
   logger: Logger;
-  /** SMTP mailer; null when SMTP is not configured (development only, see env.ts). */
+  /** Mailer (Resend HTTPS or SMTP); null when email is not configured (development only). */
   mailer?: Mailer | null;
   /** Tests: capture codes instead of emailing them. */
   sendOtp?: SendOtp;
@@ -139,15 +159,29 @@ export function authOptions(env: Env, deps: AuthDeps) {
     deps.sendOtp ??
     (async (email, otp, type) => {
       const mail = codeEmail(type, otp);
-      if (deps.mailer) return deps.mailer.send({ to: email, ...mail });
+      if (deps.mailer) {
+        try {
+          await deps.mailer.send({ to: email, ...mail });
+          return;
+        } catch (error) {
+          // The mailer gives up within its timeout, so the screen gets an answer quickly.
+          // The error never holds the code; the recipient is masked.
+          deps.logger.warn({ err: error, to: maskEmail(email), type }, 'email code not sent');
+          // Better Auth catches errors from this hook and still answers 200, so the request
+          // is marked here and createAuth turns it into the error the apps show.
+          const request = sendFailures.getStore();
+          if (request) request.failed = true;
+          throw sendFailedError();
+        }
+      }
       if (env.NODE_ENV === 'development') {
-        // Development without SMTP only: the code goes to the console. Production refuses to
-        // start without SMTP (env.ts), so codes are never logged there.
+        // Development without email only: the code goes to the console. Production refuses to
+        // start without email settings (env.ts), so codes are never logged there.
         // In the message, not a field: otp fields are redacted (logger.ts).
         deps.logger.info({ email, type }, `email code (development only): ${otp}`);
         return;
       }
-      throw new Error('Email OTP: SMTP is not configured');
+      throw new Error('Email OTP: email is not configured');
     });
   const google = googleKeys(env);
 
@@ -245,7 +279,15 @@ export function createAuth(env: Env, deps: AuthDeps): AuthService {
 
   return {
     googleEnabled: google !== undefined,
-    handler: (request) => auth.handler(request),
+    async handler(request) {
+      const { value: response, sendFailed } = await trackSend(() => auth.handler(request));
+      if (!sendFailed) return response;
+      // Same body shape as Better Auth's own errors ({ code, message }).
+      return Response.json(
+        { code: EMAIL_SEND_FAILED, message: SEND_FAILED_MESSAGE },
+        { status: 503, headers: { 'cache-control': 'no-store' } },
+      );
+    },
     async handleOAuthCallback(request) {
       return addOneTimeTokenToRedirect(
         await auth.handler(request),
@@ -291,7 +333,10 @@ export function createAuth(env: Env, deps: AuthDeps): AuthService {
     },
     createOneTimeToken,
     async sendPinResetCode(email) {
-      await auth.api.sendVerificationOTP({ body: { email, type: 'email-verification' } });
+      const { sendFailed } = await trackSend(() =>
+        auth.api.sendVerificationOTP({ body: { email, type: 'email-verification' } }),
+      );
+      if (sendFailed) throw sendFailedError();
     },
     async verifyPinResetCode(email, code) {
       try {

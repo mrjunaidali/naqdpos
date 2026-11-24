@@ -881,3 +881,22 @@ Everything that needs real hosting: Railway (API, worker, Postgres 17, two stati
 - Before a second API instance: database-backed rate limits.
 - Offline-sale end-to-end test on the `e2e/` structure (needs a real API in CI).
 - Bill photos (US069) will reuse `/files` with a new key pattern.
+
+## Fix: email over Resend's HTTPS API and send timeouts (24 Nov 2026)
+
+Railway's Hobby plan blocks outbound SMTP (ports 25/465/587/2525; only HTTPS). On staging `POST /auth/email-otp/send-verification-otp` hung because nodemailer could not reach `smtp.resend.com`.
+
+- **Second transport** (`apps/api/src/mailer.ts`): Resend's HTTPS API (`POST https://api.resend.com/emails`, `Authorization: Bearer <RESEND_API_KEY>`, JSON `{from, to, subject, text, html?}`) with plain `fetch`, no new dependency. Same `Mailer` interface as SMTP, so callers did not change. `verify()` is skipped for it with a log line (Resend sending-only keys can't call a read endpoint). Errors carry the HTTP status and Resend's error name only, never its message (it can quote the recipient) or the key.
+- **Choice** (`env.ts` `mailSettings`, replaces `smtpSettings`): `RESEND_API_KEY` → HTTPS; else all four `SMTP_*` → SMTP; else none (development prints codes). Production needs `MAIL_FROM` plus one of the two; the startup message names both options.
+- **Timeouts**: every send gives up after 10 s (AbortController for fetch; `connectionTimeout` / `greetingTimeout` / `socketTimeout` for nodemailer; plus a deadline around any transport).
+- **Clear error**: Better Auth awaits `sendVerificationOTP` but swallows its errors and answers 200. The hook marks the request in an `AsyncLocalStorage` (per request, nothing kept between requests) and `createAuth().handler` then answers **503** `{ code: 'EMAIL_SEND_FAILED', message: "Couldn't send the code, try again" }`. PIN reset codes (`sendPinResetCode`) throw the same error. Logs: `email code not sent` with the recipient masked (`o***@example.com`), never the code; `email sent` and invite failures are masked too.
+- **Apps**: `EMAIL_SEND_FAILED` in `packages/core`; POS `errorMessageKey` → `signIn.sendFailed` (en + ur); the admin sign-in shows "Couldn't send the code, try again." Both stay on the email step with the button enabled.
+- **Docs**: deployment §1/§2 (table: `RESEND_API_KEY`; SMTP only where the host allows it), setup step 3 (Resend), step 4 (Railway: set `RESEND_API_KEY`, leave `SMTP_*` empty), step 9 (what the log shows); runbook incident row; architecture §5/§9; `.env.example`.
+
+**Files**: `apps/api/src/{mailer,env,auth,server,app}.ts`, `routes/adminShop.ts`, tests `mailer.test.ts`, `mailTransport.test.ts` (new), `env.test.ts`, `mailFailure.db.test.ts` (new); `packages/core/src/api/schemas.ts`; `apps/pos/src/ui/errors.ts`, `i18n/{en,ur}.json`, `features/auth/SignInPage.test.tsx`; `apps/admin/src/app/SignInPage.tsx`, `Admin.test.tsx`; docs.
+
+**Tests**: API 74 (+12: Resend request shape and bearer header, html passthrough, error answer without message/key, network failure, 10 s abort with fake timers, transport choice and skipped verify, hanging-transport deadline, masking, 503 `EMAIL_SEND_FAILED` from the hook with a clean log; settings: `RESEND_API_KEY` alone is enough in production, it wins over SMTP, the missing-email message names both). API DB 56 (+1: the real route answers 503 within the timeout when the transport hangs). Pos 348 (+1), Admin 17 (+1). Core 388, DB 199. Lint, typecheck, format pass.
+
+**Follow-ups**
+- Set `RESEND_API_KEY` on staging and production `api` and remove `SMTP_*` there.
+- `POST /staff/{id}/pin-code` still answers 500 (generic message) when the email fails, now within 10 s; map `EMAIL_SEND_FAILED` there if the PIN-reset screen should say "couldn't send".

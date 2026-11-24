@@ -4,7 +4,7 @@ import { sql } from 'kysely';
 import { createApp } from './app.ts';
 import { createAuth, createAuthPool } from './auth.ts';
 import { createDb } from './db/index.ts';
-import { loadEnv, s3Settings, smtpSettings } from './env.ts';
+import { loadEnv, mailSettings, s3Settings } from './env.ts';
 import { createLogger } from './logger.ts';
 import { createMailer } from './mailer.ts';
 import { s3Store } from './storage.ts';
@@ -14,12 +14,12 @@ const env = loadEnv();
 const logger = createLogger(env);
 const db = createDb(env.DATABASE_URL);
 const authPool = createAuthPool(env.DATABASE_URL);
-const smtp = smtpSettings(env);
-const mailer = smtp ? createMailer(smtp, logger) : null;
+const mail = mailSettings(env);
+const mailer = mail ? createMailer(mail, logger) : null;
 const s3 = s3Settings(env);
 const auth = createAuth(env, { pool: authPool, logger, mailer });
 
-// A wrong SMTP login is logged loudly at start, but doesn't stop the API: selling never needs
+// A wrong email login is logged loudly at start, but doesn't stop the API: selling never needs
 // email, and the host would restart it in a loop.
 if (mailer) void mailer.verify();
 

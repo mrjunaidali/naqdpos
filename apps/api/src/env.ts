@@ -3,6 +3,7 @@
 // error lists every missing or invalid setting by name and never echoes a value.
 import { isAppVersion } from '@naqdpos/core';
 import { z } from 'zod';
+import type { MailSettings } from './mailer.ts';
 
 // .env.example lists every variable with an empty value, so empty means "not set" (loadEnv).
 const optional = z.string().optional();
@@ -25,6 +26,8 @@ const common = {
   S3_ACCESS_KEY_ID: optional,
   S3_SECRET_ACCESS_KEY: optional,
 
+  // Email (deployment §2): RESEND_API_KEY (HTTPS) wins over SMTP_*; either needs MAIL_FROM.
+  RESEND_API_KEY: optional,
   SMTP_HOST: optional,
   SMTP_PORT: z.coerce.number().int().positive().optional(),
   SMTP_USER: optional,
@@ -80,7 +83,7 @@ const S3_KEYS = [
   'S3_ACCESS_KEY_ID',
   'S3_SECRET_ACCESS_KEY',
 ] as const;
-const SMTP_KEYS = ['SMTP_HOST', 'SMTP_PORT', 'SMTP_USER', 'SMTP_PASS', 'MAIL_FROM'] as const;
+const SMTP_KEYS = ['SMTP_HOST', 'SMTP_PORT', 'SMTP_USER', 'SMTP_PASS'] as const;
 
 type Source = Record<string, string | undefined>;
 
@@ -92,12 +95,19 @@ function extraProblems(kind: 'api' | 'worker', env: Source): string[] {
     keys.some(set) && !keys.every(set) ? keys.filter((k) => !set(k)) : [];
   for (const key of partial(S3_KEYS)) problems.push(`${key}: required when any S3_* is set`);
   for (const key of partial(SMTP_KEYS)) problems.push(`${key}: required when any SMTP_* is set`);
+  if (!set('MAIL_FROM')) {
+    if (SMTP_KEYS.some(set)) problems.push('MAIL_FROM: required when any SMTP_* is set');
+    if (set('RESEND_API_KEY')) problems.push('MAIL_FROM: required when RESEND_API_KEY is set');
+  }
 
   const production = (env.NODE_ENV ?? 'production') === 'production';
   if (!production || kind === 'worker') return problems;
-  // Production sends real sign-in codes: without SMTP nobody could sign in (§5).
-  if (!SMTP_KEYS.some(set))
-    for (const key of SMTP_KEYS) problems.push(`${key}: required in production`);
+  // Production sends real sign-in codes: without email nobody could sign in (§5).
+  if (!set('RESEND_API_KEY') && !SMTP_KEYS.some(set))
+    problems.push(
+      'RESEND_API_KEY or SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS: one is required in production (use RESEND_API_KEY where the host blocks SMTP ports)',
+    );
+  if (!set('MAIL_FROM')) problems.push('MAIL_FROM: required in production');
   if (!set('POS_URL')) problems.push('POS_URL: required in production');
   const https = (value: string | undefined) => !value || value.startsWith('https://');
   if (!https(env.BETTER_AUTH_URL)) problems.push('BETTER_AUTH_URL: must be https in production');
@@ -147,10 +157,24 @@ export function s3Settings(env: Pick<Env, (typeof S3_KEYS)[number]>) {
     : null;
 }
 
-/** SMTP settings when configured, else null. */
-export function smtpSettings(env: Pick<Env, (typeof SMTP_KEYS)[number]>) {
-  const { SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS, MAIL_FROM } = env;
-  return SMTP_HOST && SMTP_PORT && SMTP_USER && SMTP_PASS && MAIL_FROM
-    ? { host: SMTP_HOST, port: SMTP_PORT, user: SMTP_USER, pass: SMTP_PASS, from: MAIL_FROM }
+/**
+ * Email settings, else null (development then prints codes). The Resend HTTPS API when
+ * RESEND_API_KEY is set (works where SMTP ports are blocked), else SMTP when SMTP_* are set.
+ */
+export function mailSettings(
+  env: Pick<Env, 'RESEND_API_KEY' | (typeof SMTP_KEYS)[number] | 'MAIL_FROM'>,
+): MailSettings | null {
+  const { RESEND_API_KEY, SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS, MAIL_FROM } = env;
+  if (!MAIL_FROM) return null;
+  if (RESEND_API_KEY) return { kind: 'resend', apiKey: RESEND_API_KEY, from: MAIL_FROM };
+  return SMTP_HOST && SMTP_PORT && SMTP_USER && SMTP_PASS
+    ? {
+        kind: 'smtp',
+        host: SMTP_HOST,
+        port: SMTP_PORT,
+        user: SMTP_USER,
+        pass: SMTP_PASS,
+        from: MAIL_FROM,
+      }
     : null;
 }

@@ -1,6 +1,6 @@
 # NaqdPOS hosting and deployment
 
-Status: **decided (Nov 2026)**. Own backend on open standards: Node API + PostgreSQL + S3-compatible storage + SMTP. Railway (API, worker, Postgres, two static sites) + Cloudflare R2 + Resend (SMTP); every part can move to another host by changing environment variables. Supabase was evaluated and dropped (§7).
+Status: **decided (Nov 2026)**. Own backend on open standards: Node API + PostgreSQL + S3-compatible storage + SMTP. Railway (API, worker, Postgres, two static sites) + Cloudflare R2 + Resend (its HTTPS API; SMTP also supported); every part can move to another host by changing environment variables. Supabase was evaluated and dropped (§7).
 
 Day-to-day operations (backups, restore drill, first-time database steps, incidents) are in **`docs/runbook.md`**.
 
@@ -30,7 +30,7 @@ Day-to-day operations (backups, restore drill, first-time database steps, incide
 | Database | PostgreSQL **18** | Railway Postgres (one per environment) | Neon, AWS RDS, DigitalOcean, own server |
 | Files | S3 API: bucket per environment (shop logos; bill photos later) | Cloudflare R2 | AWS S3, Backblaze B2, MinIO |
 | Backups | S3 API: a **separate** bucket per environment, own token | Cloudflare R2 | Any S3 storage |
-| Email | SMTP (sign-in codes, PIN reset codes, owner invites) | Resend (SMTP relay) | Any SMTP provider |
+| Email | Resend's HTTPS API or SMTP (sign-in codes, PIN reset codes, owner invites) | Resend (HTTPS API: Railway Hobby blocks SMTP ports) | Any SMTP provider (`SMTP_*`) |
 | Phone OTP (later) | WhatsApp auth template, SMS fallback | Deferred until business registration and Meta verification | — |
 
 Region: as close to Pakistan as the host offers (Railway: Singapore / Asia; R2 location hint: Asia-Pacific). The shop app is offline-first, so latency matters less than usual.
@@ -39,7 +39,7 @@ Region: as close to Pakistan as the host offers (Railway: Singapore / Asia; R2 l
 
 Moving a part = changing its settings. Nothing host-specific is in code. Secrets live only in Railway's variables and the password manager; never in the repo or a front-end build. `.env.example` lists every variable.
 
-**The API and the worker check their settings at start** and stop with one message that names every missing or invalid setting (never its value). In production the API requires `DATABASE_URL`, `BETTER_AUTH_SECRET` (≥ 32 chars), `BETTER_AUTH_URL` (https), `APP_ORIGINS` (all https), `POS_URL` (https) and all of `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, `MAIL_FROM`. `S3_*` is all-or-nothing (none = the logo feature is hidden). The worker requires `DATABASE_ADMIN_URL`, `BACKUP_S3_ENDPOINT`, `BACKUP_S3_REGION`, `BACKUP_S3_BUCKET`, `BACKUP_S3_ACCESS_KEY_ID`, `BACKUP_S3_SECRET_ACCESS_KEY` and `BACKUP_ENCRYPTION_KEY` (32 bytes, base64).
+**The API and the worker check their settings at start** and stop with one message that names every missing or invalid setting (never its value). In production the API requires `DATABASE_URL`, `BETTER_AUTH_SECRET` (≥ 32 chars), `BETTER_AUTH_URL` (https), `APP_ORIGINS` (all https), `POS_URL` (https), `MAIL_FROM`, and **either** `RESEND_API_KEY` **or** all of `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS` (`RESEND_API_KEY` wins when both are set). `SMTP_*` is all-or-nothing. `S3_*` is all-or-nothing (none = the logo feature is hidden). The worker requires `DATABASE_ADMIN_URL`, `BACKUP_S3_ENDPOINT`, `BACKUP_S3_REGION`, `BACKUP_S3_BUCKET`, `BACKUP_S3_ACCESS_KEY_ID`, `BACKUP_S3_SECRET_ACCESS_KEY` and `BACKUP_ENCRYPTION_KEY` (32 bytes, base64).
 
 | Service | Variable | Production | Staging | Note |
 | --- | --- | --- | --- | --- |
@@ -50,7 +50,8 @@ Moving a part = changing its settings. Nothing host-specific is in code. Secrets
 | api | `APP_ORIGINS` | `https://pos.naqd.pk,https://admin.naqd.pk` | `https://staging-pos.naqd.pk,https://staging-admin.naqd.pk` | CORS and Better Auth trusted origins |
 | api | `POS_URL` | `https://pos.naqd.pk` | `https://staging-pos.naqd.pk` | In the owner invite email |
 | api | `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` | production OAuth client | staging OAuth client | Empty = Google sign-in hidden |
-| api | `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS` | `smtp.resend.com`, `587`, `resend`, production API key | same, staging API key | |
+| api | `RESEND_API_KEY` | production Resend API key | staging Resend API key | Email over HTTPS (`POST https://api.resend.com/emails`). **Use this on Railway:** the Hobby plan blocks outbound SMTP (ports 25, 465, 587, 2525) and allows only HTTPS |
+| api | `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS` | empty | empty | Only on a host that allows SMTP, instead of `RESEND_API_KEY` (Resend: `smtp.resend.com`, `587`, `resend`, the API key) |
 | api | `MAIL_FROM` | `NaqdPOS <no-reply@naqd.pk>` | `NaqdPOS staging <no-reply@naqd.pk>` | |
 | api | `S3_ENDPOINT`, `S3_REGION` | `https://<account-id>.r2.cloudflarestorage.com`, `auto` | same | |
 | api | `S3_BUCKET` | `naqdpos-files-prod` | `naqdpos-files-staging` | |
@@ -144,12 +145,12 @@ Records are added in steps 3 (Resend) and 6 (Railway domains). Use **DNS only (g
    ```
    Production: the same with `https://pos.naqd.pk`. The backups buckets get **no** CORS policy.
 
-### 3. Resend (email over SMTP)
+### 3. Resend (email over its HTTPS API)
 
 1. resend.com → **Domains → Add domain** `naqd.pk`, region closest to Pakistan offered.
 2. Add the records Resend shows in Cloudflare DNS (DNS only), typically: **MX** `send` → `feedback-smtp.<region>.amazonses.com` (priority 10); **TXT** `send` → `v=spf1 include:amazonses.com ~all`; **TXT** `resend._domainkey` → the DKIM key. Also add **TXT** `_dmarc` → `v=DMARC1; p=none;`. Click **Verify** and wait for "Verified".
-3. **API keys** → create `naqdpos-staging` and `naqdpos-production`, permission **Sending access**, domain `naqd.pk`. Each key is the `SMTP_PASS` of that environment.
-4. SMTP settings: `SMTP_HOST=smtp.resend.com`, `SMTP_PORT=587` (STARTTLS; 465 also works), `SMTP_USER=resend`. Check the free-tier daily and monthly limits on Resend's pricing page before the pilot.
+3. **API keys** → create `naqdpos-staging` and `naqdpos-production`, permission **Sending access**, domain `naqd.pk`. Each key is the `RESEND_API_KEY` of that environment.
+4. Railway Hobby blocks outbound SMTP, so the API uses Resend's HTTPS API (`RESEND_API_KEY`) and leaves `SMTP_*` empty. On a host that allows SMTP the same key also works as `SMTP_PASS` with `SMTP_HOST=smtp.resend.com`, `SMTP_PORT=587` (STARTTLS; 465 also works), `SMTP_USER=resend`. Every send gives up after 10 seconds: the sign-in screens then say "Couldn't send the code, try again". Check the free-tier daily and monthly limits on Resend's pricing page before the pilot.
 
 ### 4. Railway project, environments and services
 
@@ -165,7 +166,7 @@ Records are added in steps 3 (Resend) and 6 (Railway domains). Use **DNS only (g
    | `admin` | `apps/admin/railway.json` | yes (custom domain) |
 
    The config files set the Dockerfile, the start command, `/health` checks, watch paths, one replica, and the API's pre-deploy migration.
-4. Create the **shared variable** `APP_DB_PASSWORD` in each environment (`openssl rand -base64 24 | tr '+/' '-_'`, no quotes), then set every variable from the §2 table on each service.
+4. Create the **shared variable** `APP_DB_PASSWORD` in each environment (`openssl rand -base64 24 | tr '+/' '-_'`, no quotes), then set every variable from the §2 table on each service. Email: set `RESEND_API_KEY` and leave `SMTP_*` empty (the Hobby plan blocks outbound SMTP ports 25/465/587/2525; with `SMTP_*` the code request would fail after the 10-second timeout).
 5. Railway gives each Dockerfile service its variables as build arguments, so `APP`, `VITE_API_URL` and `VITE_POS_URL` reach the static builds. Changing a `VITE_*` value needs a **redeploy** (it is baked in at build time).
 
 ### 5. First deploy (order matters)
@@ -197,8 +198,8 @@ For each public service: Railway → service → Settings → Networking → **C
 
 ### 9. Checks after each deploy
 
-- `https://<api>/health` → `{"ok":true,"db":true}`; the API log line `NaqdPOS API listening` shows `email: true, files: true`, and no "SMTP check failed".
-- Sign in on the POS with an email code (the email arrives in English and Urdu); create or open a shop; set a logo in Settings → Shop; it shows in the header and on a receipt.
+- `https://<api>/health` → `{"ok":true,"db":true}`; the API log line `NaqdPOS API listening` shows `email: true, files: true`; with `RESEND_API_KEY` the log says `email: no startup check for this transport` (Resend sending keys can't be checked without sending), so the sign-in below is the real email check. With SMTP: no `email check failed`.
+- Sign in on the POS with an email code (the email arrives in English and Urdu; the log shows `email sent` with `via: resend-https` and a masked address); create or open a shop; set a logo in Settings → Shop; it shows in the header and on a receipt.
 - Browser dev tools on POS and admin: no CSP errors in the console; response headers as in §4.
 - Admin portal: create a test shop → "Email sent to …"; the invite email arrives.
 - The next morning: the worker log shows `backup uploaded` and the backups bucket has `backups/daily/<date>.dump.enc`. Do the restore drill once on staging (runbook) before the pilot.

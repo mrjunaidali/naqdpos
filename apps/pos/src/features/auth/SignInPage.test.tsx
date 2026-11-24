@@ -1,3 +1,4 @@
+import { EMAIL_SEND_FAILED } from '@naqdpos/core';
 import { fireEvent, screen, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { api, ApiError } from '../../api/index.ts';
@@ -168,5 +169,21 @@ describe('offline', () => {
     typeInto('Email', 'ali@shop.pk');
     fireEvent.click(screen.getByRole('button', { name: 'Send code' }));
     expect(await screen.findByRole('alert')).toHaveTextContent('No internet connection');
+  });
+});
+
+describe('email provider down', () => {
+  it('says the code could not be sent and stays on the email step', async () => {
+    mocked.sendSignInCode.mockRejectedValue(
+      new ApiError(503, EMAIL_SEND_FAILED, "Couldn't send the code, try again"),
+    );
+    await openSignIn();
+    typeInto('Email', 'ali@shop.pk');
+    fireEvent.click(screen.getByRole('button', { name: 'Send code' }));
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      "Couldn't send the code, try again.",
+    );
+    expect(screen.getByRole('button', { name: 'Send code' })).toBeEnabled();
+    expect(screen.queryByLabelText('6-digit code')).not.toBeInTheDocument();
   });
 });

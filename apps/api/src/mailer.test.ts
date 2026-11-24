@@ -5,6 +5,7 @@ import { loadEnv } from './env.ts';
 import { codeEmail, createMailer, inviteEmail, type Transport } from './mailer.ts';
 
 const SMTP = {
+  kind: 'smtp' as const,
   host: 'smtp.test',
   port: 587,
   user: 'resend',
@@ -60,13 +61,14 @@ describe('email templates', () => {
 });
 
 describe('mailer', () => {
-  it('sends from MAIL_FROM and logs who and what, never the text', async () => {
+  it('sends from MAIL_FROM and logs who (masked) and what, never the text', async () => {
     const { transport, sent } = fakeTransport();
     const { logger, lines } = captureLogs();
-    const mailer = createMailer(SMTP, logger, transport);
+    const mailer = createMailer(SMTP, logger, { transport });
     await mailer.send({ to: 'owner@example.com', ...codeEmail('sign-in', '771100') });
     expect(sent).toEqual([expect.objectContaining({ from: SMTP.from, to: 'owner@example.com' })]);
-    expect(lines.join('\n')).toContain('owner@example.com');
+    expect(lines.join('\n')).toContain('o***@example.com');
+    expect(lines.join('\n')).not.toContain('owner@example.com');
     expect(lines.join('\n')).not.toContain('771100');
   });
 
@@ -74,8 +76,8 @@ describe('mailer', () => {
     const { transport } = fakeTransport();
     transport.verify = () => Promise.reject(new Error('535 auth failed'));
     const { logger, lines } = captureLogs();
-    expect(await createMailer(SMTP, logger, transport).verify()).toBe(false);
-    expect(lines.join('\n')).toContain('SMTP check failed');
+    expect(await createMailer(SMTP, logger, { transport }).verify()).toBe(false);
+    expect(lines.join('\n')).toContain('email check failed');
     expect(lines.join('\n')).not.toContain(SMTP.pass);
   });
 
@@ -92,7 +94,7 @@ describe('mailer', () => {
     const options = authOptions(env, {
       pool: {} as never,
       logger,
-      mailer: createMailer(SMTP, logger, transport),
+      mailer: createMailer(SMTP, logger, { transport }),
     });
     const plugin = options.plugins[0] as unknown as {
       options: {
@@ -108,7 +110,7 @@ describe('mailer', () => {
     expect(lines.join('\n')).not.toContain('654321');
   });
 
-  it('without SMTP: development prints the code, anything else refuses to send', async () => {
+  it('without email settings: development prints the code, anything else refuses to send', async () => {
     const base = {
       DATABASE_URL: 'postgres://a:b@localhost:5432/x',
       BETTER_AUTH_SECRET: 'x'.repeat(32),
@@ -140,7 +142,7 @@ describe('mailer', () => {
     await dev.run;
     expect(dev.lines.join('\n')).toContain('111222');
     const other = send('test');
-    await expect(other.run).rejects.toThrow(/SMTP is not configured/);
+    await expect(other.run).rejects.toThrow(/email is not configured/);
     expect(other.lines.join('\n')).not.toContain('111222');
   });
 });

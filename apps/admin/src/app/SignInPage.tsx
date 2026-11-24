@@ -1,5 +1,6 @@
 import { useEffect, useState, type FormEvent } from 'react';
-import { api } from '../api/index.ts';
+import { EMAIL_SEND_FAILED } from '@naqdpos/core';
+import { api, ApiError } from '../api/index.ts';
 import { Alert, Button, Field } from './ui.tsx';
 
 /** Google (when the API has it) or an email code. 2FA follows in AuthGate. */
@@ -25,8 +26,12 @@ export function SignInPage(props: { onSignedIn: (token: string) => void; message
     try {
       await api.sendSignInCode(email.trim());
       setSent(true);
-    } catch {
-      setError('Could not send the code. Check the email address.');
+    } catch (e) {
+      setError(
+        e instanceof ApiError && e.code === EMAIL_SEND_FAILED
+          ? "Couldn't send the code, try again."
+          : 'Could not send the code. Check the email address.',
+      );
     } finally {
       setBusy(false);
     }

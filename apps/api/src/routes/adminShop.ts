@@ -22,7 +22,7 @@ import { z } from 'zod';
 import type { AppDeps, AppEnv } from '../app.ts';
 import { withUserTx, type TxContext } from '../db/index.ts';
 import { errorBody, pgCode } from '../errors.ts';
-import { inviteEmail } from '../mailer.ts';
+import { inviteEmail, maskEmail } from '../mailer.ts';
 
 const json = <T>(schema: T) => ({ 'application/json': { schema } });
 const shopParam = z.object({ id: z.uuid() });
@@ -132,7 +132,7 @@ export function registerAdminShopRoutes(
       await deps.mailer.send({ to: email, ...inviteEmail(shopName, deps.posUrl, email) });
       return true;
     } catch (error) {
-      deps.logger.warn({ err: error, to: email }, 'invite email failed');
+      deps.logger.warn({ err: error, to: maskEmail(email) }, 'invite email failed');
       return false;
     }
   };

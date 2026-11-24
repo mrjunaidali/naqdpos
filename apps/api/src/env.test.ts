@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { loadEnv, loadWorkerEnv, s3Settings, smtpSettings } from './env.ts';
+import { loadEnv, loadWorkerEnv, mailSettings, s3Settings } from './env.ts';
 
 /** A complete production API setup. */
 const production = {
@@ -32,6 +32,9 @@ const worker = {
   BACKUP_ENCRYPTION_KEY: Buffer.alloc(32, 7).toString('base64'),
 };
 
+const without = (source: Record<string, string>, ...keys: string[]) =>
+  Object.fromEntries(Object.entries(source).filter(([key]) => !keys.includes(key)));
+
 const problems = (fn: () => unknown): string => {
   try {
     fn();
@@ -47,7 +50,7 @@ describe('API settings', () => {
     expect(env.PORT).toBe(8787);
     expect(env.NODE_ENV).toBe('production');
     expect(env.APP_ORIGINS).toEqual(['https://pos.naqd.pk', 'https://admin.naqd.pk']);
-    expect(smtpSettings(env)).toMatchObject({ host: 'smtp.resend.com', port: 587 });
+    expect(mailSettings(env)).toMatchObject({ kind: 'smtp', host: 'smtp.resend.com', port: 587 });
     expect(s3Settings(env)).toBeNull();
   });
 
@@ -90,8 +93,41 @@ describe('API settings', () => {
 
   it('development runs without SMTP, storage or POS_URL', () => {
     const env = loadEnv(development);
-    expect(smtpSettings(env)).toBeNull();
+    expect(mailSettings(env)).toBeNull();
     expect(s3Settings(env)).toBeNull();
+  });
+
+  it('production: RESEND_API_KEY + MAIL_FROM alone is enough (hosts that block SMTP)', () => {
+    const noSmtp = without(production, 'SMTP_HOST', 'SMTP_PORT', 'SMTP_USER', 'SMTP_PASS');
+    const env = loadEnv({ ...noSmtp, RESEND_API_KEY: 're_live_key' });
+    expect(mailSettings(env)).toEqual({
+      kind: 'resend',
+      apiKey: 're_live_key',
+      from: production.MAIL_FROM,
+    });
+  });
+
+  it('RESEND_API_KEY wins over SMTP_* when both are set', () => {
+    const env = loadEnv({ ...production, RESEND_API_KEY: 're_live_key' });
+    expect(mailSettings(env)?.kind).toBe('resend');
+  });
+
+  it('production without any email names both options; Resend needs MAIL_FROM', () => {
+    const noMail = without(
+      production,
+      'SMTP_HOST',
+      'SMTP_PORT',
+      'SMTP_USER',
+      'SMTP_PASS',
+      'MAIL_FROM',
+    );
+    const text = problems(() => loadEnv(noMail));
+    expect(text).toContain('RESEND_API_KEY or SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS');
+    expect(text).toContain('MAIL_FROM: required in production');
+    const resendOnly = problems(() => loadEnv({ ...noMail, RESEND_API_KEY: 're_live_key' }));
+    expect(resendOnly).toContain('MAIL_FROM: required when RESEND_API_KEY is set');
+    expect(resendOnly).not.toContain('SMTP_HOST');
+    expect(resendOnly).not.toContain('re_live_key');
   });
 
   it('S3 and SMTP are all-or-nothing', () => {

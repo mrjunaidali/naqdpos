@@ -190,6 +190,19 @@ describe('admin sign-in', () => {
     expect(await screen.findByText('Your admin session ended. Sign in again.')).toBeInTheDocument();
     expect(getToken()).toBeNull();
   });
+
+  it('email provider down: says the code could not be sent instead of spinning', async () => {
+    const { ApiError, EMAIL_SEND_FAILED } =
+      await vi.importActual<typeof import('@naqdpos/core')>('@naqdpos/core');
+    api.sendSignInCode.mockRejectedValueOnce(
+      new ApiError(503, EMAIL_SEND_FAILED, "Couldn't send the code, try again"),
+    );
+    start();
+    fireEvent.change(await screen.findByLabelText('Email'), { target: { value: 'me@x.test' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Email me a code' }));
+    expect(await screen.findByText("Couldn't send the code, try again.")).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Email me a code' })).toBeEnabled();
+  });
 });
 
 describe('shops (US010, US011)', () => {

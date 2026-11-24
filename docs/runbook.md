@@ -101,7 +101,7 @@ If anything fails, treat it as an incident (§5): backups that can't be restored
 | --- | --- | --- |
 | API won't start, log says `Invalid api settings:` | The message lists every missing / wrong variable by name | Set them on the `api` service, redeploy |
 | `/health` → `db: false` | Postgres service up? `naqdpos_app` password (§1)? `?sslmode=disable` on internal URLs | Fix the variable or the role password, redeploy |
-| Nobody receives sign-in codes | API log: `SMTP check failed` / `email sent` lines; Resend dashboard → Logs | Fix `SMTP_*`; check the domain is still verified; check the Resend daily limit |
+| Nobody receives sign-in codes, or the screen says "Couldn't send the code, try again" | API log: `email code not sent` (its `err`: `Resend API: HTTP 401/403 (…)` = bad key or unverified domain; `no answer within 10 s` = provider unreachable) / `email sent` lines; with SMTP also `email check failed` at start; Resend dashboard → Logs | On Railway use `RESEND_API_KEY`, not `SMTP_*` (Hobby blocks SMTP ports: SMTP sends time out). Fix the key; check the domain is still verified; check the Resend daily limit |
 | Invite shows "The email was not sent" | Same as above | The WhatsApp text in the portal always works |
 | Logo upload fails | Browser console: CORS error → R2 CORS policy (deployment §6 step 2); CSP error → `FILES_ORIGIN` on the `pos` service | Fix and retry; the old logo stays until a new one is saved |
 | Worker: `backup failed` | The log line has the step (`pg_dump failed …`, storage error) | `pg_dump` version vs Postgres version (must be ≥ 18); backup token scope; bucket name |

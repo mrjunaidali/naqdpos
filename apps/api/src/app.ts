@@ -32,7 +32,7 @@ export interface AppDeps {
   minAppVersion?: string | undefined;
   /** Object storage (S3_*); null = file features off (local dev). */
   files?: ObjectStore | null;
-  /** SMTP mailer (owner invite emails); null = not configured. */
+  /** Mailer (owner invite emails); null = not configured. */
   mailer?: Mailer | null;
   /** The shop app's address for invite emails (POS_URL). */
   posUrl?: string | undefined;

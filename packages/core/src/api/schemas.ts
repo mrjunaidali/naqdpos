@@ -284,6 +284,9 @@ export type ErrorResponse = z.infer<typeof ErrorResponse>;
 /** Better Auth's own error body, e.g. { code: 'INVALID_OTP', message: '…' }. */
 export const AuthErrorResponse = z.object({ code: z.string().optional(), message: z.string() });
 
+/** Auth error code when the code email could not be sent (provider down or timed out). */
+export const EMAIL_SEND_FAILED = 'EMAIL_SEND_FAILED';
+
 // --- Catalogue rows (architecture §3, migration 20261121090000_catalogue) ---
 
 const paisa = z.number().int().nonnegative();
