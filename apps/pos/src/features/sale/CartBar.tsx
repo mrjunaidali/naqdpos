@@ -12,7 +12,7 @@ export function CartBar({ onOpen, onCharge }: { onOpen: () => void; onCharge: ()
   const rs = useRs();
   if (totals.itemCount === 0) return null;
   return (
-    <div className="fixed inset-x-0 bottom-0 z-20 p-3">
+    <div className="fixed inset-x-0 bottom-0 z-20 p-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))]">
       <div className="mx-auto flex max-w-3xl items-center gap-3 rounded-2xl bg-primary p-2 text-primary-fg">
         <button
           type="button"

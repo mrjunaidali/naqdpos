@@ -900,3 +900,20 @@ Railway's Hobby plan blocks outbound SMTP (ports 25/465/587/2525; only HTTPS). O
 **Follow-ups**
 - Set `RESEND_API_KEY` on staging and production `api` and remove `SMTP_*` there.
 - `POST /staff/{id}/pin-code` still answers 500 (generic message) when the email fails, now within 10 s; map `EMAIL_SEND_FAILED` there if the PIN-reset screen should say "couldn't send".
+
+## Fix: iPhone PWA bottom nav, content under the nav, select all on the preset picker (24 Nov 2026)
+
+Found on a real iPhone (installed PWA).
+
+- **Docked nav** (`features/home/Nav.tsx`): the phone bar is no longer a floating pill. It is fixed to the bottom edge, full width, rounded only on the top corners, with `padding-bottom: env(safe-area-inset-bottom)` so the dark `bg-hero` runs down behind the home indicator while the buttons (h-14) stay above it. The Sale pill is unchanged. `viewport-fit=cover` was already in `index.html`. `html` now also gets `bg-bg`, so overscroll never shows another colour.
+- **One shared bottom space** (`index.css`): `--nav-h` (0 by default; `Nav` sets it to `3.5rem` on `:root` while the docked bar shows and back to 0 when hidden: sale flow, side nav from 768px, before sign-in) and `--bottom-inset = --nav-h + safe-area-inset-bottom`. Utilities `pb-nav` (main area: inset + 1rem) and `bottom-nav` (action bars sit right on the nav). On `:root` so the update banner, mounted outside the layout, can use it.
+- **Screens**: `<main>` uses `pb-nav`, so every in-flow form button (Stock in, Expense, Close day, product form, settings…) scrolls clear of the nav; Home's own `pb-28` is gone. The preset picker and Today's rates action bars were `fixed bottom-0` under the nav; now `sticky bottom-nav`, always visible above it. Sale flow (nav hidden): the cart bar pads by the safe area and FOC chips sit above it. Bottom sheets pad by the safe area on phones. The "new version" banner sits above the nav.
+- **Select all** (`PresetPickerPage.tsx`, pure helpers in `presetSelection.ts`): a "Select all" checkbox above the list acts on the rows the search shows, skipping rows already added (locked). Checked when all are ticked, indeterminate (DOM property) when some are, disabled when none can be ticked. Unticking removes only the shown rows; rows outside the search and rates already typed are kept. The add button already showed the count ("Add 12 products").
+- **Strings**: `presets.selectAll` (en + ur).
+
+**Files**: `apps/pos/src/index.css`, `app/{RootLayout,HomePage,NewVersionBanner}.tsx`, `features/home/Nav.tsx`, `features/catalogue/{PresetPickerPage,TodaysRatesPage}.tsx`, `features/catalogue/presetSelection.ts` (new), `features/sale/{CartBar,FocSuggestions}.tsx`, `ui/Sheet.tsx`, `i18n/{en,ur}.json`; tests `features/catalogue/Catalogue.test.tsx`, `features/home/Home.test.tsx`.
+
+**Tests**: Pos 353 (+5: select all ticks every row not yet added and shows the count, unticks again; indeterminate with some ticked; acts only on the search and keeps typed rates; disabled when the search shows only added rows; the docked bar sets `--nav-h` and frees it in the sale flow). Core 388, API 74, Admin 17. Lint, typecheck, format pass; production build checked for the generated safe-area rules.
+
+**Follow-ups**
+- Re-check on the iPhone (safe area can't be tested in jsdom): nav flush with the bottom edge, picker and rates bars sitting on the nav, cart bar above the home indicator.

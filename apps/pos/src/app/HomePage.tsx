@@ -47,7 +47,7 @@ export function HomePage() {
   }, [navigate]);
 
   return (
-    <section className="mx-auto max-w-3xl space-y-4 pb-28 md:pb-4">
+    <section className="mx-auto max-w-3xl space-y-4">
       <div>
         <h1 className="text-2xl font-bold">{t(`home.greeting.${greetingKey()}`)}</h1>
         {info?.shopName && <p className="text-muted">{info.shopName}</p>}

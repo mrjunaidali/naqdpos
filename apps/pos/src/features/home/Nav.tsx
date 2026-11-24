@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { NavLink, useLocation } from 'react-router';
 import { useCurrentStaff } from '../../staff/currentStaff.ts';
@@ -15,8 +15,11 @@ const sideLink = ({ isActive }: { isActive: boolean }) =>
     isActive ? 'bg-primary text-primary-fg' : 'text-text hover:bg-bg'
   }`;
 
+/** Height of the docked bar above the safe area; matches its h-14. */
+const BAR_HEIGHT = '3.5rem';
+
 /**
- * Phones: a floating near-black bar (Home, Sales, the white Sale pill, Products or Khata, More).
+ * Phones: a near-black bar docked to the bottom edge (Home, Sales, the white Sale pill, Products or Khata, More).
  * From 768px: a side nav with every item. Logical order, so Urdu mirrors it. Hidden on the sale
  * and pay screens (the cart bar is there).
  */
@@ -26,7 +29,16 @@ export function Nav() {
   const current = useCurrentStaff();
   const [more, setMore] = useState(false);
   const wide = useWide();
-  if (navHidden(pathname) || !current?.valid) return null;
+  const hidden = navHidden(pathname) || !current?.valid;
+  const bar = !hidden && !wide;
+  // Publish the bar height so the main area and action bars keep clear of it (index.css).
+  useEffect(() => {
+    if (!bar) return;
+    const root = document.documentElement.style;
+    root.setProperty('--nav-h', BAR_HEIGHT);
+    return () => root.setProperty('--nav-h', '0px');
+  }, [bar]);
+  if (hidden) return null;
   const role = current.staff.role;
   const { left, right } = barItems(role);
   const rest = moreItems(role);
@@ -36,8 +48,13 @@ export function Nav() {
   return (
     <>
       {!wide && (
-        <nav aria-label={t('nav.main')} className="fixed inset-x-3 bottom-3 z-20">
-          <div className="mx-auto flex max-w-md items-center justify-between rounded-2xl bg-hero px-2 py-1 text-hero-fg shadow-lg">
+        // Docked full width: the dark background runs down through the home-indicator area while
+        // the safe-area padding keeps the buttons above it.
+        <nav
+          aria-label={t('nav.main')}
+          className="fixed inset-x-0 bottom-0 z-20 rounded-t-xl bg-hero pb-[env(safe-area-inset-bottom)] text-hero-fg shadow-lg"
+        >
+          <div className="mx-auto flex h-14 max-w-md items-center justify-between px-2">
             {left.map((item) => (
               <NavLink key={item.key} to={item.to} end className={barLink}>
                 {label(item)}

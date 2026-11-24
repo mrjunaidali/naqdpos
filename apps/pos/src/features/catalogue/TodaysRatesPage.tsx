@@ -85,7 +85,7 @@ function RatesForm(props: {
   );
 
   return (
-    <section className="mx-auto max-w-xl space-y-4 pb-24">
+    <section className="mx-auto max-w-xl space-y-4">
       <h1 className="text-2xl font-bold">{t('rates.title')}</h1>
       <p className="text-muted">
         {props.costsHere ? t('rates.introOwner') : t('products.costElsewhere')}
@@ -120,7 +120,7 @@ function RatesForm(props: {
           </li>
         ))}
       </ul>
-      <div className="fixed inset-x-0 bottom-0 border-t border-border bg-surface p-3">
+      <div className="sticky bottom-nav z-10 -mx-4 border-t border-border bg-surface p-3">
         <Button disabled={busy} onClick={() => void saveAll()}>
           {t('rates.saveAll')}
         </Button>

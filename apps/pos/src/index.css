@@ -91,11 +91,36 @@
   }
 }
 
+/*
+ * Bottom nav space (phones). Nav sets --nav-h to its bar height while the docked bar shows and
+ * back to 0 when it is hidden (sale flow, wide screens). --bottom-inset is what sits over the
+ * bottom of the screen: the bar plus the iPhone home-indicator area (viewport-fit=cover). Both on
+ * :root so overlays mounted outside the layout (update banner) can use them too.
+ */
+:root {
+  --nav-h: 0px;
+  --bottom-inset: calc(var(--nav-h) + env(safe-area-inset-bottom, 0px));
+}
+
+/* The main scroll area: nothing ends up under the nav. */
+@utility pb-nav {
+  padding-bottom: calc(var(--bottom-inset) + 1rem);
+}
+/* Sticky / fixed action bars sit directly on top of the nav. */
+@utility bottom-nav {
+  bottom: var(--bottom-inset);
+}
+
 @layer base {
   html,
   body,
   #root {
     min-height: 100%;
+  }
+
+  /* Overscroll and the safe area show the page background, never a different colour. */
+  html {
+    @apply bg-bg;
   }
 
   body {

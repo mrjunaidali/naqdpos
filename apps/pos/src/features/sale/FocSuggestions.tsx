@@ -15,7 +15,7 @@ export function FocSuggestions({ products }: { products: readonly ProductRow[] }
   const suggestions = focSuggestions(lines, products);
   if (suggestions.length === 0) return null;
   return (
-    <div className="fixed inset-x-0 bottom-24 z-20 px-3">
+    <div className="fixed inset-x-0 bottom-[calc(6rem+env(safe-area-inset-bottom))] z-20 px-3">
       <div className="mx-auto flex max-w-3xl flex-wrap justify-center gap-2">
         {suggestions.map(({ product, qty_milli }) => (
           <button

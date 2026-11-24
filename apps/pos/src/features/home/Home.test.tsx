@@ -318,6 +318,16 @@ describe('navigation', () => {
     expect(screen.queryByRole('navigation', { name: 'Menu' })).toBeNull();
   });
 
+  it('phones: the docked bar reserves its height for the page, and frees it in the sale flow', async () => {
+    await seedShop();
+    const navHeight = () => document.documentElement.style.getPropertyValue('--nav-h');
+    const { router } = renderAt('/');
+    await screen.findByRole('navigation', { name: 'Main' });
+    await waitFor(() => expect(navHeight()).toBe('3.5rem'));
+    await act(() => router.navigate('/sale'));
+    await waitFor(() => expect(navHeight()).toBe('0px'));
+  });
+
   it('from 768px: a side nav with every item; no nav on the sale screen', async () => {
     matchMediaWide(true);
     await seedShop();

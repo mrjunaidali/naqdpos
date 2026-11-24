@@ -7,7 +7,7 @@ import {
   type ProducePreset,
 } from '@naqdpos/core';
 import { useLiveQuery } from 'dexie-react-hooks';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useSearchParams } from 'react-router';
 import { Alert, Button } from '../../ui/Button.tsx';
@@ -19,6 +19,7 @@ import {
   productsByName,
   type PresetChoice,
 } from './catalogueRepo.ts';
+import { selectAllState, toggleAll } from './presetSelection.ts';
 
 const PICKER = presetsForPicker();
 const CATEGORY_ORDER: PresetCategory[] = ['vegetables', 'greens', 'fruits'];
@@ -50,6 +51,18 @@ export function PresetPickerPage() {
       ),
     [query],
   );
+  /** Keys "Select all" acts on: what the search shows, minus rows already added. */
+  const selectable = useMemo(
+    () =>
+      byName ? shown.filter((p) => presetStatus(p, byName) !== 'added').map((p) => p.key) : [],
+    [shown, byName],
+  );
+  const allState = selectAllState(selectable, picked);
+  const allRef = useRef<HTMLInputElement>(null);
+  // "indeterminate" is a DOM property only; React has no attribute for it.
+  useEffect(() => {
+    if (allRef.current) allRef.current.indeterminate = allState === 'some';
+  });
   const done = () => void navigate(fromOnboarding ? '/' : '/products', { replace: fromOnboarding });
 
   function toggle(preset: ProducePreset) {
@@ -86,7 +99,7 @@ export function PresetPickerPage() {
   const ur = i18n.language === 'ur';
 
   return (
-    <section className="mx-auto max-w-xl space-y-4 pb-24">
+    <section className="mx-auto max-w-xl space-y-4">
       <h1 className="text-2xl font-bold">{t('presets.title')}</h1>
       <p className="text-muted">{t('presets.intro')}</p>
       <input
@@ -98,6 +111,17 @@ export function PresetPickerPage() {
         className="min-h-12 w-full rounded-xl border border-border bg-surface px-4 text-lg"
       />
       {rateErrors.size > 0 && <Alert>{t('presets.rateError')}</Alert>}
+      <label className="flex min-h-11 items-center gap-3 px-3 font-medium">
+        <input
+          ref={allRef}
+          type="checkbox"
+          checked={allState === 'all'}
+          disabled={selectable.length === 0}
+          onChange={() => setPicked((prev) => toggleAll(selectable, prev))}
+          className="size-5 accent-primary"
+        />
+        {t('presets.selectAll')}
+      </label>
 
       {CATEGORY_ORDER.map((category) => {
         const items = shown.filter((p) => p.category === category);
@@ -181,7 +205,8 @@ export function PresetPickerPage() {
         );
       })}
 
-      <div className="fixed inset-x-0 bottom-0 flex gap-2 border-t border-border bg-surface p-3">
+      {/* Sticky right above the nav, so the add button never hides behind it. */}
+      <div className="sticky bottom-nav z-10 -mx-4 flex gap-2 border-t border-border bg-surface p-3">
         {fromOnboarding && (
           <Button variant="secondary" onClick={done}>
             {t('presets.skip')}

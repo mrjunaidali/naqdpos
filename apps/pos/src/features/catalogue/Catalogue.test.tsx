@@ -1,4 +1,4 @@
-import { FRESH_PRODUCE, type ProductRow } from '@naqdpos/core';
+import { FRESH_PRODUCE, presetsForPicker, type ProductRow } from '@naqdpos/core';
 import { fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { db } from '../../db/schema.ts';
@@ -315,6 +315,89 @@ describe('fresh produce presets (US072)', () => {
     expect(
       (await db.products.toArray()).filter((p: ProductRow) => p.name === 'Tomato'),
     ).toHaveLength(1);
+  });
+});
+
+describe('select all on the preset picker', () => {
+  const total = presetsForPicker().length;
+  const addButton = () => screen.getByRole('button', { name: /^Add \d+ products?$/ });
+  const rowCheckbox = (name: string) =>
+    within(screen.getByText(name).closest('li')!).getAllByRole('checkbox')[0]!;
+
+  /** Potato is already added, so its row is locked and never part of "Select all". */
+  async function openPicker() {
+    await seedReady();
+    await createFromPresets([{ preset: preset('potato'), rate: 8000 }], STAFF_ID);
+    renderAt('/products/presets');
+    return screen.findByRole('checkbox', { name: 'Select all' });
+  }
+
+  it('ticks every row not yet added, shows the count on the button, and unticks them again', async () => {
+    const all = await openPicker();
+    expect(all).not.toBeChecked();
+    expect(all).not.toBePartiallyChecked();
+
+    fireEvent.click(all);
+    expect(all).toBeChecked();
+    expect(addButton()).toHaveTextContent(`Add ${total - 1} products`);
+    expect(rowCheckbox('Tomato')).toBeChecked();
+    expect(rowCheckbox('Potato')).toBeDisabled();
+
+    fireEvent.click(all);
+    expect(all).not.toBeChecked();
+    expect(rowCheckbox('Tomato')).not.toBeChecked();
+    expect(addButton()).toHaveTextContent('Add 0 products');
+    expect(addButton()).toBeDisabled();
+  });
+
+  it('is indeterminate when only some rows are ticked', async () => {
+    const all = await openPicker();
+    fireEvent.click(rowCheckbox('Tomato'));
+    expect(all).toBePartiallyChecked();
+    expect(all).not.toBeChecked();
+
+    fireEvent.click(all);
+    expect(all).toBeChecked();
+    expect(all).not.toBePartiallyChecked();
+
+    fireEvent.click(rowCheckbox('Tomato'));
+    expect(all).toBePartiallyChecked();
+    expect(addButton()).toHaveTextContent(`Add ${total - 2} products`);
+  });
+
+  it('acts only on the rows the search shows and keeps rates already typed', async () => {
+    const all = await openPicker();
+    fireEvent.click(rowCheckbox('Onion (red)'));
+    fireEvent.change(screen.getByLabelText('Today’s rate for Onion (red) in rupees'), {
+      target: { value: '120' },
+    });
+
+    fireEvent.change(screen.getByLabelText('Search the list'), { target: { value: 'tamatar' } });
+    await waitFor(() => expect(screen.queryByText('Onion (red)')).toBeNull());
+    const visible = screen.getAllByRole('listitem').length;
+    expect(all).not.toBeChecked();
+    expect(all).not.toBePartiallyChecked();
+    fireEvent.click(all);
+    expect(all).toBeChecked();
+    expect(addButton()).toHaveTextContent(`Add ${visible + 1} products`);
+
+    // Back to the full list: only some are ticked now, and Onion (red) still has its rate.
+    fireEvent.change(screen.getByLabelText('Search the list'), { target: { value: '' } });
+    expect(await screen.findByText('Onion (red)')).toBeInTheDocument();
+    expect(all).toBePartiallyChecked();
+    expect(screen.getByLabelText('Today’s rate for Onion (red) in rupees')).toHaveValue('120');
+  });
+
+  it('is disabled when every row the search shows is already added', async () => {
+    const all = await openPicker();
+    fireEvent.change(screen.getByLabelText('Search the list'), { target: { value: 'aaloo' } });
+    await waitFor(() => expect(screen.queryByText('Tomato')).toBeNull());
+    const rows = screen.getAllByRole('listitem');
+    // Only valid if the search shows just Potato; guard so a preset change fails loudly.
+    expect(rows.map((r) => within(r).getAllByRole('checkbox')[0]!)).toEqual([
+      rowCheckbox('Potato'),
+    ]);
+    expect(all).toBeDisabled();
   });
 });
 

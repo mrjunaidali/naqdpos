@@ -345,6 +345,7 @@
     "title": "Pick your products",
     "intro": "Tick what you sell. Today’s rate is optional; without it the rate is asked at the first sale.",
     "search": "Search the list",
+    "selectAll": "Select all",
     "searchPlaceholder": "Search: aalu, آلو, potato",
     "added": "Added",
     "hidden": "Hidden",

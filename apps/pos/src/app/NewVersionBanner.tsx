@@ -21,7 +21,7 @@ export function NewVersionBanner({ visible, onLater, onReload }: Props) {
   return (
     <div
       role="status"
-      className="fixed inset-x-0 bottom-0 flex items-center justify-between gap-4 bg-primary px-4 py-2 text-primary-fg"
+      className="fixed inset-x-0 bottom-nav z-20 flex items-center justify-between gap-4 bg-primary px-4 py-2 text-primary-fg"
     >
       <span>{t('pwa.updateAvailable')}</span>
       <div className="flex gap-2">

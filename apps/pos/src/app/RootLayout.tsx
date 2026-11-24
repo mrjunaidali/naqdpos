@@ -84,7 +84,7 @@ export function RootLayout() {
       {ready && <UpdateRequiredBanner />}
       <div className="flex flex-1">
         {ready && <Nav />}
-        <main className="min-w-0 flex-1 p-4">
+        <main className="min-w-0 flex-1 px-4 pt-4 pb-nav">
           <Outlet />
         </main>
       </div>
