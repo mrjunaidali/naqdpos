@@ -937,3 +937,25 @@ The four open items in `docs/bugs.md` (noted 24 Nov), now under "Fixed".
 **Follow-ups**
 - Check on a real iPhone as an installed PWA (safe areas can't be tested in jsdom or desktop Chromium): header under the status bar, raised Sale button, pay screen with the home indicator.
 - In Safari with its toolbars (not installed), the iPhone SE viewport is ~550px, below the pay screen's 30rem minimum + header, so the page scrolls a little there; the installed app fits.
+
+## Sale screen desktop layout refresh (25 Nov 2026)
+
+Wide screens only (≥768px, `useWide()`); the phone layout (cart bar + cart sheet, tiles, header row) is unchanged. No schema or core changes.
+
+- **Two panes** (`features/sale/SalePage.tsx`): full width, CSS grid `minmax(0,1fr)` + cart pane 20rem (md) / 24rem (lg) / 28rem (xl). The cart pane is always there, with "Tap a product to add it" when empty, so nothing jumps.
+- **Toolbar**: back icon, "New sale", search (flex-1, "/" hint while empty), "Custom item" in one row; category chips below. "Name · device code" is not repeated (it is in the top bar); the Customer chip moved into the cart header. **No barcode button**: scanning is US022 (R2, not built), so a button would do nothing; add it with that story.
+- **Grid and tiles**: `repeat(auto-fill, minmax(150px, 1fr))`; tiles a fixed 9rem tall and centred: icon, name on one line (truncate + `title`), the other-language name on one line, price at the bottom. "/pc" for piece (tiles only); no rate → "Set rate" in `text-warning`. Hover → new token `--color-border-strong` (`theme/default.css`). In-cart border, qty badge and the dashed FOC style are unchanged.
+- **Cart panel** (`features/sale/CartPanel.tsx`, new): sticky under the header and as tall as the viewport; the header (title, item count, Customer chip) and footer stay put, and only the lines scroll. Each line has the name + rate (tap → QuantityPanel), a − qty + stepper, the line total (strike-through when discounted, FOC label + value) and a ⋮ menu with Discount / Free / Remove (same aria-labels as the phone cart: `discount.forLine`, `foc.toggleFor`, `sale.removeLine`; closes on Escape or a tap outside). Footer: item discounts and free-items value (when > 0), a large Total, "Charge Rs …" with an F2 hint (disabled only when empty), and "Clear cart" as a small text button with the confirm step.
+- **Line layout decision**: one row from 1280px (xl, 28rem panel). Below that (md/lg, 20–24rem) the stepper and ⋮ drop under the name. With 44px stepper buttons, a total and ⋮ on one row, a 24rem panel left ~70px for the name ("Oni…"), which checked badly.
+- **Stepper** (`features/sale/qtyStep.ts`, new; pos-side, built on core `makeLine`): step 250 for kg / litre, one unit (1000) for piece, dozen, bundle, g. Never below one step, never past the line limit; discount and FOC kept; a "by amount" line becomes qty × rate.
+- **FOC suggestions** get an `inline` mode (in the products pane on wide screens, not floating over the cart panel). `CartSheet` loses its `inline` variant (phones only now).
+- **Strings** (en + ur): `sale.cartEmptyHint`, `chargeTotal`, `lineRate`, `less`, `more`, `lineMenu`, `setRate`, `pcShort`.
+
+**Files**: `apps/pos/src/features/sale/{SalePage,CartSheet,FocSuggestions}.tsx`, `CartPanel.tsx` (new), `qtyStep.ts` (new), `SaleWide.test.tsx` (new), `theme/default.css`, `i18n/{en,ur}.json`; `features/onboarding/Onboarding.test.tsx` (wait 5 s: it timed out under full-suite load twice).
+
+**Tests**: Pos 367 (+9: step sizes; stepLine totals, discount / FOC kept, floor and limit, by-amount; empty panel + one toolbar row + no repeated name/code; tiles truncate with title, "/pc", "Set rate" in warning; stepper ±250 g / ±1 piece with Charge showing the total; ⋮ Free / Discount / Remove and tapping the name edits; Clear cart confirm → empty state; Charge opens pay). Existing phone tests unchanged. Core 394, API 74, Admin 17. Lint, typecheck, format pass.
+
+**Checked** in Chromium (dev server, seeded): 768 empty and with a cart, 1100, 1280 (lines, ⋮ menu), 1280 Urdu/RTL; phone 375 unchanged.
+
+**Follow-ups**
+- A barcode button in the toolbar with US022.

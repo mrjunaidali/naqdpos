@@ -448,7 +448,15 @@
       "amountTooSmall": "اس ریٹ پر رقم بہت کم ہے۔",
       "rate": "0 سے زیادہ ریٹ لکھیں۔",
       "price": "0 سے زیادہ قیمت لکھیں۔"
-    }
+    },
+    "cartEmptyHint": "شامل کرنے کے لیے پروڈکٹ پر ٹیپ کریں",
+    "chargeTotal": "وصول کریں {{amount}}",
+    "lineRate": "{{rate}}/{{unit}}",
+    "less": "{{name}} کم کریں",
+    "more": "{{name}} زیادہ کریں",
+    "lineMenu": "{{name}} کے مزید اختیارات",
+    "setRate": "ریٹ لگائیں",
+    "pcShort": "عدد"
   },
   "payment": {
     "method": {

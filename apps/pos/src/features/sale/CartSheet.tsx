@@ -1,5 +1,5 @@
 import { computeBill, displayName, lineDiscountPaisa, lineNet, type CartLine } from '@naqdpos/core';
-import { useState, type ReactNode } from 'react';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '../../ui/Button.tsx';
 import { Sheet } from '../../ui/Sheet.tsx';
@@ -10,14 +10,10 @@ import { useQtyText, useRs } from './saleFormat.ts';
 
 /**
  * The cart (US029): lines, edit (tap), remove, "Clear cart" with a confirm step; per line a
- * discount (Rs or %) and "Free" (FOC, US032 / US033). Totals update live.
+ * discount (Rs or %) and "Free" (FOC, US032 / US033). Totals update live. Phones only: wide
+ * screens use CartPanel beside the grid.
  */
-export function CartSheet(props: {
-  onEdit: (line: CartLine) => void;
-  onClose: () => void;
-  /** A side panel on wide screens instead of a sheet. */
-  inline?: boolean;
-}) {
+export function CartSheet(props: { onEdit: (line: CartLine) => void; onClose: () => void }) {
   const { t, i18n } = useTranslation();
   const lines = useCartStore((s) => s.lines);
   const remove = useCartStore((s) => s.remove);
@@ -30,7 +26,7 @@ export function CartSheet(props: {
   const [confirmClear, setConfirmClear] = useState(false);
 
   return (
-    <Wrap inline={props.inline ?? false} title={t('sale.cartTitle')} onClose={props.onClose}>
+    <Sheet title={t('sale.cartTitle')} onClose={props.onClose}>
       {lines.length === 0 ? (
         <p className="text-muted">{t('sale.cartEmpty')}</p>
       ) : (
@@ -194,24 +190,6 @@ export function CartSheet(props: {
             {t('sale.clearCart')}
           </Button>
         ))}
-    </Wrap>
-  );
-}
-
-function Wrap(props: { inline: boolean; title: string; onClose: () => void; children: ReactNode }) {
-  if (!props.inline)
-    return (
-      <Sheet title={props.title} onClose={props.onClose}>
-        {props.children}
-      </Sheet>
-    );
-  return (
-    <section
-      aria-label={props.title}
-      className="space-y-4 rounded-2xl border border-border bg-surface p-4"
-    >
-      <h2 className="text-lg font-semibold">{props.title}</h2>
-      {props.children}
-    </section>
+    </Sheet>
   );
 }

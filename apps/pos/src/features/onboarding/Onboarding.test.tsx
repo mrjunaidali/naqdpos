@@ -134,7 +134,9 @@ describe('onboarding form', () => {
       await screen.findByRole('heading', { name: /^Good (morning|afternoon|evening)$/ }),
     ).toBeInTheDocument();
     // Setup navigates home twice (Gate redirect + onDone), so check inside waitFor.
-    await waitFor(() => expect(screen.getByText('This device: A1')).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByText('This device: A1')).toBeInTheDocument(), {
+      timeout: 5000, // slow when every package's tests run at once
+    });
 
     const sent = mocked.createShop.mock.calls[0]![0];
     expect(sent).toMatchObject({

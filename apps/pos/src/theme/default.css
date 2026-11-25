@@ -8,6 +8,7 @@
   --color-bg: #f4f4f5; /* page background (zinc-100) */
   --color-surface: #ffffff; /* cards */
   --color-border: #e4e4e7; /* thin card borders (zinc-200) */
+  --color-border-strong: #a1a1aa; /* hover on tiles and cards (zinc-400) */
   --color-text: #18181b; /* titles, numbers (zinc-900) */
   --color-muted: #71717a; /* labels, secondary text (zinc-500) */
 

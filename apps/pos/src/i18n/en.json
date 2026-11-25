@@ -448,7 +448,15 @@
       "amountTooSmall": "The amount is too small for this rate.",
       "rate": "Enter a rate above 0.",
       "price": "Enter a price above 0."
-    }
+    },
+    "cartEmptyHint": "Tap a product to add it",
+    "chargeTotal": "Charge {{amount}}",
+    "lineRate": "{{rate}}/{{unit}}",
+    "less": "Less {{name}}",
+    "more": "More {{name}}",
+    "lineMenu": "More options for {{name}}",
+    "setRate": "Set rate",
+    "pcShort": "pc"
   },
   "payment": {
     "method": {
