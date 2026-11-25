@@ -1,17 +1,18 @@
 import {
   parseRupees,
-  presetsForPicker,
   PRESET_CATEGORIES,
   searchItems,
   type PresetCategory,
+  type PresetList,
   type ProducePreset,
 } from '@naqdpos/core';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useNavigate, useSearchParams } from 'react-router';
+import { Link, Navigate, useNavigate, useSearchParams } from 'react-router';
 import { Alert, Button } from '../../ui/Button.tsx';
 import { useActingOwnerId } from '../pin/actingOwner.ts';
+import { useShopPresets } from './catalogueData.ts';
 import { ProductIcon } from './ProductIcon.tsx';
 import {
   createFromPresets,
@@ -21,19 +22,56 @@ import {
 } from './catalogueRepo.ts';
 import { selectAllState, toggleAll } from './presetSelection.ts';
 
-const PICKER = presetsForPicker();
 const CATEGORY_ORDER: PresetCategory[] = ['vegetables', 'greens', 'fruits'];
 
 /**
  * "Add from list" (US072, docs/features/produce-presets.md): tick what the shop sells, optionally
  * type today's rate, save once. Existing products show "Added"; hidden ones show "Hidden" and are
  * restored when ticked. Also the onboarding step for fruit & veg shops (?from=onboarding).
+ * The list follows the shop's type (getPresetsForShopType): a type without one gets a notice
+ * here (and onboarding skips the step), never another type's list.
  */
 export function PresetPickerPage() {
-  const { t, i18n } = useTranslation();
-  const navigate = useNavigate();
+  const { t } = useTranslation();
   const [params] = useSearchParams();
   const fromOnboarding = params.get('from') === 'onboarding';
+  const presets = useShopPresets();
+  if (presets === undefined) return null;
+  if (presets) return <PresetPicker presets={presets} fromOnboarding={fromOnboarding} />;
+  // No list for this type: onboarding goes straight home; opened directly, say so.
+  if (fromOnboarding) return <Navigate to="/" replace />;
+  return (
+    <section className="mx-auto max-w-xl space-y-4">
+      <h1 className="text-2xl font-bold">{t('presets.title')}</h1>
+      <p className="rounded-2xl border border-border bg-surface p-4">{t('presets.noneForType')}</p>
+      <div className="flex flex-wrap gap-2">
+        <Link
+          to="/products/new"
+          className="inline-flex min-h-11 items-center rounded-md bg-primary px-4 font-semibold text-primary-fg"
+        >
+          {t('products.add')}
+        </Link>
+        <Link
+          to="/products"
+          className="inline-flex min-h-11 items-center rounded-md border border-border bg-surface px-4 font-medium text-text"
+        >
+          {t('products.title')}
+        </Link>
+      </div>
+      <p className="text-sm text-muted">{t('presets.csvHint')}</p>
+    </section>
+  );
+}
+
+function PresetPicker({
+  presets,
+  fromOnboarding,
+}: {
+  presets: PresetList;
+  fromOnboarding: boolean;
+}) {
+  const { t, i18n } = useTranslation();
+  const navigate = useNavigate();
   const actor = useActingOwnerId();
   const byName = useLiveQuery(productsByName);
   const [query, setQuery] = useState('');
@@ -46,10 +84,10 @@ export function PresetPickerPage() {
   const shown = useMemo(
     () =>
       searchItems(
-        PICKER.map((p) => ({ ...p, name: p.en, name_ur: p.ur, search_terms: p.roman })),
+        presets.map((p) => ({ ...p, name: p.en, name_ur: p.ur, search_terms: p.roman })),
         query,
       ),
-    [query],
+    [presets, query],
   );
   /** Keys "Select all" acts on: what the search shows, minus rows already added. */
   const selectable = useMemo(
@@ -77,7 +115,7 @@ export function PresetPickerPage() {
   async function save() {
     const choices: PresetChoice[] = [];
     const bad = new Set<string>();
-    for (const preset of PICKER) {
+    for (const preset of presets) {
       const rate = picked.get(preset.key);
       if (rate === undefined) continue;
       const parsed = parseRupees(rate, false);

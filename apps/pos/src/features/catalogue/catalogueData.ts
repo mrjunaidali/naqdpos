@@ -1,9 +1,11 @@
 // Live catalogue reads for the screens (Dexie only; the UI never asks the server).
 import {
+  getPresetsForShopType,
   paisaToRupeesString,
   rupeesText,
   type CategoryRow,
   type Paisa,
+  type PresetList,
   type ProductRow,
 } from '@naqdpos/core';
 import { useLiveQuery } from 'dexie-react-hooks';
@@ -19,6 +21,18 @@ export function useShopProducts(): ProductRow[] | undefined {
     if (!device) return [];
     return db.products.where('shop_id').equals(device.shop_id).toArray();
   });
+}
+
+/**
+ * The ready-made list for this shop's type (fruit & veg today), null when the type has none,
+ * undefined while loading. Live from Dexie, so a type change in Settings applies at once.
+ */
+export function useShopPresets(): PresetList | null | undefined {
+  return useLiveQuery(async () => {
+    const device = await getStoredDevice();
+    const shop = device ? await db.shops.get(device.shop_id) : undefined;
+    return { list: shop ? getPresetsForShopType(shop.type) : null };
+  })?.list;
 }
 
 export function useCategories(): CategoryRow[] | undefined {

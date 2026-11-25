@@ -1,4 +1,5 @@
 import {
+  getPresetsForShopType,
   hashPin,
   isValidPin,
   normalizePkMobile,
@@ -81,8 +82,10 @@ export function OnboardingForm({ onDone }: { onDone: () => void }) {
         name: values.deviceName.trim(),
         mode: values.deviceMode,
         ownerPinHash,
-        // Fruit & veg shops pick their products from the built-in list next (US072).
-        ...(values.shopType === 'fruit_veg' && { next: '/products/presets?from=onboarding' }),
+        // Shop types with a ready-made list pick their products from it next (US072).
+        ...(getPresetsForShopType(values.shopType) && {
+          next: '/products/presets?from=onboarding',
+        }),
       });
       onDone();
     } catch (e) {

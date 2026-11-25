@@ -357,7 +357,9 @@
     "save_one": "Add {{count}} product",
     "save_other": "Add {{count}} products",
     "focFree": "Give free with purchases?",
-    "focFreeFor": "Give {{name}} free with purchases"
+    "focFreeFor": "Give {{name}} free with purchases",
+    "noneForType": "No ready-made list for this shop type yet. Add your products one by one.",
+    "csvHint": "Many products? NaqdPOS support can import them from a spreadsheet (CSV) for you."
   },
   "rates": {
     "title": "Today’s rates",

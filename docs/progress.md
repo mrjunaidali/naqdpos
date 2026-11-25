@@ -959,3 +959,17 @@ Wide screens only (≥768px, `useWide()`); the phone layout (cart bar + cart she
 
 **Follow-ups**
 - A barcode button in the toolbar with US022.
+
+## Fix: ready-made product list follows the shop type (25 Nov 2026)
+
+Bug: a `general` shop was offered the fresh fruit & veg import list (Products → "Add from list" and admin act-as-shop "Fresh produce list" showed it for every type).
+
+- **Registry** (`packages/core/src/presets/index.ts`, new): `getPresetsForShopType(type): PresetList | null`. `fruit_veg` → the fresh produce list in picker order; `grocery`, `meat`, `general` (and an unknown type) → null. Exported from core.
+- **Shop app**: `useShopPresets()` (`features/catalogue/catalogueData.ts`) reads the current shop's type live from Dexie (undefined while loading, null when none). Products hides "Add from list" without a list. `PresetPickerPage` takes its list from the hook; with none it shows "No ready-made list for this shop type yet" and links to Add product and Products, plus a hint that support can import a CSV (the shop app has no CSV import; the admin act-as-shop does). Opened as the onboarding step (`?from=onboarding`) with no list, it goes home. Onboarding and register-device set the pick-products `next` step only when the registry has a list.
+- **Admin act-as-shop**: the "Fresh produce list" tab only for types with a list; the route otherwise says so and links to the CSV import and Products tabs. Admin text stays English like the rest of the admin portal.
+- **Docs**: "Lists per shop type" section added to `docs/features/produce-presets.md` (it did not exist yet); bug entry in `docs/bugs.md` under Fixed (it was not in the file).
+- **Strings** (en + ur): `presets.noneForType`, `presets.csvHint`.
+
+**Files**: `packages/core/src/presets/{index,index.test}.ts` (new), `packages/core/src/index.ts`; `apps/pos/src/features/catalogue/{catalogueData.ts,PresetPickerPage.tsx,ProductListPage.tsx,PresetsByShopType.test.tsx (new)}`, `features/onboarding/{OnboardingForm,RegisterDeviceForm}.tsx`, `features/onboarding/Onboarding.test.tsx`, `i18n/{en,ur}.json`; `apps/admin/src/act/{ActLayout,ProducePage}.tsx`, `app/Admin.test.tsx`; docs.
+
+**Tests**: Core 399 (+5: fruit_veg list in picker order; grocery / meat / general none; every type decided; unknown type none). Pos 375 (+8: fruit_veg shows the link and the list; general / grocery / meat hide the link and the route shows the notice with Add product; onboarding step skipped; live type change hides and shows the link; onboarding goes home for meat and general too). Admin 21 (+4: tab hidden and notice with a working CSV import link for general / grocery / meat; tab shown for fruit_veg). API 74. Lint, typecheck, format pass.

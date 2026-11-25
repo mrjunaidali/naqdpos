@@ -11,7 +11,13 @@ import { useTranslation } from 'react-i18next';
 import { Link, useNavigate } from 'react-router';
 import { useActingOwnerId } from '../pin/actingOwner.ts';
 import { useStockByProduct, useStockText } from '../stock/stockData.ts';
-import { rupeesInput, useCategories, usePriceLabel, useShopProducts } from './catalogueData.ts';
+import {
+  rupeesInput,
+  useCategories,
+  usePriceLabel,
+  useShopPresets,
+  useShopProducts,
+} from './catalogueData.ts';
 import { setSalePrice } from './catalogueRepo.ts';
 import { CategoryTabs } from './CategoryTabs.tsx';
 import { ProductIcon } from './ProductIcon.tsx';
@@ -24,6 +30,7 @@ export function ProductListPage() {
   const { t } = useTranslation();
   const products = useShopProducts();
   const categories = useCategories();
+  const presets = useShopPresets();
   const stock = useStockByProduct();
   const [query, setQuery] = useState('');
   const [category, setCategory] = useState<string | null>(null);
@@ -50,9 +57,12 @@ export function ProductListPage() {
         </Link>
       </div>
       <div className="flex flex-wrap gap-2">
-        <Link to="/products/presets" className={actionClass}>
-          {t('presets.open')}
-        </Link>
+        {/* Only shop types with a ready-made list (fruit & veg today). */}
+        {presets && (
+          <Link to="/products/presets" className={actionClass}>
+            {t('presets.open')}
+          </Link>
+        )}
         <Link to="/products/rates" className={actionClass}>
           {t('rates.title')}
         </Link>

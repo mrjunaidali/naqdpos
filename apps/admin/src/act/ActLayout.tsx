@@ -1,4 +1,4 @@
-import type { AdminCatalogue, ShopType } from '@naqdpos/core';
+import { getPresetsForShopType, type AdminCatalogue, type ShopType } from '@naqdpos/core';
 import { useCallback, useEffect, useState } from 'react';
 import { Link, NavLink, Outlet, useParams } from 'react-router';
 import { api } from '../api/index.ts';
@@ -68,22 +68,25 @@ export function ActLayout() {
           </Link>
         </div>
         <nav aria-label="Shop setup" className="flex flex-wrap gap-2">
-          {TABS.map(([path, label]) => (
-            <NavLink
-              key={label}
-              to={path}
-              end
-              className={({ isActive }) =>
-                `inline-flex min-h-11 items-center rounded-md border px-3 ${
-                  isActive
-                    ? 'border-primary bg-primary text-primary-fg'
-                    : 'border-border bg-surface'
-                }`
-              }
-            >
-              {label}
-            </NavLink>
-          ))}
+          {/* The produce list only for shop types that have one (fruit & veg today). */}
+          {TABS.filter(([path]) => path !== 'produce' || getPresetsForShopType(shop.type)).map(
+            ([path, label]) => (
+              <NavLink
+                key={label}
+                to={path}
+                end
+                className={({ isActive }) =>
+                  `inline-flex min-h-11 items-center rounded-md border px-3 ${
+                    isActive
+                      ? 'border-primary bg-primary text-primary-fg'
+                      : 'border-border bg-surface'
+                  }`
+                }
+              >
+                {label}
+              </NavLink>
+            ),
+          )}
         </nav>
         <Outlet />
       </div>

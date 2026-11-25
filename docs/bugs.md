@@ -6,6 +6,10 @@ _Nothing open._
 
 ## Fixed
 
+### 2026-11-25 — Product import list ignores shop type — fixed 2026-11-25
+
+A `general` shop was offered the fresh fruit & veg import list. The list now comes from `getPresetsForShopType` (`packages/core/src/presets/index.ts`): only `fruit_veg` has one; grocery, meat and general skip the onboarding step, have no "Add from list" (shop app) or "Fresh produce list" tab (admin act-as-shop), and the route says there is no list yet.
+
 ### 2026-11-24 — UX improvements (noted 2026-11-24) — fixed 2026-11-25
 
 1. **Fixed header.** The top app header (shop name, user/device chip, sync chip, settings) now stays fixed at the top while the page scrolls; the page pads its top by the header height plus `env(safe-area-inset-top)`.

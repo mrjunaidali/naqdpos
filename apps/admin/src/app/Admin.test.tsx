@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { createMemoryRouter, RouterProvider } from 'react-router';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { getToken, setToken } from '../api/session.ts';
@@ -395,6 +395,33 @@ describe('act as shop (US013)', () => {
     );
     fireEvent.click(await screen.findByRole('button', { name: 'Hide' }));
     await waitFor(() => expect(api.adminHideProduct).toHaveBeenCalledWith(SHOP, MANGO, true));
+  });
+
+  it.each(['general', 'grocery', 'meat'])(
+    '%s shop: no "Fresh produce list" tab; the route says so and links to CSV import',
+    async (type) => {
+      api.adminGetShop.mockResolvedValue({ ...detail, shop: { ...detail.shop, type } });
+      start(`/shops/${SHOP}/act`);
+      await screen.findByRole('link', { name: 'CSV import' });
+      expect(screen.queryByRole('link', { name: 'Fresh produce list' })).toBeNull();
+      cleanup();
+
+      const router = start(`/shops/${SHOP}/act/produce`);
+      expect(
+        await screen.findByText('No ready-made list for this shop type yet.'),
+      ).toBeInTheDocument();
+      expect(screen.queryByRole('checkbox')).toBeNull();
+      const links = within(
+        screen.getByText('No ready-made list for this shop type yet.').parentElement!,
+      );
+      fireEvent.click(links.getByRole('link', { name: 'CSV import' }));
+      await waitFor(() => expect(router.state.location.pathname).toBe(`/shops/${SHOP}/act/import`));
+    },
+  );
+
+  it('fruit_veg shop: the "Fresh produce list" tab is there', async () => {
+    start(`/shops/${SHOP}/act`);
+    expect(await screen.findByRole('link', { name: 'Fresh produce list' })).toBeInTheDocument();
   });
 
   it('fresh produce list: existing names are "Added"; picks import with skip and a rate', async () => {

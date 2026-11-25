@@ -23,6 +23,19 @@ Images: **emoji icon now (US078); owner photos later (US079).** Every preset has
 - Search matches English, Urdu and Roman Urdu spellings (`aloo`, `aalu`, `pyaz`, `tamatar`, `chaunsa`…).
 - Three categories are created on demand with both names: Vegetables / سبزیاں, Greens & herbs / ساگ اور ہرے مصالحے, Fruits / پھل.
 
+## Lists per shop type
+
+Each shop type has its own ready-made list, or none (decided 25 Nov 2026). `getPresetsForShopType(type)` in `packages/core/src/presets/index.ts` is the only way screens get a list:
+
+| Shop type | List |
+| --- | --- |
+| `fruit_veg` | Fresh produce (below) |
+| `grocery` | none yet |
+| `meat` | none yet |
+| `general` | none yet |
+
+Without a list: onboarding skips the pick-products step, "Add from list" (shop app) and the "Fresh produce list" tab (admin act-as-shop) are hidden, and opening the route shows "No ready-made list for this shop type yet". Manual add and CSV import (admin) work for every type. The shop app reads the type live from Dexie, so a type change applies without a reload. A new list = a new module plus one line in the registry (its test lists every type).
+
 ## List
 
 Urdu to be verified by Junaid.

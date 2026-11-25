@@ -408,14 +408,17 @@ describe('after onboarding (US072)', () => {
     expect(screen.getByRole('button', { name: 'Skip for now' })).toBeInTheDocument();
   });
 
-  it('other shop types go straight home', async () => {
-    const router = await onboard('grocery');
-    await waitFor(() => expect(router.state.location.pathname).toBe('/'));
-    await waitFor(() =>
-      expect(
-        screen.getByRole('heading', { name: /^Good (morning|afternoon|evening)$/ }),
-      ).toBeInTheDocument(),
-    );
-    expect(await db.meta.get('after_setup')).toBeUndefined();
-  });
+  it.each(['grocery', 'meat', 'general'])(
+    '%s (no ready-made list) goes straight home',
+    async (type) => {
+      const router = await onboard(type);
+      await waitFor(() => expect(router.state.location.pathname).toBe('/'));
+      await waitFor(() =>
+        expect(
+          screen.getByRole('heading', { name: /^Good (morning|afternoon|evening)$/ }),
+        ).toBeInTheDocument(),
+      );
+      expect(await db.meta.get('after_setup')).toBeUndefined();
+    },
+  );
 });

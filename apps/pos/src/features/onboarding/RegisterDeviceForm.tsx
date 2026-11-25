@@ -1,4 +1,4 @@
-import { hashPin, isValidPin, uuidv7, type ShopRow } from '@naqdpos/core';
+import { getPresetsForShopType, hashPin, isValidPin, uuidv7, type ShopRow } from '@naqdpos/core';
 import { api } from '../../api/index.ts';
 import { useRef, useState, type FormEvent } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -67,7 +67,7 @@ export function RegisterDeviceForm({
         ...(ownerPinHash && { ownerPinHash }),
         // A new fruit & veg shop picks its products from the built-in list next (US072).
         ...(ownerStaffId &&
-          shop.type === 'fruit_veg' && { next: '/products/presets?from=onboarding' }),
+          getPresetsForShopType(shop.type) && { next: '/products/presets?from=onboarding' }),
       });
       onDone();
     } catch (e) {
