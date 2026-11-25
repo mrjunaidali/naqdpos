@@ -5,6 +5,7 @@ import { otherLanguage } from '../i18n/index.ts';
 import { SyncChip } from '../sync/SyncChip.tsx';
 import { UpdateRequiredBanner } from '../sync/UpdateRequiredBanner.tsx';
 import { BrandMark } from '../ui/BrandMark.tsx';
+import { Icon } from '../ui/icons.tsx';
 import { Toaster } from '../ui/Toaster.tsx';
 import { Nav } from '../features/home/Nav.tsx';
 import { SuspendedBanner } from './SuspendedBanner.tsx';
@@ -13,24 +14,6 @@ import { useSessionCheck } from './sessionCheck.ts';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '../db/schema.ts';
 import { getStoredDevice } from '../db/session.ts';
-
-function GearIcon() {
-  return (
-    <svg
-      aria-hidden="true"
-      viewBox="0 0 24 24"
-      className="size-6"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.75"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <circle cx="12" cy="12" r="3" />
-      <path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z" />
-    </svg>
-  );
-}
 
 export function RootLayout() {
   const { t, i18n } = useTranslation();
@@ -44,41 +27,44 @@ export function RootLayout() {
   });
 
   return (
-    <div className="flex min-h-dvh flex-col">
-      <header className="flex items-center gap-2 border-b border-border bg-surface px-4 py-2">
-        <Link
-          to="/"
-          aria-label={t('nav.home')}
-          className="flex min-h-11 min-w-0 flex-1 items-center gap-2 rounded-md text-text"
-        >
-          <BrandMark logoPath={shop?.logoPath ?? null} />
-          <span className="min-w-0 truncate text-lg font-semibold">
-            {shop?.name ?? t('app.name')}
-          </span>
-        </Link>
-        {ready ? (
-          <>
-            <StaffChip />
-            {/* Home shows it in the hero card. */}
-            {pathname !== '/' && <SyncChip />}
-            <Link
-              to="/settings"
-              aria-label={t('settings.title')}
-              className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-md text-text"
-            >
-              <GearIcon />
-            </Link>
-          </>
-        ) : (
-          <button
-            type="button"
-            className="min-h-11 min-w-11 rounded-md px-3 text-text"
-            aria-label={t('language.switchLabel')}
-            onClick={() => void i18n.changeLanguage(otherLanguage(i18n.language))}
+    <div className="flex min-h-dvh flex-col pt-header">
+      {/* Fixed so it stays while the page scrolls; its surface runs up behind the status bar. */}
+      <header className="fixed inset-x-0 top-0 z-20 border-b border-border bg-surface pt-[env(safe-area-inset-top)]">
+        <div className="flex h-[calc(var(--header-h)-1px)] items-center gap-2 px-4">
+          <Link
+            to="/"
+            aria-label={t('nav.home')}
+            className="flex min-h-11 min-w-0 flex-1 items-center gap-2 rounded-md text-text"
           >
-            {t('language.other')}
-          </button>
-        )}
+            <BrandMark logoPath={shop?.logoPath ?? null} />
+            <span className="min-w-0 truncate text-lg font-semibold">
+              {shop?.name ?? t('app.name')}
+            </span>
+          </Link>
+          {ready ? (
+            <>
+              <StaffChip />
+              {/* Home shows it in the hero card. */}
+              {pathname !== '/' && <SyncChip />}
+              <Link
+                to="/settings"
+                aria-label={t('settings.title')}
+                className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-md text-text"
+              >
+                <Icon name="settings" />
+              </Link>
+            </>
+          ) : (
+            <button
+              type="button"
+              className="min-h-11 min-w-11 rounded-md px-3 text-text"
+              aria-label={t('language.switchLabel')}
+              onClick={() => void i18n.changeLanguage(otherLanguage(i18n.language))}
+            >
+              {t('language.other')}
+            </button>
+          )}
+        </div>
       </header>
       {ready && <SuspendedBanner />}
       {ready && <UpdateRequiredBanner />}

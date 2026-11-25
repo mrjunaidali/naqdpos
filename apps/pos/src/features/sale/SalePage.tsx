@@ -175,7 +175,7 @@ export function SalePage() {
         </div>
         {/* From 768px the cart sits beside the grid (the cart bar is hidden there). */}
         {wide && lines.length > 0 && (
-          <aside className="sticky top-4 w-80 shrink-0 space-y-2">
+          <aside className="sticky top-[calc(var(--top-inset)+1rem)] w-80 shrink-0 space-y-2">
             <CartSheet
               inline
               onClose={() => undefined}

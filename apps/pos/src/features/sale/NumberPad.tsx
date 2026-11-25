@@ -7,12 +7,14 @@ interface Props {
   decimals: number;
   /** Longest text (keeps typos from growing forever). */
   maxLength?: number;
+  /** 44px keys instead of 48px (screens that must fit on one phone screen, e.g. pay). */
+  compact?: boolean;
 }
 
 const KEYS = ['1', '2', '3', '4', '5', '6', '7', '8', '9'] as const;
 
 /** On-screen number keypad (44px+ keys), always left-to-right, also in Urdu. */
-export function NumberPad({ value, onChange, decimals, maxLength = 9 }: Props) {
+export function NumberPad({ value, onChange, decimals, maxLength = 9, compact = false }: Props) {
   const { t } = useTranslation();
   const press = (key: string) => {
     if (value.length >= maxLength) return;
@@ -25,10 +27,9 @@ export function NumberPad({ value, onChange, decimals, maxLength = 9 }: Props) {
     if (frac !== undefined && frac.length >= decimals) return;
     onChange(value === '0' ? key : value + key);
   };
-  const keyClass =
-    'min-h-12 rounded-xl border border-border bg-surface text-xl font-semibold text-text disabled:opacity-40';
+  const keyClass = `${compact ? 'min-h-11' : 'min-h-12'} rounded-xl border border-border bg-surface text-xl font-semibold text-text disabled:opacity-40`;
   return (
-    <div className="grid grid-cols-3 gap-2" dir="ltr">
+    <div className={`grid grid-cols-3 ${compact ? 'gap-1.5' : 'gap-2'}`} dir="ltr">
       {KEYS.map((k) => (
         <button key={k} type="button" className={keyClass} onClick={() => press(k)}>
           {k}

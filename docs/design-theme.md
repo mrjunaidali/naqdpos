@@ -24,7 +24,10 @@ Decided: 19–20 Nov 2026 (Junaid). Professional, pleasant, corporate look in **
 - Two small stat cards: khata owed, low stock (owner only).
 - Row of four action tiles: Product, Customer, Purchase, Expense (tiles hidden when the role can't use them).
 - "Recent" card: last few sales and khata entries, "See all".
-- **Floating nav bar** (near-black, rounded) with Home, Sales, white **Sale** pill in the centre, Products (owner) or Khata (cashier), More (a sheet with Khata, Stock, Expenses, Close day, Staff, Sync, Settings as the role allows). **From 768px** a left side nav with every item instead; the sale screen then shows the cart beside the product grid. No nav in the sale flow (sale, pay, done). "Purchase" is the **Stock in** tile until purchases exist (R2; Wastage for cashiers); "Low stock" = tracked products with stock ≤ 0 until minimum quantities (R2). "Today" on Home is the current business date (after a close, "Sales for <date>").
+- **Docked nav bar** (near-black, rounded top corners) with an outline icon above each label (`ui/icons.tsx`, decided 25 Nov 2026): Home, Sales, a raised white **Sale** button in the centre, Products (owner) or Khata (cashier), More (a sheet with Khata, Stock, Expenses, Close day, Staff, Sync, Settings as the role allows). **From 768px** a left side nav with every item instead; the sale screen then shows the cart beside the product grid. No nav in the sale flow (sale, pay, done). "Purchase" is the **Stock in** tile until purchases exist (R2; Wastage for cashiers); "Low stock" = tracked products with stock ≤ 0 until minimum quantities (R2). "Today" on Home is the current business date (after a close, "Sales for <date>").
+
+### Header (all screens)
+- Fixed at the top while the page scrolls (25 Nov 2026), padded by the safe area at the top.
 
 ### Sale (new sale)
 - Header: back, "New sale", cashier name + device code (e.g. `Ali · A1`), **Customer** chip (attach khata customer).
@@ -34,6 +37,9 @@ Decided: 19–20 Nov 2026 (Junaid). Professional, pleasant, corporate look in **
 - **Quantity panel** for the selected product: quick buttons (250 g, 500 g, 1 kg, 1.5 kg for kg items; 1, 2, 6, 12 for dozen/piece), or type kg or an amount in Rs (Rs → qty calculated in `packages/core`).
 - **Cart bar** fixed at the bottom (near-black): item count, total, white **Charge** button → payment screen (cash / wallet / khata, change due).
 - Selling works fully offline (rule 1); no network spinners in this flow.
+
+### Pay (tender)
+- One phone screen, no scrolling (375×667 first, 25 Nov 2026): dark card with To pay, Cash received and Change (or Remaining); method chips; note buttons Rs 5000 … Rs 1 that add up with a "×n" badge, Exact, Clear; a keypad button for typing; Complete sale. Only the split-payment list scrolls. Two columns from 768px.
 
 ## Implementation (must support branding later — see below)
 - **All colours are CSS variables** (e.g. `--color-bg`, `--color-surface`, `--color-border`, `--color-text`, `--color-muted`, `--color-primary`, `--color-primary-fg`, `--color-hero`, `--color-success`, `--color-warning`, `--color-danger`). Tailwind's theme maps its colour names to these variables (`primary: 'rgb(var(--color-primary) / <alpha-value>)'`).

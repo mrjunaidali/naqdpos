@@ -318,6 +318,43 @@ describe('navigation', () => {
     expect(screen.queryByRole('navigation', { name: 'Menu' })).toBeNull();
   });
 
+  it('phones: an icon above every bar label, the same outline style for all', async () => {
+    await seedShop();
+    renderAt('/');
+    const bar = await screen.findByRole('navigation', { name: 'Main' });
+    const items = [...within(bar).getAllByRole('link'), within(bar).getByRole('button')];
+    expect(items.map((el) => el.textContent)).toEqual([
+      'Home',
+      'Sales',
+      'Sale',
+      'Products',
+      'More',
+    ]);
+    for (const el of items) {
+      const svg = el.querySelector('svg')!;
+      expect(el.firstElementChild).toBe(svg); // above the label (column layout)
+      expect(el).toHaveClass('flex-col');
+      expect(svg).toHaveAttribute('aria-hidden', 'true');
+      expect(svg).toHaveAttribute('stroke-width', '1.75');
+    }
+    expect(items.map((el) => el.querySelector('svg')!.dataset.icon)).toEqual([
+      'home',
+      'sales',
+      'sale',
+      'products',
+      'more',
+    ]);
+  });
+
+  it('the header stays fixed at the top and the page pads below it', async () => {
+    await seedShop();
+    renderAt('/');
+    await screen.findByRole('navigation', { name: 'Main' });
+    const header = screen.getByRole('banner');
+    expect(header).toHaveClass('fixed', 'top-0');
+    expect(header.parentElement).toHaveClass('pt-header');
+  });
+
   it('phones: the docked bar reserves its height for the page, and frees it in the sale flow', async () => {
     await seedShop();
     const navHeight = () => document.documentElement.style.getPropertyValue('--nav-h');

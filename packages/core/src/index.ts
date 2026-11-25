@@ -29,4 +29,5 @@ export * from './sync/schemas.ts';
 export * from './sync/tables.ts';
 export * from './syncHealth.ts';
 export * from './tenancy.ts';
+export * from './tender.ts';
 export * from './uuid5.ts';

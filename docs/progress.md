@@ -917,3 +917,23 @@ Found on a real iPhone (installed PWA).
 
 **Follow-ups**
 - Re-check on the iPhone (safe area can't be tested in jsdom): nav flush with the bottom edge, picker and rates bars sitting on the nav, cart bar above the home indicator.
+
+## UX: fixed header, one-screen tender with note buttons, nav icons (25 Nov 2026)
+
+The four open items in `docs/bugs.md` (noted 24 Nov), now under "Fixed".
+
+- **Fixed header** (`app/RootLayout.tsx`, `index.css`): the header is `fixed` at the top with `padding-top: env(safe-area-inset-top)`, so its surface runs up behind the iPhone status bar. `--header-h` (3.5rem) and `--top-inset` (= header + safe-area top) on `:root`; utilities `pt-header` (the layout's top padding) and `top-header` (sticky things stick under it). The side nav from 768px is now sticky below the header with its own scroll; the sale screen's cart aside sticks below the header. Header z-20, so sheets (z-30) still cover it.
+- **Tender logic** (`packages/core/src/tender.ts`, new): `TENDER_NOTES` (Rs 5000 … Rs 1, from `DENOMINATIONS`), `Tender = { paisa, notes }`, `addNote` (adds, counts the note, ignores taps past `MAX_TENDER_PAISA`), `exactTender(due)`, `typedTender(paisa)` (drops note counts), `tenderSummary` → `change_paisa` / `short_paisa`. Amounts in paisa; the tendered amount is still never stored.
+- **Pay screen** (`features/sale/PayPage.tsx`): one screen at 375×667. Top: back (icon), title, Discount button ("Discount −Rs 5" once set). Dark card: To pay (+ rounding, Remaining after part payments), Cash received / Amount, Change or Remaining. Method chips in one row (scroll sideways if many). The middle (error, customer, split payments + khata part, item discounts / FOC, locked note) is the only part that scrolls. Bottom: cash → note buttons 4×3 (10 notes/coins, Exact, Clear) with a "×n" badge; the keypad button on the tendered amount swaps in the keypad (Exact / Clear above it); wallets / bank / khata → reference field (wallets) and keypad. Then Add payment / Complete sale. Height = `100dvh − top inset − bottom inset − main padding` (min 30rem). From 768px two columns (figures + methods + list | pad + confirm). `NumberPad` gets a `compact` option (44px keys). The bottom "Back to cart" button is now the back icon in the top row (same label).
+- **Nav icons** (`ui/icons.tsx`, new; `features/home/Nav.tsx`): inline outline SVGs (24px box, stroke 1.75, `currentColor`; no icon library), one per nav key. The docked bar shows the icon above each label; the Sale button is raised above the bar (white, rounded, bar-coloured ring). Side nav and More sheet show the same icons beside the labels. The header gear uses the same set.
+- **Strings** (en + ur): `pay.changeLabel`, `pay.left`, `pay.addNote`, `pay.clear`, `pay.typeAmount`; `pay.change` ("Change: Rs …") removed.
+
+**Files**: `packages/core/src/{tender,tender.test,index}.ts`; `apps/pos/src/index.css`, `app/RootLayout.tsx`, `ui/icons.tsx` (new), `features/home/Nav.tsx`, `features/sale/{PayPage,NumberPad,SalePage}.tsx`, `i18n/{en,ur}.json`; tests `features/sale/{Pay,Discount}.test.tsx`, `features/khata/Khata.test.tsx`, `features/home/Home.test.tsx`; `docs/bugs.md`, `docs/design-theme.md`.
+
+**Tests**: Core 394 (+6: notes largest first; taps add and count; change vs short; Exact and a tap after it; Clear / typed drop counts; max and bad notes). Pos 358 (+5: note buttons add up with "×2", Remaining until covered, all denominations shown, Clear; keypad swap keeps the amount and drops badges; only the split list is in the scrolling part; nav icon above every bar label in one style; fixed header). Existing pay tests now tap note buttons instead of keypad digits for cash. API 74, Admin 17. Lint, typecheck, format pass.
+
+**Checked** in Chromium (Playwright, dev server, unit-test fixtures seeded in the browser): pay screen at 375×667 (cash, keypad, wallet, three split payments), 360×640 Urdu/RTL, 768×1024 and 1280×800: no page scroll in any case. Home at 360 (scrolled: header stays), 360 Urdu, 768, 1280.
+
+**Follow-ups**
+- Check on a real iPhone as an installed PWA (safe areas can't be tested in jsdom or desktop Chromium): header under the status bar, raised Sale button, pay screen with the home indicator.
+- In Safari with its toolbars (not installed), the iPhone SE viewport is ~550px, below the pay screen's 30rem minimum + header, so the page scrolls a little there; the installed app fits.

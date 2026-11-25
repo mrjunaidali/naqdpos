@@ -241,20 +241,21 @@ describe('pay screen and receipt', () => {
     await seedShop('owner');
     line(await product('Tomato'), 1300);
     renderAt('/sale/pay');
-    expect(await screen.findByText('Rs 215')).toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button', { name: 'Discount' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Discount' }));
     const sheet = await screen.findByRole('dialog', { name: 'Bill discount' });
     fireEvent.click(within(sheet).getByRole('button', { name: '5' }));
     fireEvent.click(within(sheet).getByRole('button', { name: 'Apply discount' }));
     // 21450 − 500 = 20950 → Rs 210
-    expect(await screen.findByText('Rs 210')).toBeInTheDocument();
+    const discount = { name: 'Discount −Rs 5' };
+    await screen.findByRole('button', discount);
+    expect(document.querySelector('[data-figure="total"] dd')).toHaveTextContent('Rs 210');
 
     // A part payment in cash (Rs 100 of Rs 210).
-    for (const d of '100') fireEvent.click(screen.getByRole('button', { name: d }));
+    fireEvent.click(screen.getByRole('button', { name: 'Add Rs 100' }));
     fireEvent.click(screen.getByRole('button', { name: 'Add payment' }));
-    expect(await screen.findByRole('button', { name: 'Change' })).toBeDisabled();
+    expect(await screen.findByRole('button', discount)).toBeDisabled();
     fireEvent.click(screen.getByRole('button', { name: 'Remove this payment' }));
-    expect(screen.getByRole('button', { name: 'Change' })).toBeEnabled();
+    expect(screen.getByRole('button', discount)).toBeEnabled();
   });
 
   it('the success screen shows item discounts, free items, the bill discount and approver', async () => {

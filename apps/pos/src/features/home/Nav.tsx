@@ -4,14 +4,15 @@ import { NavLink, useLocation } from 'react-router';
 import { useCurrentStaff } from '../../staff/currentStaff.ts';
 import { Sheet } from '../../ui/Sheet.tsx';
 import { useWide } from '../../app/useWide.ts';
+import { NavIcon } from '../../ui/icons.tsx';
 import { barItems, moreItems, navHidden, type NavItem } from './navItems.ts';
 
 const barLink = ({ isActive }: { isActive: boolean }) =>
-  `flex min-h-12 min-w-12 flex-col items-center justify-center rounded-xl px-2 text-xs font-medium ${
+  `flex min-h-12 min-w-14 flex-1 flex-col items-center justify-center gap-0.5 rounded-xl px-1 text-xs font-medium ${
     isActive ? 'text-hero-fg' : 'text-hero-muted'
   }`;
 const sideLink = ({ isActive }: { isActive: boolean }) =>
-  `flex min-h-11 items-center rounded-md px-3 font-medium ${
+  `flex min-h-11 items-center gap-3 rounded-md px-3 font-medium ${
     isActive ? 'bg-primary text-primary-fg' : 'text-text hover:bg-bg'
   }`;
 
@@ -54,21 +55,25 @@ export function Nav() {
           aria-label={t('nav.main')}
           className="fixed inset-x-0 bottom-0 z-20 rounded-t-xl bg-hero pb-[env(safe-area-inset-bottom)] text-hero-fg shadow-lg"
         >
-          <div className="mx-auto flex h-14 max-w-md items-center justify-between px-2">
+          <div className="mx-auto flex h-14 max-w-md items-center justify-between gap-1 px-2">
             {left.map((item) => (
               <NavLink key={item.key} to={item.to} end className={barLink}>
+                <NavIcon name={item.key} />
                 {label(item)}
               </NavLink>
             ))}
+            {/* Raised above the bar: the one action that matters most. */}
             <NavLink
               to="/sale"
               aria-label={t('home.newSale')}
-              className="flex min-h-12 items-center rounded-full bg-surface px-5 text-base font-bold text-text"
+              className="-mt-6 flex min-h-16 min-w-16 shrink-0 flex-col items-center justify-center gap-0.5 rounded-2xl border-4 border-hero bg-surface px-3 text-xs font-bold text-text shadow-lg"
             >
+              <NavIcon name="sale" />
               {t('nav.sale')}
             </NavLink>
             {right.map((item) => (
               <NavLink key={item.key} to={item.to} className={barLink}>
+                <NavIcon name={item.key} />
                 {label(item)}
               </NavLink>
             ))}
@@ -77,6 +82,7 @@ export function Nav() {
               className={barLink({ isActive: more })}
               onClick={() => setMore(true)}
             >
+              <NavIcon name="more" />
               {t('nav.more')}
             </button>
           </div>
@@ -86,16 +92,18 @@ export function Nav() {
       {wide && (
         <nav
           aria-label={t('nav.side')}
-          className="w-56 shrink-0 space-y-1 border-e border-border bg-surface p-3"
+          className="sticky top-header h-[calc(100dvh-var(--top-inset))] w-56 shrink-0 space-y-1 overflow-y-auto border-e border-border bg-surface p-3"
         >
           <NavLink
             to="/sale"
             className="mb-2 flex min-h-12 items-center justify-center rounded-xl bg-primary font-bold text-primary-fg"
           >
+            <NavIcon name="sale" className="me-2 size-5" />
             {t('home.newSale')}
           </NavLink>
           {sideItems.map((item) => (
             <NavLink key={item.key} to={item.to} end={item.to === '/'} className={sideLink}>
+              <NavIcon name={item.key} className="size-5" />
               {label(item)}
             </NavLink>
           ))}
@@ -110,8 +118,9 @@ export function Nav() {
                 <NavLink
                   to={item.to}
                   onClick={() => setMore(false)}
-                  className="flex min-h-12 items-center justify-center rounded-xl border border-border bg-surface font-medium text-text"
+                  className="flex min-h-12 items-center justify-center gap-2 rounded-xl border border-border bg-surface font-medium text-text"
                 >
+                  <NavIcon name={item.key} className="size-5" />
                   {label(item)}
                 </NavLink>
               </li>

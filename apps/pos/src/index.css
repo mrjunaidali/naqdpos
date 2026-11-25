@@ -102,6 +102,21 @@
   --bottom-inset: calc(var(--nav-h) + env(safe-area-inset-bottom, 0px));
 }
 
+/*
+ * Fixed header (all screens): its bar height plus the iPhone status-bar area. The page pads its top
+ * by --top-inset so nothing starts under the header; sticky things stick just below it.
+ */
+:root {
+  --header-h: 3.5rem;
+  --top-inset: calc(var(--header-h) + env(safe-area-inset-top, 0px));
+}
+@utility pt-header {
+  padding-top: var(--top-inset);
+}
+@utility top-header {
+  top: var(--top-inset);
+}
+
 /* The main scroll area: nothing ends up under the nav. */
 @utility pb-nav {
   padding-bottom: calc(var(--bottom-inset) + 1rem);

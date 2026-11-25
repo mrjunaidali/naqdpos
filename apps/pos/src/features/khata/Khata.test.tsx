@@ -176,8 +176,7 @@ describe('sale on khata (US039)', () => {
     await putTomatoes();
     useCartStore.getState().setCustomer(c.id);
     renderAt('/sale/pay');
-    await screen.findByRole('button', { name: 'Exact' });
-    pad('100');
+    fireEvent.click(await screen.findByRole('button', { name: 'Add Rs 100' }));
     fireEvent.click(screen.getByRole('button', { name: 'Add payment' }));
     // Khata for Rs 50 of the Rs 115 left (the keypad starts with what is due).
     fireEvent.click(await screen.findByRole('button', { name: 'Khata / Udhaar' }));
@@ -222,8 +221,7 @@ describe('sale on khata (US039)', () => {
     await putTomatoes();
     useCartStore.getState().setCustomer(c.id);
     const { router } = renderAt('/sale/pay');
-    await screen.findByRole('button', { name: 'Exact' });
-    pad('100');
+    fireEvent.click(await screen.findByRole('button', { name: 'Add Rs 100' }));
     fireEvent.click(screen.getByRole('button', { name: 'Add payment' }));
     fireEvent.click(await screen.findByRole('button', { name: 'Khata / Udhaar' }));
     fireEvent.click(screen.getByRole('button', { name: 'Complete sale' }));

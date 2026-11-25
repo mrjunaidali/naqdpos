@@ -169,6 +169,11 @@ describe('completeSale: one transaction', () => {
 });
 
 const panel = () => screen.getByRole('dialog');
+/** A figure on the pay screen's dark card: its label and amount. */
+const figure = (name: 'total' | 'tendered' | 'change') => {
+  const box = document.querySelector(`[data-figure="${name}"]`)!;
+  return [box.querySelector('dt')!.textContent, box.querySelector('dd')!.textContent];
+};
 const pressAmount = (keys: string) => {
   for (const k of keys)
     fireEvent.click(screen.getByRole('button', { name: k === '.' ? 'Decimal point' : k }));
@@ -179,10 +184,11 @@ describe('pay screen (US034, US035)', () => {
     await seedShop();
     putTomatoes();
     const { router } = renderAt('/sale/pay');
-    expect(await screen.findByText('Rs 215')).toBeInTheDocument();
-    expect(screen.getByText('Bill Rs 214.50, rounded +Rs 0.50')).toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button', { name: 'Rs 500' }));
-    expect(screen.getByText('Change: Rs 285')).toBeInTheDocument();
+    expect(await screen.findByText('Bill Rs 214.50, rounded +Rs 0.50')).toBeInTheDocument();
+    expect(figure('total')).toEqual(['To pay', 'Rs 215']);
+    fireEvent.click(screen.getByRole('button', { name: 'Add Rs 500' }));
+    expect(figure('tendered')).toEqual(['Cash received', 'Rs 500']);
+    expect(figure('change')).toEqual(['Change', 'Rs 285']);
     fireEvent.click(screen.getByRole('button', { name: 'Complete sale' }));
 
     await waitFor(() => expect(router.state.location.pathname).toMatch(/^\/sale\/done\//));
@@ -200,8 +206,72 @@ describe('pay screen (US034, US035)', () => {
     putTomatoes();
     renderAt('/sale/pay');
     fireEvent.click(await screen.findByRole('button', { name: 'Exact' }));
-    expect(screen.getByText('Change: Rs 0')).toBeInTheDocument();
+    expect(figure('tendered')).toEqual(['Cash received', 'Rs 215']);
+    expect(figure('change')).toEqual(['Change', 'Rs 0']);
     expect(screen.getByRole('button', { name: 'Complete sale' })).toBeInTheDocument();
+  });
+
+  it('note buttons add up with a count badge; remaining until covered; Clear starts again', async () => {
+    await seedShop();
+    putTomatoes(); // Rs 215
+    renderAt('/sale/pay');
+    const hundred = await screen.findByRole('button', { name: 'Add Rs 100' });
+    expect(figure('change')).toEqual(['Remaining', 'Rs 215']);
+    expect(screen.getByRole('button', { name: 'Clear' })).toBeDisabled();
+    fireEvent.click(hundred);
+    fireEvent.click(hundred);
+    expect(within(hundred).getByText('×2')).toBeInTheDocument();
+    expect(figure('tendered')).toEqual(['Cash received', 'Rs 200']);
+    expect(figure('change')).toEqual(['Remaining', 'Rs 15']);
+    expect(screen.getByRole('button', { name: 'Add payment' })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Add Rs 50' }));
+    expect(figure('change')).toEqual(['Change', 'Rs 35']);
+    expect(screen.getByRole('button', { name: 'Complete sale' })).toBeInTheDocument();
+    for (const amount of ['5,000', '1,000', '20', '10', '5', '2', '1'])
+      expect(screen.getByRole('button', { name: `Add Rs ${amount}` })).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Clear' }));
+    expect(figure('tendered')).toEqual(['Cash received', 'Rs 0']);
+    expect(within(hundred).queryByText(/×/)).toBeNull();
+    expect(screen.getByRole('button', { name: 'Add payment' })).toBeDisabled();
+  });
+
+  it('typing stays available: the keypad replaces the notes and drops their badges', async () => {
+    await seedShop();
+    putTomatoes();
+    renderAt('/sale/pay');
+    fireEvent.click(await screen.findByRole('button', { name: 'Add Rs 500' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Type amount' }));
+    expect(screen.queryByRole('button', { name: 'Add Rs 500' })).toBeNull();
+    // The keypad starts from what the notes added up to.
+    fireEvent.click(screen.getByRole('button', { name: 'Delete last digit' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Delete last digit' }));
+    pressAmount('20'); // 520
+    expect(figure('change')).toEqual(['Change', 'Rs 305']);
+    fireEvent.click(screen.getByRole('button', { name: 'Type amount' }));
+    expect(within(screen.getByRole('button', { name: 'Add Rs 500' })).queryByText(/×/)).toBeNull();
+    expect(figure('tendered')).toEqual(['Cash received', 'Rs 520']);
+  });
+
+  it('one screen: only the split list scrolls, never the totals, notes or Confirm', async () => {
+    await seedShop();
+    putTomatoes();
+    renderAt('/sale/pay');
+    fireEvent.click(await screen.findByRole('button', { name: 'Add Rs 100' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Add payment' }));
+    const list = (await screen.findByRole('button', { name: 'Remove this payment' })).closest(
+      'ul',
+    )!;
+    const scroller = document.querySelector('[data-scroll="pay-middle"]')!;
+    expect(scroller).toHaveClass('overflow-y-auto');
+    expect(scroller.contains(list)).toBe(true);
+    for (const el of [
+      document.querySelector('[data-figure="total"]')!,
+      document.querySelector('[data-figure="change"]')!,
+      screen.getByRole('button', { name: 'Add Rs 100' }),
+      screen.getByRole('button', { name: 'Add payment' }),
+    ])
+      expect(scroller.contains(el)).toBe(false);
   });
 
   it('split: JazzCash with a reference, then cash for the rest', async () => {
