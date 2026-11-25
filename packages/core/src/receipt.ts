@@ -2,7 +2,7 @@
 // browser print) and a canvas image (Bluetooth ESC/POS). Pure. Labels come from the caller in the
 // shop's receipt language (not the app's), so the same receipt prints the same on every device.
 import { qtyLabel } from './cart.ts';
-import type { ProductUnit } from './catalogue.ts';
+import { isProductUnit, type UnitCode } from './catalogue.ts';
 import { priceForQty } from './qty.ts';
 import { rupeesText } from './khata.ts';
 import type { PaymentRow, SaleLineRow, SaleRow } from './sale.ts';
@@ -84,9 +84,9 @@ export function receiptFor(input: ReceiptInput): ReceiptDoc {
   const M = input.labels[one];
   const rs = (paisa: number) => M('receipt.rs', { amount: rupeesText(paisa) });
   const minus = (paisa: number) => `−${rs(paisa)}`;
-  const qty = (milli: number, unit: ProductUnit) => {
+  const qty = (milli: number, unit: UnitCode) => {
     const label = qtyLabel(milli, unit);
-    return `${label.amount} ${M(`unit.${label.unit}`)}`;
+    return `${label.amount} ${isProductUnit(label.unit) ? M(`unit.${label.unit}`) : label.unit}`;
   };
   const method = (code: string) =>
     lang === 'both'

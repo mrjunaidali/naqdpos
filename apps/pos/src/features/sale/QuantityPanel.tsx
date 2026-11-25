@@ -3,7 +3,7 @@ import {
   makeLine,
   parseQtyInput,
   parseRupees,
-  UNIT_RULES,
+  unitRule,
   type CartLine,
   type LineSource,
 } from '@naqdpos/core';
@@ -19,7 +19,7 @@ import { useOwnerHere } from '../pin/useOwnerHere.ts';
 import { useCartStore } from './cartStore.ts';
 import { NumberPad } from './NumberPad.tsx';
 import { OwnerPinDialog } from './OwnerPinDialog.tsx';
-import { qtyToKeypad, useQtyText, useRs } from './saleFormat.ts';
+import { qtyToKeypad, unitName, useQtyText, useRs } from './saleFormat.ts';
 
 interface Props {
   source: LineSource & { product_id: string };
@@ -50,7 +50,7 @@ export function QuantityPanel({ source, existing, onClose }: Props) {
   const put = useCartStore((s) => s.put);
   const remove = useCartStore((s) => s.remove);
   const ownerHere = useOwnerHere();
-  const rules = UNIT_RULES[source.unit];
+  const rules = unitRule(source.unit);
 
   const [rate, setRate] = useState(existing?.unit_price_paisa ?? source.unit_price_paisa);
   const [step, setStep] = useState<'rate' | 'qty'>(rate === 0 ? 'rate' : 'qty');
@@ -71,7 +71,7 @@ export function QuantityPanel({ source, existing, onClose }: Props) {
 
   const lineSource = { ...source, unit_price_paisa: rate };
   const name = i18n.language === 'ur' ? source.name_ur || source.name : source.name;
-  const unit = t(`unit.${source.unit}`);
+  const unit = unitName(t, source.unit);
 
   /** Saves the line; an edit keeps its discount and Free flag, "Add free" makes it FOC. */
   function commit(line: LineResult, free?: boolean) {
@@ -209,11 +209,7 @@ export function QuantityPanel({ source, existing, onClose }: Props) {
           <p
             className="min-h-12 rounded-xl border border-border px-4 py-2 text-end text-2xl"
             dir="ltr"
-            aria-label={
-              mode === 'amount'
-                ? t('sale.amountLabel')
-                : t('sale.qtyLabel', { unit: source.unit === 'g' ? t('unit.g') : unit })
-            }
+            aria-label={mode === 'amount' ? t('sale.amountLabel') : t('sale.qtyLabel', { unit })}
             aria-live="polite"
           >
             {mode === 'amount' ? t('sale.rs', { amount: text || '0' }) : text || '0'}

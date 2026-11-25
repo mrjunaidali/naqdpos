@@ -1,4 +1,4 @@
-import { makeLine, type CartLine, type ProductRow } from '@naqdpos/core';
+import { makeLine, type CartLine, type ProductRow, type ProductUnit } from '@naqdpos/core';
 import { fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { api } from '../../api/index.ts';
@@ -19,7 +19,7 @@ vi.mock('../../sync/index.ts', () => ({ syncEngine: sync }));
 const CASHIER = '019a9b8e-0000-7000-8000-0000000000c2';
 const CASH = [{ method_code: 'cash', amount_paisa: 0, reference: null }];
 
-async function product(name: string, trackStock: boolean, unit: ProductRow['unit'] = 'kg') {
+async function product(name: string, trackStock: boolean, unit: ProductUnit = 'kg') {
   const id = await saveProduct(
     null,
     {

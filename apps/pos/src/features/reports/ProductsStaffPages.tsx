@@ -4,7 +4,6 @@ import {
   rangePreset,
   staffCsv,
   type ProductReportResponse,
-  type ProductUnit,
   type StaffReportResponse,
 } from '@naqdpos/core';
 import { useState } from 'react';
@@ -47,7 +46,7 @@ function ProductsReport({ today }: { today: string }) {
       key: 'qty',
       label: t('reports.col.qty'),
       value: (r) => r.qty_milli,
-      render: (r) => qty(r.qty_milli, r.unit as ProductUnit),
+      render: (r) => qty(r.qty_milli, r.unit),
       numeric: true,
     },
     {

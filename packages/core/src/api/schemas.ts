@@ -5,7 +5,6 @@ import {
   isProductIcon,
   MAX_SEARCH_TERM_LENGTH,
   MAX_SEARCH_TERMS,
-  PRODUCT_UNITS,
   type CategoryRow,
   type PriceHistoryRow,
   type ProductCostHistoryRow,
@@ -304,13 +303,20 @@ export const CategoryRowSchema = z.object({
   server_seq: z.number().int().nullable(),
 }) satisfies z.ZodType<CategoryRow>;
 
+/**
+ * A unit in a synced row: any short code, so a device on an older app still stores products and
+ * sale lines with a unit added later (architecture §4) and shows the code as it is. Writes are
+ * checked against PRODUCT_UNITS (forms, CSV, admin) and by the database's own check.
+ */
+const unitCode = z.string().min(1).max(16);
+
 export const ProductRowSchema = z.object({
   id: z.uuid(),
   shop_id: z.uuid(),
   category_id: z.uuid().nullable(),
   name: z.string().min(1).max(100),
   name_ur: z.string().max(100).nullable(),
-  unit: z.enum(PRODUCT_UNITS),
+  unit: unitCode,
   sale_price_paisa: paisa,
   barcode: z.string().max(64).nullable(),
   track_stock: z.boolean(),
@@ -500,7 +506,7 @@ export const SaleLineRowSchema = z.object({
   product_id: z.uuid().nullable(),
   name_snapshot: z.string().min(1).max(100),
   name_ur_snapshot: z.string().max(100).nullable(),
-  unit_snapshot: z.enum(PRODUCT_UNITS),
+  unit_snapshot: unitCode,
   qty_milli: z.number().int().positive(),
   unit_price_paisa: paisa,
   discount_paisa: paisa,

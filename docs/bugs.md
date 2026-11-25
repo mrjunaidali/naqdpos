@@ -6,6 +6,10 @@ _Nothing open._
 
 ## Fixed
 
+### 2026-11-25 — Change request: add `ml` as a product unit — done 2026-11-25
+
+Products can be sold per millilitre (whole ml like g, price per ml: Rs 50/ml × 6 ml = Rs 300). Migration `20261125090000_ml_unit.sql`; product form, sale screen, receipts, CSV import and admin accept it; a device that doesn't know a unit shows its code instead of dropping or crashing.
+
 ### 2026-11-25 — Product import list ignores shop type — fixed 2026-11-25
 
 A `general` shop was offered the fresh fruit & veg import list. The list now comes from `getPresetsForShopType` (`packages/core/src/presets/index.ts`): only `fruit_veg` has one; grocery, meat and general skip the onboarding step, have no "Add from list" (shop app) or "Fresh produce list" tab (admin act-as-shop), and the route says there is no list yet.

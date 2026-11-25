@@ -138,6 +138,37 @@ const input = (over: Partial<ReceiptInput> = {}): ReceiptInput => ({
 });
 
 describe('receiptFor', () => {
+  it('prints ml lines (6 ml × Rs 50) and a unit this app does not know as its code', () => {
+    const doc = receiptFor(
+      input({
+        lines: [
+          line({
+            unit_snapshot: 'ml',
+            name_snapshot: 'Rose water',
+            qty_milli: 6000,
+            unit_price_paisa: 5000,
+            discount_paisa: 0,
+            line_total_paisa: 30000,
+          }),
+          line({
+            id: 'l2',
+            unit_snapshot: 'maund',
+            name_snapshot: 'Rice',
+            qty_milli: 2000,
+            unit_price_paisa: 5000,
+            discount_paisa: 0,
+            line_total_paisa: 10000,
+          }),
+        ],
+        labels: { en: fn({ ...EN, 'unit.ml': 'ml' }), ur: fn(UR) },
+      }),
+    );
+    const text = receiptText(doc);
+    expect(text).toContain('6 ml × Rs 50');
+    expect(text).toContain('2 maund × Rs 50');
+    expect(text).not.toContain('unit.');
+  });
+
   it('has every section in order: header, items, FOC, discounts, totals, payments, khata, footer', () => {
     const doc = receiptFor(input());
     expect(doc).toMatchObject({ language: 'en', dir: 'ltr', paperWidthMm: 58 });

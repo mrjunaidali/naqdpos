@@ -5,12 +5,12 @@ import {
   makeLine,
   MILLI_PER_UNIT,
   type CartLine,
-  type ProductUnit,
+  type UnitCode,
   type QtyMilli,
 } from '@naqdpos/core';
 
-/** One tap: 250 g / 250 ml for weighed items, one whole unit (piece, dozen, bundle, g) otherwise. */
-export function qtyStep(unit: ProductUnit): QtyMilli {
+/** One tap: 250 g / 250 ml for kg and litre, one whole unit (piece, dozen, bundle, g, ml) otherwise. */
+export function qtyStep(unit: UnitCode): QtyMilli {
   return unit === 'kg' || unit === 'litre' ? 250 : MILLI_PER_UNIT;
 }
 

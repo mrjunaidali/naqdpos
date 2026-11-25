@@ -29,7 +29,7 @@ import { CartSheet } from './CartSheet.tsx';
 import { useCartStore } from './cartStore.ts';
 import { CustomItemDialog } from './CustomItemDialog.tsx';
 import { QuantityPanel } from './QuantityPanel.tsx';
-import { useQtyText } from './saleFormat.ts';
+import { unitName, useQtyText } from './saleFormat.ts';
 
 type Open =
   | {
@@ -356,7 +356,7 @@ function SaleTile(props: {
               ? t('sale.setRate')
               : t('products.pricePerUnit', {
                   amount: rupeesText(product.sale_price_paisa),
-                  unit: product.unit === 'piece' ? t('sale.pcShort') : t(`unit.${product.unit}`),
+                  unit: product.unit === 'piece' ? t('sale.pcShort') : unitName(t, product.unit),
                 })}
           </span>
         </button>

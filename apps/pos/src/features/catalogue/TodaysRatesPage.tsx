@@ -1,6 +1,7 @@
 import { displayName, parseRupees, type ProductRow } from '@naqdpos/core';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { unitName } from '../sale/saleFormat.ts';
 import { Alert, Button } from '../../ui/Button.tsx';
 import { useActingOwnerId } from '../pin/actingOwner.ts';
 import { rupeesInput, useCosts, useCostsHere, useShopProducts } from './catalogueData.ts';
@@ -101,7 +102,7 @@ function RatesForm(props: {
             <span className="min-w-0 flex-1">
               <span className="block truncate font-medium">{displayName(p, i18n.language)}</span>
               <span className="block text-sm text-muted">
-                {t('rates.perUnit', { unit: t(`unit.${p.unit}`) })}
+                {t('rates.perUnit', { unit: unitName(t, p.unit) })}
               </span>
             </span>
             {input(

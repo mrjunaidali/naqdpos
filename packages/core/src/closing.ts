@@ -14,7 +14,7 @@ import type { StockMovementRow } from './stock.ts';
 import { uuidv7 } from './ids.ts';
 import type { PaperWidth, Role } from './tenancy.ts';
 import type { Paisa } from './money.ts';
-import type { ProductUnit } from './catalogue.ts';
+import { isProductUnit, type UnitCode } from './catalogue.ts';
 import { qtyLabel } from './cart.ts';
 
 export interface DayCloseRow {
@@ -207,7 +207,7 @@ export interface SummaryInput {
   khata: readonly KhataEntryRow[];
   expenses: readonly ExpenseRow[];
   movements: readonly StockMovementRow[];
-  products: ReadonlyMap<string, { name: string; unit: ProductUnit }>;
+  products: ReadonlyMap<string, { name: string; unit: UnitCode }>;
   /** Cost per unit at that date, only on owner devices (costs live there). */
   costs?: ReadonlyMap<string, Paisa> | undefined;
   categoryName: (id: string) => string;
@@ -243,9 +243,9 @@ export function dailySummary(input: SummaryInput): DaySummary {
     p < 0
       ? `−${L('receipt.rs', { amount: rupeesText(-p) })}`
       : L('receipt.rs', { amount: rupeesText(p) });
-  const qty = (milli: number, unit: ProductUnit) => {
+  const qty = (milli: number, unit: UnitCode) => {
     const q = qtyLabel(milli, unit);
-    return `${q.amount} ${L(`unit.${q.unit}`)}`;
+    return `${q.amount} ${isProductUnit(q.unit) ? L(`unit.${q.unit}`) : q.unit}`;
   };
   const out: ReceiptLine[] = [
     { kind: 'title', text: input.shopName },

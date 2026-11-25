@@ -5,7 +5,7 @@ import { CustomerChip } from '../khata/CustomerChip.tsx';
 import { useCartStore } from './cartStore.ts';
 import { DiscountSheet } from './DiscountSheet.tsx';
 import { stepLine } from './qtyStep.ts';
-import { useQtyText, useRs } from './saleFormat.ts';
+import { unitName, useQtyText, useRs } from './saleFormat.ts';
 
 /**
  * The cart beside the product grid on wide screens (≥768px). Always shown (an empty state when
@@ -187,7 +187,7 @@ function PanelLine(props: { line: CartLine; onEdit: () => void; onDiscount: () =
             ? t('sale.lineByAmount', { qty: qtyText(line.qty_milli, line.unit) })
             : t('sale.lineRate', {
                 rate: rs(line.unit_price_paisa),
-                unit: t(`unit.${line.unit}`),
+                unit: unitName(t, line.unit),
               })}
         </span>
       </button>

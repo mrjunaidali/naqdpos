@@ -1,12 +1,13 @@
 import {
   displayName,
   parseQtyInput,
-  UNIT_RULES,
+  unitRule,
   type ProductRow,
   type StaffRow,
 } from '@naqdpos/core';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { unitName } from '../sale/saleFormat.ts';
 import { syncEngine } from '../../sync/index.ts';
 import { Button } from '../../ui/Button.tsx';
 import { Field } from '../../ui/Field.tsx';
@@ -47,7 +48,7 @@ export function StockActionSheet({ product, action, staff, onClose }: Props) {
   const [error, setError] = useState<string>();
   const [phase, setPhase] = useState<'edit' | 'syncing' | 'confirm' | 'saving'>('edit');
   const name = displayName(product, i18n.language);
-  const rules = UNIT_RULES[product.unit];
+  const rules = unitRule(product.unit);
 
   /** The typed quantity; a count may be 0, the other actions need more than 0. */
   function typedQty(): number | { error: string } {
@@ -128,7 +129,7 @@ export function StockActionSheet({ product, action, staff, onClose }: Props) {
       <div>
         <p className="font-medium">
           {action === 'set_stock' ? t('stock.counted') : t('stock.quantity')} (
-          {t(`unit.${product.unit}`)})
+          {unitName(t, product.unit)})
         </p>
         <output
           aria-label={t('stock.typedQty')}

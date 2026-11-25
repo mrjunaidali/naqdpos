@@ -1,5 +1,6 @@
 // Stock read from Dexie (US024): always the sum of the product's movements (packages/core).
-import { stockByProduct, stockOf, type ProductUnit } from '@naqdpos/core';
+import { stockByProduct, stockOf, type UnitCode } from '@naqdpos/core';
+import { unitName } from '../sale/saleFormat.ts';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { useTranslation } from 'react-i18next';
 import { db } from '../../db/schema.ts';
@@ -31,8 +32,8 @@ export function useProductStock(productId: string | undefined): number | undefin
 export function useStockText() {
   const { t } = useTranslation();
   const qtyText = useQtyText();
-  return (qtyMilli: number, unit: ProductUnit) => {
-    if (qtyMilli === 0) return t('sale.qty', { amount: '0', unit: t(`unit.${unit}`) });
+  return (qtyMilli: number, unit: UnitCode) => {
+    if (qtyMilli === 0) return t('sale.qty', { amount: '0', unit: unitName(t, unit) });
     const text = qtyText(Math.abs(qtyMilli), unit);
     return qtyMilli < 0 ? `−${text}` : text;
   };

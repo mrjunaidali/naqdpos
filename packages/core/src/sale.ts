@@ -1,7 +1,7 @@
 // Completing a sale (US034, US035; architecture §3 ledgers). Pure: the bill, payments, change,
 // business date, receipt number and the rows to write. Money is integer paisa.
 import type { CartLine } from './cart.ts';
-import type { ProductUnit } from './catalogue.ts';
+import type { UnitCode } from './catalogue.ts';
 import {
   approvalCovers,
   computeBill,
@@ -66,7 +66,7 @@ export interface SaleLineRow {
   product_id: string | null;
   name_snapshot: string;
   name_ur_snapshot: string | null;
-  unit_snapshot: ProductUnit;
+  unit_snapshot: UnitCode;
   qty_milli: number;
   unit_price_paisa: Paisa;
   discount_paisa: Paisa;

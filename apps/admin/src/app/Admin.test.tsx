@@ -378,6 +378,9 @@ describe('act as shop (US013)', () => {
     expect(await screen.findByText('Rs 300 / kg')).toBeInTheDocument();
     expect(screen.getByText('cost Rs 220')).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Edit' }));
+    expect(within(screen.getByLabelText('Unit')).getByRole('option', { name: 'ml' })).toHaveValue(
+      'ml',
+    );
     fireEvent.change(screen.getByLabelText('Sale price (Rs)'), { target: { value: '320' } });
     fireEvent.click(screen.getByRole('button', { name: 'Save product' }));
     await waitFor(() =>

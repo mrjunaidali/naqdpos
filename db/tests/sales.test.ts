@@ -140,6 +140,43 @@ function sale(
 }
 
 describe('pushing a sale', () => {
+  it('an ml line (6 ml at Rs 50 = Rs 300) is accepted; an unknown unit is a per-entry error', async () => {
+    await asUser(f.cashierA, async (q) => {
+      const s = sale();
+      const money = { subtotal_paisa: 30000, rounding_paisa: 0, total_paisa: 30000 };
+      const ml = {
+        ...s.line,
+        row: {
+          ...s.line.row,
+          name_snapshot: 'Rose water',
+          unit_snapshot: 'ml',
+          qty_milli: 6000,
+          unit_price_paisa: 5000,
+          line_total_paisa: 30000,
+        },
+      };
+      const batch = [
+        { ...s.sale, row: { ...s.sale.row, ...money } },
+        ml,
+        { ...s.payment, row: { ...s.payment.row, amount_paisa: 30000 } },
+      ];
+      expect((await push(q, f.deviceA, batch)).accepted).toHaveLength(3);
+      const { rows } = await q<{ unit_snapshot: string }>(
+        'select unit_snapshot from sale_lines where sale_id = $1',
+        [s.saleId],
+      );
+      expect(rows).toEqual([{ unit_snapshot: 'ml' }]);
+
+      // A unit the database doesn't know (e.g. from a newer app, before its migration): only
+      // that entry fails, as 'invalid'; the rest of the batch goes through.
+      const other = sale();
+      const bad = { ...other.line, row: { ...other.line.row, unit_snapshot: 'ton' } };
+      const result = await push(q, f.deviceA, [other.sale, bad]);
+      expect(result.accepted).toEqual([other.sale.id]);
+      expect(result.errors).toEqual([expect.objectContaining({ id: bad.id, code: 'invalid' })]);
+    });
+  });
+
   it('a cashier pushes sale, line and payment; a retry adds nothing', async () => {
     await asUser(f.cashierA, async (q) => {
       const s = sale();

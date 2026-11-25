@@ -12,6 +12,7 @@ import { useLiveQuery } from 'dexie-react-hooks';
 import { useTranslation } from 'react-i18next';
 import { db } from '../../db/schema.ts';
 import { getStoredDevice } from '../../db/session.ts';
+import { unitName } from '../sale/saleFormat.ts';
 import { shopCategories } from './catalogueRepo.ts';
 
 /** All products of this shop, hidden ones included (screens filter). */
@@ -68,6 +69,6 @@ export function usePriceLabel() {
       ? t('products.noRate')
       : t('products.pricePerUnit', {
           amount: rupeesText(product.sale_price_paisa),
-          unit: t(`unit.${product.unit}`),
+          unit: unitName(t, product.unit),
         });
 }

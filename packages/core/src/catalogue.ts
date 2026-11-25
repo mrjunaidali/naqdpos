@@ -4,8 +4,20 @@ import { rupeesToPaisa, type Paisa } from './money.ts';
 import { parseQtyInput } from './cart.ts';
 import { MAX_FOC_QTY_MILLI, type FocRule } from './discount.ts';
 
-export const PRODUCT_UNITS = ['kg', 'g', 'dozen', 'piece', 'bundle', 'litre'] as const;
+/** Units a product can be created with (form, CSV, admin). `ml` added 25 Nov 2026. */
+export const PRODUCT_UNITS = ['kg', 'g', 'dozen', 'piece', 'bundle', 'litre', 'ml'] as const;
 export type ProductUnit = (typeof PRODUCT_UNITS)[number];
+
+/**
+ * A unit as stored and synced: one this app knows, or a code added by a newer app version
+ * (architecture §4: older apps can pull new rows). Screens show an unknown code as it is and
+ * treat it with `unitRule()`'s fallback, never crash.
+ */
+export type UnitCode = ProductUnit | (string & {});
+
+export function isProductUnit(unit: string): unit is ProductUnit {
+  return (PRODUCT_UNITS as readonly string[]).includes(unit);
+}
 
 /** Max characters (code points) of products.icon, as Postgres char_length counts them. */
 export const MAX_ICON_LENGTH = 16;
@@ -100,7 +112,7 @@ export interface ProductRow extends Synced {
   category_id: string | null;
   name: string;
   name_ur: string | null;
-  unit: ProductUnit;
+  unit: UnitCode;
   sale_price_paisa: Paisa;
   barcode: string | null;
   track_stock: boolean;

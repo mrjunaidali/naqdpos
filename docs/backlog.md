@@ -184,7 +184,7 @@ Build in this order, not in ID order. "Sheet step" is the step number in the ori
 ### F11 · Product management (R1)
 
 **US019** · Must · 5 · Done — As a shop owner, I want to add a product with name (English and Urdu), unit, sale price and cost price, so that I can sell and track profit.
-- Name and unit and sale price required; `name_ur` and cost optional; units kg, g, dozen, piece, bundle, litre
+- Name and unit and sale price required; `name_ur` and cost optional; units kg, g, dozen, piece, bundle, litre, ml (ml added 25 Nov 2026: whole millilitres, price per ml)
 - Prices entered in rupees, stored as paisa; cost saved to owner-only `product_costs`
 - Decimal quantities for kg/litre; quick price edit from the list; `price_history` row on every price change
 - Varieties are separate products

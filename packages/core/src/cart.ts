@@ -1,6 +1,6 @@
 // The cart (US029, US030): lines and totals before payment. Pure and integer-only: money in paisa,
 // quantities in qty_milli (thousandths of the product's unit); BigInt where values multiply.
-import type { ProductUnit } from './catalogue.ts';
+import { isProductUnit, type ProductUnit, type UnitCode } from './catalogue.ts';
 import { lineNet, type Discount } from './discount.ts';
 import { parseFixed } from './fixed.ts';
 import { uuidv7 } from './ids.ts';
@@ -20,7 +20,7 @@ export interface CartLine {
   /** Snapshots taken when the line is made; later product edits do not change the cart. */
   name: string;
   name_ur: string | null;
-  unit: ProductUnit;
+  unit: UnitCode;
   icon: string | null;
   qty_milli: QtyMilli;
   unit_price_paisa: Paisa;
@@ -63,21 +63,31 @@ export const UNIT_RULES: Record<ProductUnit, UnitRule> = {
   piece: { decimals: 0, byAmount: false, quick: [1000, 2000, 6000, 12000] },
   bundle: { decimals: 0, byAmount: false, quick: [1000, 2000, 3000, 5000] },
   g: { decimals: 0, byAmount: false, quick: [] },
+  // Like g: whole millilitres, priced per ml (qty_milli = ml × 1000).
+  ml: { decimals: 0, byAmount: false, quick: [] },
 };
+
+/** A unit from a newer app version: typed quantities, no quick buttons, no "by amount". */
+const UNKNOWN_UNIT_RULE: UnitRule = { decimals: 3, byAmount: false, quick: [] };
+
+/** The entry rules for any stored unit, with a safe fallback for one this app doesn't know. */
+export function unitRule(unit: UnitCode): UnitRule {
+  return isProductUnit(unit) ? UNIT_RULES[unit] : UNKNOWN_UNIT_RULE;
+}
 
 export type QtyInputError = 'invalid' | 'zero' | 'too_many_decimals' | 'too_large';
 
 /** Keypad text → qty_milli under the unit's rules. */
 export function parseQtyInput(
   text: string,
-  unit: ProductUnit,
+  unit: UnitCode,
 ): { qty_milli: QtyMilli } | { error: QtyInputError } {
   const trimmed = text.trim();
   if (!/^\d*\.?\d*$/.test(trimmed) || trimmed === '' || trimmed === '.') {
     return { error: 'invalid' };
   }
   const decimals = trimmed.includes('.') ? trimmed.split('.')[1]!.length : 0;
-  if (decimals > UNIT_RULES[unit].decimals) return { error: 'too_many_decimals' };
+  if (decimals > unitRule(unit).decimals) return { error: 'too_many_decimals' };
   let qty: number;
   try {
     qty = parseFixed(trimmed, 3, 'qty');
@@ -188,12 +198,12 @@ export function cartTotals(lines: readonly CartLine[]): CartTotals {
 export interface QtyLabel {
   /** Number to show (shortest form), or "½". */
   amount: string;
-  /** Unit to show: below 1 kg / 1 litre the small unit. */
-  unit: ProductUnit | 'ml';
+  /** Unit to show: below 1 kg / 1 litre the small unit; an unknown code as it is. */
+  unit: UnitCode;
 }
 
 /** "250 g", "1.5 kg", "750 ml", "½ dozen", "6 piece": for badges and cart lines. */
-export function qtyLabel(qtyMilli: QtyMilli, unit: ProductUnit): QtyLabel {
+export function qtyLabel(qtyMilli: QtyMilli, unit: UnitCode): QtyLabel {
   if ((unit === 'kg' || unit === 'litre') && qtyMilli < MILLI_PER_UNIT) {
     // qty_milli of a kg is grams (of a litre, ml)
     return { amount: String(qtyMilli), unit: unit === 'kg' ? 'g' : 'ml' };

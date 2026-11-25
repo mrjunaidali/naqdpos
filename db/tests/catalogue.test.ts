@@ -155,6 +155,8 @@ describe('catalogue RLS', () => {
         ),
       ).toBe('23514');
       expect((await insert('kg', 0, ['aloo', 'aalu'])).rowCount).toBe(1);
+      // ml (migration 20261125090000): an owner can add a product sold per millilitre.
+      expect((await insert('ml', 5000, ['gulab jal'])).rowCount).toBe(1);
     });
   });
 });

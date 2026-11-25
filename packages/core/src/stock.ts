@@ -1,7 +1,7 @@
 // Stock (US024, US025; architecture §3 stock_movements, derived values). Stock of a product is
 // always the sum of its movements (integer qty_milli); nothing stores a stock figure. Stock never
 // blocks a sale and may go negative. Movements carry no cost (every device pulls them).
-import type { ProductRow, ProductUnit } from './catalogue.ts';
+import type { ProductRow, UnitCode } from './catalogue.ts';
 import { uuidv7 } from './ids.ts';
 import { formatQty, type QtyMilli } from './qty.ts';
 import type { SaleLineRow } from './sale.ts';
@@ -140,7 +140,7 @@ export type StockActionError = 'bad_qty' | 'note_too_long' | 'forbidden';
 export interface StockActionInput {
   action: StockAction;
   productId: string;
-  unit: ProductUnit;
+  unit: UnitCode;
   /** Wastage, damaged, stock in: the amount (> 0). Set stock: the counted stock (≥ 0). */
   qtyMilli: QtyMilli;
   /** Current stock on this device (set stock only). */
@@ -161,7 +161,7 @@ export function stockActionReason(action: StockAction): StockReason {
 }
 
 /** The note kept on a count correction, so the owner sees what was counted: "counted 12.5 kg". */
-export function countNote(countedMilli: QtyMilli, unit: ProductUnit): string {
+export function countNote(countedMilli: QtyMilli, unit: UnitCode): string {
   return `counted ${formatQty(countedMilli)} ${unit}`;
 }
 

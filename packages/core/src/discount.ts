@@ -2,7 +2,7 @@
 // Order: line totals → line discounts → bill discount → round to the rupee → total.
 // Nothing goes below zero: a discount is limited to what it applies to.
 import type { CartLine } from './cart.ts';
-import type { ProductRow, ProductUnit } from './catalogue.ts';
+import type { ProductRow, UnitCode } from './catalogue.ts';
 import { sumPaisa, type Paisa } from './money.ts';
 import type { QtyMilli } from './qty.ts';
 import { roundBill, type Bill } from './sale.ts';
@@ -154,8 +154,9 @@ export interface FocRule {
 export const MAX_FOC_QTY_MILLI = 9_999_000;
 
 /** The rule a preset suggests (US033): from a Rs 200 bill, 1 bundle / piece / dozen or 50 g / ml. */
-export function suggestedFocRule(unit: ProductUnit): FocRule {
-  const qty = unit === 'kg' || unit === 'litre' ? 50 : unit === 'g' ? 50_000 : 1000;
+export function suggestedFocRule(unit: UnitCode): FocRule {
+  const qty =
+    unit === 'kg' || unit === 'litre' ? 50 : unit === 'g' || unit === 'ml' ? 50_000 : 1000;
   return { min_bill_paisa: 20_000, qty_milli: qty };
 }
 

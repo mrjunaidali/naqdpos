@@ -1,4 +1,4 @@
-import { displayName, rangePreset, type ProductUnit } from '@naqdpos/core';
+import { displayName, rangePreset } from '@naqdpos/core';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router';
@@ -100,9 +100,7 @@ function Dashboard({ today }: { today: string }) {
                       {p.custom && (
                         <span className="ms-2 text-sm text-muted">{t('reports.custom')}</span>
                       )}
-                      <span className="ms-2 text-sm text-muted">
-                        {qty(p.qty_milli, p.unit as ProductUnit)}
-                      </span>
+                      <span className="ms-2 text-sm text-muted">{qty(p.qty_milli, p.unit)}</span>
                     </span>
                     <span dir="ltr">{rs(p.sales_paisa)}</span>
                   </li>
