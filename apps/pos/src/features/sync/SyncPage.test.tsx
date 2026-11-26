@@ -3,9 +3,10 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { NewVersionBanner } from '../../app/NewVersionBanner.tsx';
 import { db, type OutboxEntry } from '../../db/schema.ts';
-import { patchSyncState } from '../../sync/state.ts';
+import { writeCurrentStaffId } from '../../staff/currentStaff.ts';
+import { patchSyncState, SYNC_META } from '../../sync/state.ts';
 import { resetApiMock } from '../../test/apiMock.ts';
-import { resetDb, seedReady, staffRow } from '../../test/fixtures.ts';
+import { resetDb, SHOP_ID, seedReady, STAFF_ID, staffRow } from '../../test/fixtures.ts';
 import { renderAt } from '../../test/render.tsx';
 import { useCartStore } from '../sale/cartStore.ts';
 
@@ -126,6 +127,128 @@ describe('Sync screen', () => {
     expect(screen.getByText('Not synced yet')).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Sync now' }));
     await waitFor(() => expect(syncNow).toHaveBeenCalledOnce());
+  });
+});
+
+// Bug 2026-11-25: "Needs review — sync.table.products — The data was not valid."
+describe('Sync screen: rejected entries (names, fields, Try again)', () => {
+  const CASHIER = '019a9b8e-0000-7000-8000-0000000000c2';
+  const PRODUCT = '019a9b8e-0000-7000-8000-0000000000f1';
+  const rejectedProduct = (n: number, overrides: Record<string, unknown> = {}) => {
+    const base = entry(n, {
+      table: 'products',
+      row: { id: PRODUCT, shop_id: SHOP_ID, name: 'Rose water', unit: 'ml' },
+      row_key: `products:${PRODUCT}`,
+    });
+    return {
+      ...base,
+      code: 'invalid',
+      message: 'unit: Invalid option',
+      field: 'unit',
+      rejected_at: new Date().toISOString(),
+      ...overrides,
+    };
+  };
+  const setOnline = (value: boolean) => {
+    Object.defineProperty(navigator, 'onLine', { value, configurable: true });
+    window.dispatchEvent(new Event(value ? 'online' : 'offline'));
+  };
+
+  beforeEach(async () => {
+    setOnline(true);
+    await writeCurrentStaffId(STAFF_ID);
+  });
+
+  it('names the record, its table and the field; never a raw key', async () => {
+    await db.sync_errors.add(rejectedProduct(10));
+    renderAt('/sync');
+    const item = await screen.findByTestId('rejected-entry');
+    expect(item).toHaveTextContent('Rose water');
+    expect(item).toHaveTextContent('Products');
+    expect(item).toHaveTextContent('Unit was not accepted.');
+    expect(item).not.toHaveTextContent('The data was not valid.');
+    expect(document.body).not.toHaveTextContent('sync.table');
+  });
+
+  it('falls back to the code message without a field (entries stored before field existed)', async () => {
+    await db.sync_errors.add(rejectedProduct(11, { field: undefined }));
+    renderAt('/sync');
+    expect(await screen.findByText('The data was not valid.')).toBeInTheDocument();
+  });
+
+  it.each([
+    [1, '1 change was not accepted'],
+    [3, '3 changes were not accepted'],
+  ])('headline with %i rejected: "%s", in the warning style', async (n, text) => {
+    await db.sync_errors.bulkAdd(Array.from({ length: n }, (_, i) => rejectedProduct(20 + i)));
+    renderAt('/sync');
+    const status = await screen.findByText(text);
+    expect(status.closest('[role=status]')).toHaveAttribute('data-tone', 'warning');
+    expect(screen.queryByText('Everything is synced.')).not.toBeInTheDocument();
+  });
+
+  it('says "Everything is synced." only with nothing pending or rejected', async () => {
+    renderAt('/sync');
+    expect(await screen.findByText('Everything is synced.')).toBeInTheDocument();
+  });
+
+  it('owner: Try again puts the entry back in the outbox and syncs', async () => {
+    const rejected = rejectedProduct(30);
+    await db.sync_errors.add(rejected);
+    renderAt('/sync');
+    fireEvent.click(await screen.findByRole('button', { name: 'Try again: Rose water' }));
+    await waitFor(() => expect(syncNow).toHaveBeenCalledOnce());
+    expect(await db.sync_errors.count()).toBe(0);
+    expect(await db.outbox.get(rejected.id)).toMatchObject({ attempts: 0, table: 'products' });
+  });
+
+  it('owner: Try all again requeues every rejected entry', async () => {
+    await db.sync_errors.bulkAdd([rejectedProduct(31), rejectedProduct(32)]);
+    renderAt('/sync');
+    fireEvent.click(await screen.findByRole('button', { name: 'Try all again' }));
+    await waitFor(() => expect(syncNow).toHaveBeenCalledOnce());
+    expect(await db.outbox.count()).toBe(2);
+    expect(await db.sync_errors.count()).toBe(0);
+  });
+
+  it('owner offline: Try again queues the entry without syncing', async () => {
+    setOnline(false);
+    await db.sync_errors.add(rejectedProduct(33));
+    renderAt('/sync');
+    fireEvent.click(await screen.findByRole('button', { name: 'Try again: Rose water' }));
+    expect(
+      await screen.findByText('Queued. It will be sent when you are back online.'),
+    ).toBeInTheDocument();
+    expect(syncNow).not.toHaveBeenCalled();
+    expect(await db.outbox.count()).toBe(1);
+  });
+
+  it('cashier: sees that the owner must review, with no Try again', async () => {
+    await db.staff.put(staffRow({ id: CASHIER, name: 'Bilal', role: 'cashier' }));
+    await writeCurrentStaffId(CASHIER);
+    await db.sync_errors.bulkAdd([rejectedProduct(40), rejectedProduct(41)]);
+    renderAt('/sync');
+    expect(await screen.findByText('The owner needs to review these changes.')).toBeInTheDocument();
+    expect(screen.getAllByTestId('rejected-entry')).toHaveLength(2);
+    expect(screen.queryByRole('button', { name: /Try (all )?again/ })).not.toBeInTheDocument();
+  });
+
+  it('says when changes wait for a server that does not know their unit yet', async () => {
+    await db.outbox.add(
+      entry(50, {
+        table: 'products',
+        row: { id: PRODUCT, shop_id: SHOP_ID, name: 'Rose water', unit: 'ml' },
+        row_key: `products:${PRODUCT}`,
+      }),
+    );
+    renderAt('/sync');
+    expect(
+      await screen.findByText('1 change waits for a server update (unit: ml).'),
+    ).toBeInTheDocument();
+    await db.meta.put({ key: SYNC_META.SERVER_UNITS, value: ['kg', 'ml'] });
+    await waitFor(() =>
+      expect(screen.queryByText(/waits for a server update/)).not.toBeInTheDocument(),
+    );
   });
 });
 

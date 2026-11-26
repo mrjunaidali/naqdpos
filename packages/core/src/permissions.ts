@@ -39,6 +39,11 @@ export const ACTIONS = {
   close_day: ['owner'],
   /** Edit shop settings (RLS shops_update_owner, column grants; write_roles). */
   manage_shop_settings: ['owner'],
+  /**
+   * "Try again" on rejected sync entries (Sync screen). The retried entry is pushed like any
+   * other, so sync_push's write_roles, RLS and constraints still decide it on the server.
+   */
+  retry_sync: ['owner'],
 } as const satisfies Record<string, readonly Role[]>;
 
 export type Action = keyof typeof ACTIONS;

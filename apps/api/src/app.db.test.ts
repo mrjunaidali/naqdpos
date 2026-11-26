@@ -466,6 +466,74 @@ describe('/sync/push and /sync/pull', () => {
     expect(result.errors).toEqual([expect.objectContaining({ id: bad.id, code: 'invalid' })]);
   });
 
+  // Bug 2026-11-25: staging rejected an ml product as "The data was not valid".
+  describe('the ml unit and the failed field', () => {
+    const productEntry = (d: Awaited<ReturnType<typeof device>>, unit: string) => {
+      const now = new Date().toISOString();
+      return {
+        id: randomUUID(),
+        table: 'products',
+        op: 'upsert',
+        actor_staff_id: d.shop.owner_staff_id,
+        row: {
+          id: randomUUID(),
+          shop_id: d.shop.shop_id,
+          category_id: null,
+          name: 'Rose water',
+          name_ur: null,
+          unit,
+          sale_price_paisa: 5000,
+          barcode: null,
+          track_stock: false,
+          min_qty_milli: null,
+          is_combo: false,
+          packaging_cost_paisa: 0,
+          foc_rule: null,
+          search_terms: [],
+          icon: null,
+          device_id: d.deviceId,
+          created_at: now,
+          updated_at: now,
+          deleted_at: null,
+          server_seq: null,
+        },
+      };
+    };
+    const pushOne = (d: Awaited<ReturnType<typeof device>>, entry: unknown) =>
+      app.request('/sync/push', {
+        method: 'POST',
+        headers: d.headers,
+        body: JSON.stringify({ device_id: d.deviceId, entries: [entry] }),
+      });
+
+    it('accepts an ml product and pulls it back, with the server units', async () => {
+      const d = await device('owner');
+      const entry = productEntry(d, 'ml');
+      const res = await pushOne(d, entry);
+      expect(await res.json()).toEqual({ accepted: [entry.id], conflicts: [], errors: [] });
+      const page = (await pullPage(d, 0)) as Awaited<ReturnType<typeof pullPage>> & {
+        units?: string[];
+      };
+      expect(page.units).toEqual(expect.arrayContaining(['kg', 'ml']));
+      const pulled = page.rows.find((r) => r.table === 'products' && r.row.id === entry.row.id);
+      expect(pulled?.row.unit).toBe('ml');
+    });
+
+    it('names the field on a schema rejection (API) and on a database one (sync_push)', async () => {
+      const d = await device('owner');
+      const tooLong = productEntry(d, 'x'.repeat(17));
+      const api = (await (await pushOne(d, tooLong)).json()) as { errors: unknown[] };
+      expect(api.errors).toEqual([
+        expect.objectContaining({ id: tooLong.id, code: 'invalid', field: 'unit' }),
+      ]);
+      const unknown = productEntry(d, 'ton');
+      const db = (await (await pushOne(d, unknown)).json()) as { errors: unknown[] };
+      expect(db.errors).toEqual([
+        expect.objectContaining({ id: unknown.id, code: 'invalid', field: 'unit' }),
+      ]);
+    });
+  });
+
   it('answers 403 for a device of another shop', async () => {
     const mine = await device('owner');
     const theirs = await device('owner');

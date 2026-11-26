@@ -30,14 +30,17 @@ export function RootLayout() {
     <div className="flex min-h-dvh flex-col pt-header">
       {/* Fixed so it stays while the page scrolls; its surface runs up behind the status bar. */}
       <header className="fixed inset-x-0 top-0 z-20 border-b border-border bg-surface pt-[env(safe-area-inset-top)]">
-        <div className="flex h-[calc(var(--header-h)-1px)] items-center gap-2 px-4">
+        <div className="flex h-[calc(var(--header-h)-1px)] items-center gap-1.5 px-3 sm:gap-2 sm:px-4">
           <Link
             to="/"
             aria-label={t('nav.home')}
-            className="flex min-h-11 min-w-0 flex-1 items-center gap-2 rounded-md text-text"
+            // min-w: the shop name keeps a few letters and an ellipsis at 375px; the chips beside
+            // it shrink instead (bug 2026-11-25: it collapsed to one letter next to the mark).
+            className="flex min-h-11 min-w-28 flex-1 items-center gap-2 rounded-md text-text"
           >
             <BrandMark logoPath={shop?.logoPath ?? null} />
-            <span className="min-w-0 truncate text-lg font-semibold">
+            {/* dir=auto: a Latin shop name in Urdu (RTL) still cuts at its own end. */}
+            <span dir="auto" className="min-w-0 truncate text-base font-semibold sm:text-lg">
               {shop?.name ?? t('app.name')}
             </span>
           </Link>

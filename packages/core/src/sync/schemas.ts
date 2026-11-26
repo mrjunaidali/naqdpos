@@ -57,7 +57,15 @@ export const SyncPushResponse = z.object({
   conflicts: z.array(
     z.object({ id: z.string(), table: z.string(), row: z.record(z.string(), z.unknown()) }),
   ),
-  errors: z.array(z.object({ id: z.string(), code: z.string(), message: z.string().optional() })),
+  errors: z.array(
+    z.object({
+      id: z.string(),
+      code: z.string(),
+      message: z.string().optional(),
+      /** The column that failed (e.g. `unit`), when known. Added 26 Nov 2026; optional. */
+      field: z.string().optional(),
+    }),
+  ),
 });
 export type SyncPushResponse = z.infer<typeof SyncPushResponse>;
 
@@ -83,5 +91,10 @@ export const SyncPullResponse = z.object({
   ),
   next_seq: z.number().int().nonnegative(),
   has_more: z.boolean(),
+  /**
+   * Product units this server accepts (sync_units(); added 26 Nov 2026). Absent from older
+   * servers: the app then sends only BASELINE_SERVER_UNITS.
+   */
+  units: z.array(z.string()).optional(),
 });
 export type SyncPullResponse = z.infer<typeof SyncPullResponse>;

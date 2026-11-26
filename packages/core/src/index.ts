@@ -26,6 +26,7 @@ export * from './search.ts';
 export * from './shopProfile.ts';
 export * from './staff.ts';
 export * from './stock.ts';
+export * from './sync/outbox.ts';
 export * from './sync/schemas.ts';
 export * from './sync/tables.ts';
 export * from './syncHealth.ts';

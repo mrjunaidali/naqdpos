@@ -29,10 +29,10 @@ export function SyncChip() {
       to="/sync"
       data-tone={tone}
       aria-label={t('sync.openSync', { status: label })}
-      className="inline-flex min-h-11 items-center gap-2 rounded-full border border-border bg-surface px-3 text-sm font-medium text-text"
+      className="inline-flex min-h-11 min-w-11 shrink items-center gap-2 rounded-full border border-border bg-surface px-3 text-sm font-medium text-text"
     >
-      <span aria-hidden="true" className={`size-2.5 rounded-full ${DOT[tone]}`} />
-      {label}
+      <span aria-hidden="true" className={`size-2.5 shrink-0 rounded-full ${DOT[tone]}`} />
+      <span className="min-w-0 truncate">{label}</span>
     </Link>
   );
 }

@@ -1,7 +1,13 @@
 // Local writes (CLAUDE.md rule 1, architecture §4): every write is ONE Dexie transaction that
 // stores the row and its outbox entry, so a row is never saved without being queued for sync,
 // and never queued without being saved. The sync engine pushes the outbox in the background.
-import { SYNC_TABLES, uuidv7, type OutboxOp, type SyncTableName } from '@naqdpos/core';
+import {
+  SYNC_TABLES,
+  toRetryEntry,
+  uuidv7,
+  type OutboxOp,
+  type SyncTableName,
+} from '@naqdpos/core';
 import type { Table } from 'dexie';
 import { readCurrentStaffId } from '../staff/currentStaff.ts';
 import { db as defaultDb, type NaqdDb, type OutboxEntry } from './schema.ts';
@@ -83,4 +89,30 @@ export async function localWrite(
 ): Promise<string> {
   const [id] = await localWriteMany([write], database, options);
   return id!;
+}
+
+/**
+ * "Try again" on the Sync screen (owner only): moves rejected entries back into the outbox as
+ * pending (toRetryEntry in core), in one transaction. Works offline: the entries simply wait in
+ * the outbox; if the server rejects them again they return to sync_errors. The local row is not
+ * touched, so a newer local edit of the same row stays as it is.
+ */
+export async function requeueRejected(
+  ids: readonly string[],
+  database: NaqdDb = defaultDb,
+): Promise<number> {
+  const moved = await database.transaction(
+    'rw',
+    [database.outbox, database.sync_errors],
+    async () => {
+      const rows = (await database.sync_errors.bulkGet([...ids])).filter(
+        (row) => row !== undefined,
+      );
+      await database.outbox.bulkPut(rows.map((row) => toRetryEntry(row)));
+      await database.sync_errors.bulkDelete(rows.map((row) => row.id));
+      return rows.length;
+    },
+  );
+  if (moved > 0) for (const listener of listeners) listener();
+  return moved;
 }

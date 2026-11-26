@@ -8,7 +8,7 @@ import {
   type SyncPushResponse,
 } from '@naqdpos/core';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { localWrite, localWriteMany } from '../db/outbox.ts';
+import { localWrite, localWriteMany, requeueRejected } from '../db/outbox.ts';
 import { NaqdDb } from '../db/schema.ts';
 import { META_KEYS } from '../db/session.ts';
 import { DEVICE_ID, SHOP_ID, staffRow } from '../test/fixtures.ts';
@@ -610,5 +610,126 @@ describe('sync engine: parents first, missing parents retried', () => {
     await write(db, 2);
     await engine.syncNow();
     expect(onSynced).toHaveBeenLastCalledWith(1, false);
+  });
+});
+
+// Bug 2026-11-25: a new unit (ml) reached a device before the API/database that accept it.
+describe('sync engine: units the server does not know yet', () => {
+  const PRODUCT = '019a9b8e-0000-7000-8000-0000000000f1';
+  const writeProduct = (db: NaqdDb, unit: string) =>
+    localWrite(
+      {
+        table: 'products',
+        op: 'upsert',
+        row: { id: PRODUCT, shop_id: SHOP_ID, name: 'Rose water', unit },
+      },
+      db,
+    );
+  const pushedTables = (calls: [SyncPushRequest][]) =>
+    calls.flatMap(([req]) => req.entries.map((e) => e.table));
+
+  it('holds an ml product for a server that does not list its units, and sends the rest', async () => {
+    const { db, server, engine } = setup();
+    await writeProduct(db, 'ml');
+    await write(db, 1);
+    await expect(engine.syncNow()).resolves.toBe('synced');
+    expect(pushedTables(server.api.syncPush.mock.calls)).toEqual(['staff']);
+    expect(await db.outbox.where('table').equals('products').count()).toBe(1);
+    expect(await db.sync_errors.count()).toBe(0);
+    expect((await db.outbox.toArray())[0]!.attempts).toBe(0);
+  });
+
+  it('sends the held entry in the same run once a pull says the server knows ml', async () => {
+    const { db, server, engine } = setup();
+    await writeProduct(db, 'ml');
+    server.api.syncPull.mockResolvedValue({
+      rows: [],
+      next_seq: 0,
+      has_more: false,
+      units: ['kg', 'g', 'dozen', 'piece', 'bundle', 'litre', 'ml'],
+    });
+    await expect(engine.syncNow()).resolves.toBe('synced');
+    expect(pushedTables(server.api.syncPush.mock.calls)).toEqual(['products']);
+    expect(await db.outbox.count()).toBe(0);
+  });
+
+  it('goes back to the baseline when a later pull has no units (API rolled back)', async () => {
+    const { db, server, engine } = setup();
+    await db.meta.put({ key: SYNC_META.SERVER_UNITS, value: ['kg', 'ml'] });
+    await engine.syncNow();
+    expect(await db.meta.get(SYNC_META.SERVER_UNITS)).toMatchObject({ value: null });
+    await writeProduct(db, 'ml');
+    server.api.syncPush.mockClear();
+    await engine.syncNow();
+    expect(server.api.syncPush).not.toHaveBeenCalled();
+  });
+
+  it('keeps the field the server names on a rejection', async () => {
+    const { db, server, engine } = setup();
+    const id = await writeProduct(db, 'kg');
+    server.api.syncPush.mockResolvedValueOnce({
+      accepted: [],
+      conflicts: [],
+      errors: [{ id, code: 'invalid', message: 'unit: Invalid option', field: 'unit' }],
+    });
+    await engine.syncNow();
+    expect(await db.sync_errors.get(id)).toMatchObject({ code: 'invalid', field: 'unit' });
+  });
+});
+
+describe('requeueRejected ("Try again")', () => {
+  it('puts the entry back as pending; a second rejection brings it back to sync_errors', async () => {
+    const { db, server, engine } = setup();
+    const id = await write(db, 1);
+    const reject = {
+      accepted: [],
+      conflicts: [],
+      errors: [{ id, code: 'invalid', field: 'name' }],
+    };
+    server.api.syncPush.mockResolvedValueOnce(reject);
+    await engine.syncNow();
+    expect(await db.sync_errors.count()).toBe(1);
+
+    expect(await requeueRejected([id], db)).toBe(1);
+    expect(await db.sync_errors.count()).toBe(0);
+    expect(await db.outbox.get(id)).toMatchObject({
+      id,
+      attempts: 0,
+      row_key: `staff:${STAFF(1)}`,
+    });
+    expect(await db.outbox.get(id)).not.toHaveProperty('code');
+
+    server.api.syncPush.mockResolvedValueOnce(reject);
+    await engine.syncNow();
+    expect(await db.outbox.count()).toBe(0);
+    expect(await db.sync_errors.get(id)).toMatchObject({ code: 'invalid', field: 'name' });
+
+    expect(await requeueRejected([id], db)).toBe(1);
+    await engine.syncNow(); // the fake server accepts it this time
+    expect(await db.sync_errors.count()).toBe(0);
+    expect(await db.outbox.count()).toBe(0);
+  });
+
+  it('works offline: the entry waits in the outbox', async () => {
+    let online = true;
+    const { db, server, engine } = setup({ isOnline: () => online });
+    const id = await write(db, 1);
+    server.api.syncPush.mockResolvedValueOnce({
+      accepted: [],
+      conflicts: [],
+      errors: [{ id, code: 'invalid' }],
+    });
+    await engine.syncNow();
+    online = false;
+    await requeueRejected([id], db);
+    server.api.syncPush.mockClear();
+    await expect(engine.syncNow()).resolves.toBe('offline');
+    expect(server.api.syncPush).not.toHaveBeenCalled();
+    expect(await db.outbox.get(id)).toBeDefined();
+  });
+
+  it('ignores ids that are not rejected', async () => {
+    const db = freshDb();
+    expect(await requeueRejected(['nope'], db)).toBe(0);
   });
 });

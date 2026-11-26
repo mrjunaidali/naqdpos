@@ -8,6 +8,8 @@ export const SYNC_META = {
   /** The sync tables this app knew when the cursor was built (see reconcileCursorTables). */
   CURSOR_TABLES: 'sync_cursor_tables',
   STATE: 'sync_state',
+  /** Units the server accepts (pull `units`); null/absent = an older server (baseline only). */
+  SERVER_UNITS: 'sync_server_units',
 } as const;
 
 export interface SyncState {
@@ -37,6 +39,11 @@ export async function patchSyncState(database: NaqdDb, patch: Partial<SyncState>
     const current = await readSyncState(database);
     await database.meta.put({ key: SYNC_META.STATE, value: { ...current, ...patch } });
   });
+}
+
+export async function readServerUnits(database: NaqdDb): Promise<string[] | null> {
+  const value = (await database.meta.get(SYNC_META.SERVER_UNITS))?.value;
+  return Array.isArray(value) ? (value as string[]) : null;
 }
 
 export async function readCursor(database: NaqdDb): Promise<number> {

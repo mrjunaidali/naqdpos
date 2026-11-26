@@ -2,8 +2,10 @@
 // nothing here is awaited by the selling flow (rule 1).
 //
 //   push: outbox in batches of 200 → accepted / conflicts leave the outbox (conflicts take the
-//         server row), rejected entries move to sync_errors
-//   pull: pages from the stored cursor until has_more is false
+//         server row), rejected entries move to sync_errors. Entries with a unit the server
+//         does not list yet stay in the outbox unsent (deploy-order safeguard, bug 2026-11-25).
+//   pull: pages from the stored cursor until has_more is false; stores the server's units, and
+//         pushes again when they now let held entries through
 //   triggers: start, `online`, a local write (debounced 5 s), every 60 s while online, Sync now
 //   failures: network / server errors retry after 5 s, 15 s, 60 s, then every 5 min.
 //             426 (update required), 401 (signed out) and 403 (device unlinked) pause sync with no
@@ -19,12 +21,14 @@ import {
   type SyncPushRequest,
   type SyncPushResponse,
   type SyncTableSpec,
+  unitServerLacks,
 } from '@naqdpos/core';
 import { dataTable, onLocalWrite, rowKey } from '../db/outbox.ts';
 import type { NaqdDb, OutboxEntry } from '../db/schema.ts';
 import {
   patchSyncState,
   readCursor,
+  readServerUnits,
   readSyncState,
   reconcileCursorTables,
   SYNC_META,
@@ -131,6 +135,7 @@ export function createSyncEngine(deps: SyncEngineDeps) {
           ...entry,
           code: error.code,
           message: error.message ?? null,
+          field: error.field ?? null,
           rejected_at: now,
         });
       }
@@ -148,8 +153,10 @@ export function createSyncEngine(deps: SyncEngineDeps) {
 
   async function pushAll(deviceId: string): Promise<number> {
     let total = 0;
+    const serverUnits = await readServerUnits(db);
+    const sendable = (entry: OutboxEntry) => unitServerLacks(entry, serverUnits) === null;
     for (;;) {
-      const batch = await db.outbox.orderBy('id').limit(SYNC_PUSH_BATCH).toArray();
+      const batch = await db.outbox.orderBy('id').filter(sendable).limit(SYNC_PUSH_BATCH).toArray();
       if (batch.length === 0) return total;
       const result = await api.syncPush({
         device_id: deviceId,
@@ -167,19 +174,24 @@ export function createSyncEngine(deps: SyncEngineDeps) {
     }
   }
 
-  async function pullAll(deviceId: string): Promise<void> {
+  /** Returns true when the server's unit list changed (held entries may now go). */
+  async function pullAll(deviceId: string): Promise<boolean> {
     // A table new to this app version means rows behind the cursor were skipped: re-pull.
     await reconcileCursorTables(db);
     let cursor = await readCursor(db);
+    const unitsBefore = JSON.stringify(await readServerUnits(db));
     for (;;) {
       const page = await api.syncPull({ device_id: deviceId, since_seq: cursor });
       await db.transaction('rw', [db.outbox, db.meta, ...dataTables()], async () => {
         await applyServerRows(page.rows);
         await db.meta.put({ key: SYNC_META.CURSOR, value: page.next_seq });
+        // An older API sends no units: back to the baseline, never a stale longer list.
+        await db.meta.put({ key: SYNC_META.SERVER_UNITS, value: page.units ?? null });
       });
-      if (!page.has_more || page.next_seq <= cursor) return;
+      if (!page.has_more || page.next_seq <= cursor) break;
       cursor = page.next_seq;
     }
+    return JSON.stringify(await readServerUnits(db)) !== unitsBefore;
   }
 
   function clearBackoff() {
@@ -205,8 +217,8 @@ export function createSyncEngine(deps: SyncEngineDeps) {
     if (!deviceId) return 'not_registered';
 
     try {
-      const pushed = await pushAll(deviceId);
-      await pullAll(deviceId);
+      let pushed = await pushAll(deviceId);
+      if (await pullAll(deviceId)) pushed += await pushAll(deviceId);
       failures = 0;
       clearBackoff();
       await patchSyncState(db, {

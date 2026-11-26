@@ -1,3 +1,4 @@
+import { SYNC_TABLE_NAMES } from '@naqdpos/core';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import en from './en.json';
 import ur from './ur.json';
@@ -12,6 +13,12 @@ const ARABIC_INDIC_DIGITS = /[٠-٩۰-۹]/;
 describe('i18n', () => {
   afterEach(async () => {
     await i18n.changeLanguage('en');
+  });
+
+  // The Sync screen names the table of every rejected entry; never a raw sync.table.* key.
+  it.each(SYNC_TABLE_NAMES)('sync table %s has a label in en.json and ur.json', (table) => {
+    expect(enEntries.get(`sync.table.${table}`)).toBeTruthy();
+    expect(urEntries.get(`sync.table.${table}`)).toBeTruthy();
   });
 
   it('en.json and ur.json have the same keys', () => {

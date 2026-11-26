@@ -61,6 +61,8 @@ export interface OutboxEntry {
 export interface SyncErrorRow extends OutboxEntry {
   code: string;
   message: string | null;
+  /** The column the server named (e.g. `unit`); absent on rows stored before 26 Nov 2026. */
+  field?: string | null;
   rejected_at: string;
 }
 

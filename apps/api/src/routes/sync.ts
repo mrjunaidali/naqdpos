@@ -5,6 +5,7 @@ import { createRoute, OpenAPIHono } from '@hono/zod-openapi';
 import {
   ErrorResponse,
   isOlderThan,
+  issueField,
   isSyncTable,
   SYNC_TABLES,
   SyncPullQuery,
@@ -82,12 +83,16 @@ function validateRows(entries: SyncEntry[]) {
     }
     const result = SYNC_TABLES[entry.table].schema.safeParse(entry.row);
     if (result.success) valid.push(entry);
-    else
+    else {
+      // `field` (the first failed column) is extra; `code` and `message` are as before.
+      const field = issueField(result.error.issues);
       errors.push({
         id: entry.id,
         code: 'invalid',
         message: result.error.issues.map((i) => `${i.path.join('.')}: ${i.message}`).join('; '),
+        ...(field ? { field } : {}),
       });
+    }
   }
   return { valid, errors };
 }
@@ -141,11 +146,11 @@ export function syncRoutes(deps: Pick<AppDeps, 'db' | 'auth' | 'minAppVersion'>)
       }
       const result = await run(() =>
         withUserTx(deps.db, tx, async (t) => {
-          const { rows } = await sql<{ r: SyncPullResponse }>`
-            select sync_pull(${query.device_id}, ${query.since_seq}, ${query.limit}) as r`.execute(
-            t,
-          );
-          return rows[0]!.r;
+          // units: what the database accepts, so the app holds back rows it would reject.
+          const { rows } = await sql<{ r: SyncPullResponse; units: string[] }>`
+            select sync_pull(${query.device_id}, ${query.since_seq}, ${query.limit}) as r,
+              sync_units() as units`.execute(t);
+          return { ...rows[0]!.r, units: rows[0]!.units };
         }),
       );
       if (!result.ok) return c.json(errorBody('forbidden'), 403);
