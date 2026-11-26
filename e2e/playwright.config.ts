@@ -11,7 +11,11 @@ export default defineConfig({
   retries: 0,
   reporter: process.env.CI ? [['list'], ['html', { open: 'never' }]] : 'list',
   use: { trace: 'retain-on-failure' },
-  projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],
+  projects: [
+    { name: 'chromium', use: { ...devices['Desktop Chrome'] } },
+    // iPhone Safari and the installed iOS PWA run WebKit (bug 2026-11-25, Day Close).
+    { name: 'webkit', use: { ...devices['iPhone 13'] } },
+  ],
   webServer: (Object.keys(SITES) as (keyof typeof SITES)[]).map((site) => ({
     command: `node support/serve.ts ${site}`,
     url: siteUrl(site),
