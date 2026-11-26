@@ -97,7 +97,7 @@ function validateRows(entries: SyncEntry[]) {
   return { valid, errors };
 }
 
-export function syncRoutes(deps: Pick<AppDeps, 'db' | 'auth' | 'minAppVersion'>) {
+export function syncRoutes(deps: Pick<AppDeps, 'db' | 'auth' | 'minAppVersion' | 'logger'>) {
   const app = new OpenAPIHono<AppEnv>();
   app.use('/sync/*', appVersionGate(deps.minAppVersion));
   app.use('/sync/*', requireUser(deps.auth));
@@ -147,10 +147,24 @@ export function syncRoutes(deps: Pick<AppDeps, 'db' | 'auth' | 'minAppVersion'>)
       const result = await run(() =>
         withUserTx(deps.db, tx, async (t) => {
           // units: what the database accepts, so the app holds back rows it would reject.
-          const { rows } = await sql<{ r: SyncPullResponse; units: string[] }>`
+          // A database behind this API version has no sync_units() (staging, 26 Nov 2026:
+          // migration 20261126090000 not applied, every pull answered 500). Then the pull
+          // answers like an older server, without units: the app sends only the original units.
+          const { rows } = await sql<{ r: SyncPullResponse; has_units: boolean }>`
             select sync_pull(${query.device_id}, ${query.since_seq}, ${query.limit}) as r,
-              sync_units() as units`.execute(t);
-          return { ...rows[0]!.r, units: rows[0]!.units };
+              to_regprocedure('public.sync_units()') is not null as has_units`.execute(t);
+          const page = rows[0]!.r;
+          if (!rows[0]!.has_units) {
+            deps.logger.warn(
+              { requestId: c.get('requestId'), path: c.req.path },
+              'sync_units() is missing: the database is behind this API (run the migrations)',
+            );
+            return page;
+          }
+          const units = await sql<{ units: string[] }>`select public.sync_units() as units`.execute(
+            t,
+          );
+          return { ...page, units: units.rows[0]!.units };
         }),
       );
       if (!result.ok) return c.json(errorBody('forbidden'), 403);

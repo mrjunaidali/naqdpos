@@ -1074,3 +1074,11 @@ where n.nspname = 'public' and p.proname in ('sync_units', 'sync_pull', 'sync_pu
 order by 1;
 select rolname, rolconfig from pg_roles where rolname = 'naqdpos_app';
 ```
+
+## Pull works when the database is behind the API (26 Nov 2026)
+
+Cause of the staging pull 500 (docs/bugs.md): staging's newest migration is `20261124090000`; `20261125090000` and `20261126090000` were never applied, so `sync_units()` is missing and every pull failed (42883 → 500).
+
+- `GET /sync/pull` (`apps/api/src/routes/sync.ts`): checks `to_regprocedure('public.sync_units()')` in the same statement as `sync_pull`; without it the page goes out without `units` (the app treats that as an older server) and a warning is logged with the request id. `syncRoutes` now takes the logger.
+- Test (`apps/api/src/app.db.test.ts`): the owner role renames `sync_units()` for one pull (restored in `finally`): 200, rows, no units; afterwards units are back. On the old code the same test gets 500.
+- No migration: the database has no defect, it is missing two existing migrations. To do on staging: apply them and fix the pre-deploy step (bugs.md).

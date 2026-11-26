@@ -2,7 +2,7 @@
 
 ## Open
 
-### 2026-11-26 — Staging: GET /sync/pull answers 500 for a fresh device — investigating
+### 2026-11-26 — Staging: GET /sync/pull answers 500 for a fresh device — cause found; staging needs its migrations
 
 A new device (incognito desktop Chrome as owner, the iPhone) gets `500 {"error":"internal"}` from `GET /sync/pull?since_seq=0`, so no products or sales arrive. On the iPhone the setup screen shows "Something went wrong. Please try again.": that text comes from `GET /me` failing during setup (`SetupPage`), so `/me` fails too.
 
@@ -12,7 +12,13 @@ A new device (incognito desktop Chrome as owner, the iPhone) gets `500 {"error":
 - A fresh device pulling the whole shop from 0 through the real API as `naqdpos_app` (owner and shop mode, default and small pages; products incl. ml, sales, lines, payments, khata, day closes) gets 200 and every row parses.
 - The original desktop calls the same `sync_units()` on each pull, so the new function alone cannot break only fresh devices; its pulls may be failing too without anyone noticing (it shows local data).
 
-**Next:** the API log line of the 500. 500s now carry `request_id` in the body and `X-Request-Id`, and the log line has `requestId` plus the Postgres SQLSTATE / routine / detail (`pg`). Read-only checks on staging in the progress entry of 26 Nov 2026.
+**Cause (26 Nov 2026).** The staging database is behind the API: its newest applied migration is `20261124090000`; `20261125090000_ml_unit` and `20261126090000_sync_units_field` were never applied, so `sync_units()` does not exist. The deployed API calls it on every pull, so every pull failed with SQLSTATE 42883 and answered 500 (the original desktop too; it only kept showing local data). The same gap explains the first bug of 25 Nov: without `20261125090000` the `ml` unit check never reached staging, so an `ml` product was rejected as `invalid`. The pre-deploy migration step either did not run for these deploys or ran against another database.
+
+**Code safeguard (commit after `6928ba2`).** When `sync_units()` is missing, `GET /sync/pull` answers like an older server: rows without `units`, and a warning in the log ("the database is behind this API"). The app then sends only the original units and holds `ml` rows on the device (architecture §4 Push 5). Test: hide `sync_units()`, pull → 200 without units (the old code answered 500).
+
+**Still to do on staging:** apply the two migrations (`pnpm db:deploy` with staging's `DATABASE_ADMIN_URL`, or redeploy once the pre-deploy step works) and find why pre-deploy did not apply them: the `api` service's Pre-deploy command and its log, and whether `DATABASE_ADMIN_URL` and `DATABASE_URL` point at the same database (`railway`). `GET /me` failing during setup is not explained by this (it does not call `sync_units()`): its log line is still needed.
+
+**Earlier step:** the API log line of the 500. 500s now carry `request_id` in the body and `X-Request-Id`, and the log line has `requestId` plus the Postgres SQLSTATE / routine / detail (`pg`). Read-only checks on staging in the progress entry of 26 Nov 2026.
 
 ## Fixed
 

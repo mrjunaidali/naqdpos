@@ -11,6 +11,7 @@ import {
   type SyncPullResponse,
 } from '@naqdpos/core';
 import { sql } from 'kysely';
+import pg from 'pg';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { createApp } from './app.ts';
 import { createAuth, createAuthPool, type AuthService } from './auth.ts';
@@ -51,8 +52,16 @@ let pinHash: string;
 beforeAll(async () => {
   pinHash = await hashPin('4821', { iterations: 1000 });
 });
+// The owner role on naqdpos_test, for the one test that changes the schema (and restores it).
+function ownerUrl(): string {
+  const url = new URL(process.env.DATABASE_ADMIN_URL ?? '');
+  url.pathname = new URL(env.DATABASE_URL).pathname;
+  return url.toString();
+}
+const owner_ = new pg.Pool({ connectionString: ownerUrl(), max: 1 });
+
 afterAll(async () => {
-  await Promise.all([db.destroy(), authPool.end()]);
+  await Promise.all([db.destroy(), authPool.end(), owner_.end()]);
 });
 
 const jsonHeaders = { 'content-type': 'application/json' };
@@ -538,6 +547,29 @@ describe('/sync/push and /sync/pull', () => {
         expect.objectContaining({ id: unknown.id, code: 'invalid', field: 'unit' }),
       ]);
     });
+  });
+
+  // Staging, 26 Nov 2026: the database was behind the API (20261126090000 not applied), so
+  // sync_units() did not exist and every pull answered 500. The pull now answers like an older
+  // server instead: rows, no units.
+  it('pulls without units when the database has no sync_units() yet', async () => {
+    const d = await device('owner');
+    await owner_.query('alter function public.sync_units() rename to sync_units_hidden');
+    try {
+      const res = await app.request(`/sync/pull?device_id=${d.deviceId}&since_seq=0`, {
+        headers: d.headers,
+      });
+      expect(res.status).toBe(200);
+      const body = (await res.json()) as { rows: { table: string }[]; units?: string[] };
+      expect(body.units).toBeUndefined();
+      expect(body.rows.some((r) => r.table === 'shops')).toBe(true);
+    } finally {
+      await owner_.query('alter function public.sync_units_hidden() rename to sync_units');
+    }
+    const after = await app.request(`/sync/pull?device_id=${d.deviceId}&since_seq=0`, {
+      headers: d.headers,
+    });
+    expect(((await after.json()) as { units?: string[] }).units).toContain('ml');
   });
 
   it('answers 403 for a device of another shop', async () => {
