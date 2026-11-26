@@ -20,7 +20,7 @@ import {
 } from './catalogueData.ts';
 import { setSalePrice } from './catalogueRepo.ts';
 import { CategoryTabs } from './CategoryTabs.tsx';
-import { ProductIcon } from './ProductIcon.tsx';
+import { ProductTile } from './ProductTile.tsx';
 
 const actionClass =
   'inline-flex min-h-11 items-center rounded-md border border-border bg-surface px-3 text-sm font-medium text-text';
@@ -97,7 +97,7 @@ export function ProductListPage() {
       {products && visible.length === 0 ? (
         <p className="text-muted">{showHidden ? t('products.noHidden') : t('products.empty')}</p>
       ) : (
-        <ul className="grid grid-cols-3 gap-2 sm:grid-cols-4 lg:grid-cols-5">
+        <ul className="grid auto-rows-fr grid-cols-3 gap-2 sm:grid-cols-4 lg:grid-cols-5">
           {visible.map((p) => (
             <ProductCard key={p.id} product={p} stock={stock?.get(p.id) ?? 0} />
           ))}
@@ -130,19 +130,17 @@ function ProductCard({ product, stock }: { product: ProductRow; stock: number })
 
   return (
     <li className="flex flex-col rounded-2xl border border-border bg-surface p-2">
-      <button
-        type="button"
+      <ProductTile
         onClick={() => void navigate(`/products/${product.id}`)}
-        className="min-h-11 flex-1 text-start"
+        icon={product.icon}
+        name={displayName(product, i18n.language)}
+        otherName={other}
+        padding="pb-1"
+        className="min-h-11 flex-1"
       >
-        <ProductIcon icon={product.icon} />
-        <span className="block font-semibold leading-tight">
-          {displayName(product, i18n.language)}
-        </span>
-        {other && <span className="block text-sm text-muted">{other}</span>}
         {product.track_stock && (
           <span
-            className={`block text-sm ${needsStockCheck(stock) ? 'font-semibold text-warning' : 'text-muted'}`}
+            className={`block w-full text-sm ${needsStockCheck(stock) ? 'font-semibold text-warning' : 'text-muted'}`}
           >
             {needsStockCheck(stock)
               ? t('stock.cardCheck', { qty: stockText(stock, product.unit) })
@@ -154,7 +152,7 @@ function ProductCard({ product, stock }: { product: ProductRow; stock: number })
             {t('products.hidden')}
           </span>
         )}
-      </button>
+      </ProductTile>
       {editing ? (
         <form
           className="mt-1 flex gap-1"
@@ -192,7 +190,7 @@ function ProductCard({ product, stock }: { product: ProductRow; stock: number })
             setEditing(true);
           }}
           aria-label={t('products.editPriceFor', { name: displayName(product, i18n.language) })}
-          className="mt-1 min-h-11 rounded-md bg-bg px-2 text-start text-sm font-medium"
+          className="mt-1 min-h-11 w-full rounded-md bg-bg px-2 text-center text-sm font-medium"
         >
           {priceLabel(product)}
         </button>

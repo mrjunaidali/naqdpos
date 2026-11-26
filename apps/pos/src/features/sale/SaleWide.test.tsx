@@ -130,12 +130,14 @@ describe('wide sale screen', () => {
     expect(screen.queryByText(/ · A1$/)).toBeNull();
   });
 
-  it('tiles: one-line names with a title, /pc for pieces, "Set rate" without a rate', async () => {
+  it('tiles: centred, names up to 2 lines with a title, /pc for pieces, "Set rate" without a rate', async () => {
     await seedShop();
     renderAt('/sale');
     const coconut = (await screen.findByText('Coconut')).closest('button')!;
     expect(coconut).toHaveAttribute('title', 'Coconut');
-    expect(within(coconut).getByText('Coconut')).toHaveClass('truncate');
+    // Bug 2026-11-26: centred at every width (no breakpoint-only alignment), long names wrap.
+    expect(coconut).toHaveClass('items-center', 'justify-center', 'text-center', 'w-full');
+    expect(within(coconut).getByText('Coconut')).toHaveClass('line-clamp-2');
     expect(within(coconut).getByText('Rs 250/pc')).toBeInTheDocument();
     const coriander = (await screen.findByText('Coriander')).closest('button')!;
     expect(within(coriander).getByText('Set rate')).toHaveClass('text-warning');

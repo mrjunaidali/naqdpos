@@ -1008,3 +1008,19 @@ Bug 2026-11-25 (docs/bugs.md): device A1 pushed an `ml` product right after the 
 **Tests**: Core +12 (hold/send by server units, retry entry, record names, issue field, schemas with and without the new keys). Pos 416 (+tests: engine holds ml / sends after pull lists it / back to baseline / stores field / requeue and second rejection / offline; Sync screen names and field, plural headlines, warning tone, owner retry and retry all, offline queue, cashier no retry, held line; labels for every table; initials). DB 208 (+8: `sync_units()` matches both checks; ml product + ml sale line pushed and pulled back; field for unknown unit, missing column, missing id; no field otherwise; migration block idempotent). API db 30 in `app.db.test.ts` (+2: ml product through `/sync/push`, pull with units; field from the API schema and from `sync_push`). E2E `sync-screen.spec.ts`, Chromium + WebKit at 375×667, en + ur + cashier, with screenshots in `e2e/test-results/screenshots/`.
 
 **Notes**: e2e was run against an already running Caddy (deploy/Caddyfile) on :4173; the admin site (:4174) was not served, so the two admin smoke tests could not run here. WebKit routes need `serviceWorkers: 'block'` (a worker-controlled page's fetches bypass `page.route`). `apps/api/src/backup.db.test.ts` needs `pg_dump` on PATH (passes with PostgreSQL 18's bin added).
+
+## Fix: product tiles centred at every width (26 Nov 2026)
+
+Bug 2026-11-26 (docs/bugs.md): New Sale tiles were start-aligned on phones (right-aligned in Urdu), centred on desktop; long names were cut to one line on desktop.
+
+- **Shared tile** `features/catalogue/ProductTile.tsx` (new): button with `items-center justify-center text-center w-full h-full` at every width, icon slot always 40px, name `line-clamp-2`, other-language name 1 line, optional price / extra lines / corner badges; the caller gives the frame (`className`) and padding. `data-testid="product-tile"`, `data-part` on icon, name, price.
+- **New Sale** (`SalePage.tsx`): one tile for phone and desktop (the separate start-aligned phone tile is gone); desktop keeps "/pc" and "Set rate". Grids `auto-rows-fr` for equal heights.
+- **Products grid** (`ProductListPage.tsx`): the card uses the same tile; price button centred; grid `auto-rows-fr`.
+- **Not changed**: preset picker and Today's rates are list rows with checkboxes / price inputs, not tiles; they already use logical classes only.
+- **e2e**: `e2e/support/seed.ts` (new: owner device, product rows, `writeRows`), `e2e/tests/product-tiles.spec.ts` (new).
+
+**Files**: `apps/pos/src/features/catalogue/{ProductTile.tsx (new),ProductIcon.tsx,ProductListPage.tsx}`, `features/sale/{SalePage.tsx,SaleWide.test.tsx}`; `e2e/support/seed.ts`, `e2e/tests/product-tiles.spec.ts`; docs.
+
+**Tests**: Pos 416 (SaleWide tile test now checks centred classes and 2-line names instead of one-line `truncate`). E2E product tiles 8/8 (Chromium + WebKit × 375/1280 × en/ur); before the fix all 8 failed (WebKit 375px: icon 22.5px, names up to 34px off-centre). Full e2e 22 passed; the 2 admin smoke tests need the admin site, not served on this machine. WebKit screenshots: `e2e/test-results/screenshots/tiles-webkit-{375,1280}-{en,ur}.png`.
+
+**Follow-up**: in Urdu the price reads "کلو/Rs 300" (mixed-direction text in `products.pricePerUnit`); not changed here.

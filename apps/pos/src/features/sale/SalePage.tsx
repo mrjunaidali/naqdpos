@@ -16,7 +16,7 @@ import { getStoredDevice } from '../../db/session.ts';
 import { useCurrentStaff } from '../../staff/currentStaff.ts';
 import { useCategories, usePriceLabel, useShopProducts } from '../catalogue/catalogueData.ts';
 import { CategoryTabs } from '../catalogue/CategoryTabs.tsx';
-import { ProductIcon } from '../catalogue/ProductIcon.tsx';
+import { ProductTile } from '../catalogue/ProductTile.tsx';
 import { DayClosedBanner } from '../closing/DayClosedBanner.tsx';
 import { CustomerChip } from '../khata/CustomerChip.tsx';
 import { useWide } from '../../app/useWide.ts';
@@ -227,7 +227,9 @@ export function SalePage() {
           )}
           {canSell && products && <FocSuggestions products={products} inline />}
           {nothing || (
-            <ul className="grid grid-cols-[repeat(auto-fill,minmax(150px,1fr))] gap-2">{tiles}</ul>
+            <ul className="grid auto-rows-fr grid-cols-[repeat(auto-fill,minmax(150px,1fr))] gap-2">
+              {tiles}
+            </ul>
           )}
         </div>
         <CartPanel onEdit={editLine} onCharge={() => void charge()} canSell={canSell} />
@@ -282,7 +284,9 @@ export function SalePage() {
 
       <div>
         {nothing || (
-          <ul className="grid grid-cols-3 gap-2 sm:grid-cols-4 lg:grid-cols-6">{tiles}</ul>
+          <ul className="grid auto-rows-fr grid-cols-3 gap-2 sm:grid-cols-4 lg:grid-cols-6">
+            {tiles}
+          </ul>
         )}
       </div>
 
@@ -331,53 +335,35 @@ function SaleTile(props: {
     </>
   );
 
-  if (props.wide)
-    // Equal height, centred, one line per name; "/pc" and "Set rate" keep the price on one line.
-    return (
-      <li>
-        <button
-          type="button"
-          disabled={props.disabled}
-          onClick={props.onTap}
-          title={name}
-          data-in-cart={line ? 'true' : undefined}
-          className={`relative flex h-36 w-full flex-col items-center rounded-2xl border-2 bg-surface px-2 pt-6 pb-2 text-center disabled:opacity-60 ${border}`}
-        >
-          {badges}
-          <ProductIcon icon={product.icon} />
-          <span className="block w-full truncate font-semibold">{name}</span>
-          {other && <span className="block w-full truncate text-sm text-muted">{other}</span>}
-          <span
-            className={`mt-auto block w-full truncate text-sm font-medium ${
-              product.sale_price_paisa === 0 ? 'text-warning' : ''
-            }`}
-          >
-            {product.sale_price_paisa === 0
-              ? t('sale.setRate')
-              : t('products.pricePerUnit', {
-                  amount: rupeesText(product.sale_price_paisa),
-                  unit: product.unit === 'piece' ? t('sale.pcShort') : unitName(t, product.unit),
-                })}
-          </span>
-        </button>
-      </li>
-    );
+  // One tile at every width (bug 2026-11-26: phones had a start-aligned copy). Wide screens show
+  // "/pc" and "Set rate" so the price keeps to one line in the narrower desktop columns.
+  const price = props.wide ? (
+    product.sale_price_paisa === 0 ? (
+      <span className="text-warning">{t('sale.setRate')}</span>
+    ) : (
+      t('products.pricePerUnit', {
+        amount: rupeesText(product.sale_price_paisa),
+        unit: product.unit === 'piece' ? t('sale.pcShort') : unitName(t, product.unit),
+      })
+    )
+  ) : (
+    priceLabel(product)
+  );
 
   return (
     <li>
-      <button
-        type="button"
+      <ProductTile
         disabled={props.disabled}
         onClick={props.onTap}
+        title={name}
         data-in-cart={line ? 'true' : undefined}
-        className={`relative flex h-full min-h-28 w-full flex-col rounded-2xl border-2 bg-surface p-2 text-start disabled:opacity-60 ${border}`}
-      >
-        {badges}
-        <ProductIcon icon={product.icon} />
-        <span className="block font-semibold leading-tight">{name}</span>
-        {other && <span className="block text-sm text-muted">{other}</span>}
-        <span className="mt-auto block pt-1 text-sm font-medium">{priceLabel(product)}</span>
-      </button>
+        icon={product.icon}
+        name={name}
+        otherName={other}
+        price={price}
+        badges={badges}
+        className={`rounded-2xl border-2 bg-surface ${props.wide ? 'min-h-36' : 'min-h-28'} ${border}`}
+      />
     </li>
   );
 }

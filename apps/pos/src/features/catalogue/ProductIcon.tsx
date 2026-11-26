@@ -9,6 +9,7 @@ export function ProductIcon({ icon }: { icon: string | null | undefined }) {
     <span
       aria-hidden="true"
       data-testid="product-icon"
+      data-part="icon"
       className="keep-leading block h-10 text-[32px] leading-10"
     >
       {icon ?? ''}

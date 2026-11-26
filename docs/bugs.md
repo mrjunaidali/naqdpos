@@ -6,6 +6,16 @@ _Nothing open._
 
 ## Fixed
 
+### 2026-11-26 — New Sale: product tiles right-aligned on mobile — fixed 2026-11-26
+
+On iPhone the product tile content (icon, name, price/unit) was right-aligned; on desktop it was centred.
+
+**Cause.** New Sale had two tile variants. The desktop one (`wide`) was `flex-col items-center text-center`; the phone one was `flex-col … text-start` with no `items-center`, so icon, name and price sat at the start edge: left in English, **right in Urdu (RTL)**. Not iOS Safari's button styling: Chromium at 375px was off-centre the same way (8–34px). On desktop a long name was `truncate`d to one line, so its text ran past the tile (132px off-centre). The Products grid card was `text-start` too.
+
+**Fix.** One `ProductTile` (`apps/pos/src/features/catalogue/ProductTile.tsx`) for New Sale (both widths) and the Products grid: `flex flex-col items-center justify-center text-center w-full h-full` at every width, no breakpoint-only alignment; names `line-clamp-2`, the other-language name 1 line; the icon keeps its 40px when empty; grids use `auto-rows-fr` so every tile has the same height. The Products card's price button is centred too. The preset picker and Today's rates are list rows (checkbox / price inputs), not tiles: they keep their row layout, already with logical classes only.
+
+**Test.** `e2e/tests/product-tiles.spec.ts`: Chromium and WebKit, 375px and 1280px, English and Urdu; seeded products with and without icons, a long name, kg and piece; icon, name and price centred on their tile within 2px, all tiles the same height. Failed on WebKit at 375px before the fix.
+
 ### 2026-11-25 — Staging rejects a product change: "The data was not valid" — fixed 2026-11-26
 
 On staging (shop of Mian Sami, device A1) a product using the new `ml` unit was pushed at 25 Nov 18:34 UTC, right after the ml change was deployed. The Sync screen showed "Needs review": `sync.table.products` — "The data was not valid." The change was stuck on the device.
