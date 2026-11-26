@@ -13,7 +13,7 @@ const DOT: Record<SyncTone, string> = {
 
 export function SyncChip() {
   const { t } = useTranslation();
-  const { health, outboxCount } = useSyncStatus();
+  const { health, outboxCount, pullProblemCount } = useSyncStatus();
   const tone = chipTone(health.level);
   const label =
     tone === 'success'
@@ -22,7 +22,9 @@ export function SyncChip() {
         ? t('sync.needsReview')
         : outboxCount > 0
           ? t('sync.pending', { count: outboxCount })
-          : t('sync.paused');
+          : pullProblemCount > 0
+            ? t('sync.checkSync')
+            : t('sync.paused');
 
   return (
     <Link

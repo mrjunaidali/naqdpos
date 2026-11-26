@@ -1,7 +1,8 @@
 import type { CartLine } from '@naqdpos/core';
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { NewVersionBanner } from '../../app/NewVersionBanner.tsx';
+import { i18n } from '../../i18n/index.ts';
 import { db, type OutboxEntry } from '../../db/schema.ts';
 import { writeCurrentStaffId } from '../../staff/currentStaff.ts';
 import { patchSyncState, SYNC_META } from '../../sync/state.ts';
@@ -183,7 +184,9 @@ describe('Sync screen: rejected entries (names, fields, Try again)', () => {
     await db.sync_errors.bulkAdd(Array.from({ length: n }, (_, i) => rejectedProduct(20 + i)));
     renderAt('/sync');
     const status = await screen.findByText(text);
-    expect(status.closest('[role=status]')).toHaveAttribute('data-tone', 'warning');
+    await waitFor(() =>
+      expect(status.closest('[role=status]')).toHaveAttribute('data-tone', 'warning'),
+    );
     expect(screen.queryByText('Everything is synced.')).not.toBeInTheDocument();
   });
 
@@ -278,5 +281,67 @@ describe('update banners never offer a reload while the cart has items', () => {
     await patchSyncState(db, { updateRequired: { minVersion: null, appVersion: '1.0.0' } });
     rerender(<NewVersionBanner {...props} />);
     await waitFor(() => expect(screen.queryByText('New version available')).toBeNull());
+  });
+});
+
+describe('Sync screen: rows from the server this device could not store', () => {
+  const PRODUCT = '019a9b8e-0000-7000-8000-0000000000f7';
+  const pullProblem = (overrides: Record<string, unknown> = {}) => ({
+    id: `pull:products:${PRODUCT}`,
+    table: 'products' as const,
+    op: 'pull' as const,
+    row: { id: PRODUCT, shop_id: SHOP_ID, name: 'Rose water', unit: 'ml' },
+    row_key: `products:${PRODUCT}`,
+    created_at: new Date().toISOString(),
+    attempts: 0,
+    actor_staff_id: null,
+    server_seq: 41,
+    code: 'pull_invalid',
+    message: 'sale_price_paisa: Too small',
+    field: 'sale_price_paisa',
+    rejected_at: new Date().toISOString(),
+    ...overrides,
+  });
+
+  beforeEach(async () => {
+    await writeCurrentStaffId(STAFF_ID);
+  });
+
+  it('lists them apart from rejected changes, with name, table and field; no Try again', async () => {
+    await db.sync_errors.add(pullProblem());
+    renderAt('/sync');
+    const section = await screen.findByTestId('pull-problems');
+    expect(
+      within(section).getByRole('heading', { name: 'Not stored on this device' }),
+    ).toBeInTheDocument();
+    const item = within(section).getByTestId('pull-problem');
+    expect(item).toHaveTextContent('Rose water');
+    expect(item).toHaveTextContent('Products');
+    expect(item).toHaveTextContent('Sale price could not be read.');
+    expect(screen.queryByRole('button', { name: /Try again/ })).not.toBeInTheDocument();
+    expect(screen.queryByTestId('rejected-entry')).not.toBeInTheDocument();
+    const status = screen.getByText('1 record from the server could not be stored');
+    // Sync health comes from its own live query: wait for it.
+    await waitFor(() =>
+      expect(status.closest('[role=status]')).toHaveAttribute('data-tone', 'warning'),
+    );
+    expect(screen.queryByText('Everything is synced.')).not.toBeInTheDocument();
+  });
+
+  it('the header chip says "Check sync" (amber), not "Needs review"', async () => {
+    await db.sync_errors.add(pullProblem());
+    renderAt('/settings');
+    const link = await screen.findByRole('link', { name: /Sync status/ });
+    await waitFor(() => expect(link).toHaveTextContent('Check sync'));
+    expect(link).toHaveAttribute('data-tone', 'warning');
+  });
+
+  it('Urdu', async () => {
+    await i18n.changeLanguage('ur');
+    await db.sync_errors.add(pullProblem({ field: null }));
+    renderAt('/sync');
+    expect(await screen.findByText('اس ڈیوائس پر محفوظ نہیں')).toBeInTheDocument();
+    expect(screen.getByText('یہ ریکارڈ پڑھا نہیں جا سکا۔')).toBeInTheDocument();
+    await i18n.changeLanguage('en');
   });
 });

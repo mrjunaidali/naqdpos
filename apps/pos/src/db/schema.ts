@@ -57,8 +57,15 @@ export interface OutboxEntry {
   actor_staff_id: string | null;
 }
 
-/** An outbox entry the server rejected (`sync_push` error), kept for review (architecture §7). */
-export interface SyncErrorRow extends OutboxEntry {
+/**
+ * An outbox entry the server rejected (`sync_push` error), kept for review (architecture §7), or
+ * (`op: 'pull'`, code `pull_invalid`) a pulled row this app could not store: its schema failed.
+ * Pull records are never pushed; they are not indexed differently, so no version bump.
+ */
+export interface SyncErrorRow extends Omit<OutboxEntry, 'op'> {
+  op: OutboxEntry['op'] | 'pull';
+  /** Pull records: the row's server_seq. */
+  server_seq?: number | null;
   code: string;
   message: string | null;
   /** The column the server named (e.g. `unit`); absent on rows stored before 26 Nov 2026. */

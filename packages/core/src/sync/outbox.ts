@@ -76,3 +76,38 @@ export function issueField(issues: readonly { path: readonly PropertyKey[] }[]):
   const first = issues[0]?.path[0];
   return typeof first === 'string' ? first : null;
 }
+
+/**
+ * A pulled row this app could not store (it failed its table's schema). Kept in `sync_errors`
+ * with `op: 'pull'` so it never disappears quietly; it is not pushed again ("Try again" does not
+ * apply: the fix is an app update or a server correction). One record per row: a newer bad
+ * version replaces it, and storing the row later removes it.
+ */
+export const PULL_OP = 'pull';
+export const PULL_INVALID = 'pull_invalid';
+
+export function isPullProblem(entry: { op: string }): boolean {
+  return entry.op === PULL_OP;
+}
+
+/** The record id for a pulled row ("pull:products:<id>"). */
+export function pullProblemId(rowKey: string): string {
+  return `pull:${rowKey}`;
+}
+
+/** row_key of a pulled row even when its key column is missing or not a string. */
+export function pulledRowKey(
+  table: string,
+  keyColumn: string,
+  row: Record<string, unknown>,
+): string {
+  const key = row[keyColumn];
+  return `${table}:${typeof key === 'string' && key !== '' ? key : '?'}`;
+}
+
+/** "unit: Invalid input; name: Too small" from schema issues. */
+export function issuesMessage(
+  issues: readonly { path: readonly PropertyKey[]; message: string }[],
+): string {
+  return issues.map((i) => `${i.path.map(String).join('.')}: ${i.message}`).join('; ');
+}

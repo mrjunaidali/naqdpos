@@ -173,7 +173,7 @@ Build in this order, not in ID order. "Sheet step" is the step number in the ori
 
 **US018** · Must · 3 · Partly done (own-shift sales with US029) — As a shop owner, I want cashiers not to see total sales, profit or cost prices, so that my figures stay private.
 - `permissions.ts` `can(role, action)` with tests; cost price and reports hidden for cashiers
-- Cashier sees only their own current-shift sales
+- Cashier sees only their own current-shift sales. "Current shift" = the open business day since the last Day Close (decided 26 Nov 2026); cashiers have no date picker on the Sales screen
 - Enforced in API routes and RLS / `sync_pull`, not only the UI (test: a shop device never receives `product_costs`)
 - Also resolve the open follow-up: riders must not receive other staff's `pin_hash` (progress Step 1)
 

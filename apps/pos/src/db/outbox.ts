@@ -3,6 +3,7 @@
 // and never queued without being saved. The sync engine pushes the outbox in the background.
 import {
   SYNC_TABLES,
+  isPullProblem,
   toRetryEntry,
   uuidv7,
   type OutboxOp,
@@ -10,7 +11,7 @@ import {
 } from '@naqdpos/core';
 import type { Table } from 'dexie';
 import { readCurrentStaffId } from '../staff/currentStaff.ts';
-import { db as defaultDb, type NaqdDb, type OutboxEntry } from './schema.ts';
+import { db as defaultDb, type NaqdDb, type OutboxEntry, type SyncErrorRow } from './schema.ts';
 
 export interface LocalWrite {
   table: SyncTableName;
@@ -105,8 +106,10 @@ export async function requeueRejected(
     'rw',
     [database.outbox, database.sync_errors],
     async () => {
+      // Pull records (op 'pull') are not outbox entries: there is nothing to send again.
       const rows = (await database.sync_errors.bulkGet([...ids])).filter(
-        (row) => row !== undefined,
+        (row): row is SyncErrorRow & { op: OutboxEntry['op'] } =>
+          row !== undefined && !isPullProblem(row),
       );
       await database.outbox.bulkPut(rows.map((row) => toRetryEntry(row)));
       await database.sync_errors.bulkDelete(rows.map((row) => row.id));

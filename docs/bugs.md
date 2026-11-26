@@ -6,6 +6,16 @@ _Nothing open._
 
 ## Fixed
 
+### 2026-11-26 — Old sales missing from the Sales screen (not data loss) — fixed 2026-11-26
+
+After the Day Close changes, older sales did not show on the Sales screen on desktop or phone, while khata still showed the credit balance from them.
+
+**Cause.** No data was lost: every sale is in the staging database, and nothing in that day's commits changed how sales are read, stored or pulled (`sync_pull` returns every row of the shop by `server_seq`, no date filter). The Sales screen has only ever listed sales whose `business_date` is today's date (`where('business_date').equals(businessDate())`); there was no way to see earlier days on the device, only in Reports. Separately, the investigation found that a pulled row which fails its schema was skipped silently (`applyServerRows`).
+
+**Fix.**
+1. **Sales history** (owners): Today / Yesterday / This week / Custom (up to 31 days), kept in the URL so "Back to sales" returns to the same range; "See older in Reports". Cashiers see only their own sales of the open business day since the last Day Close (US018 "current shift"), no picker. The title names the business date or range; after the calendar day is closed: "Day closed — new sales go to <date>". Reads one `business_date` at a time with a single-field `equals()` (Safari-safe). Range logic in `packages/core/src/salesRange.ts`.
+2. **Pulled rows that fail their schema** are kept in `sync_errors` (`op: 'pull'`) and shown on the Sync screen under "Not stored on this device", with the record, table and field; warning, not critical; header chip "Check sync".
+
 ### 2026-11-25 — Day Close crashes on iPhone: "Unable to open cursor" — fixed 2026-11-26
 
 Tapping Day Close on iPhone (Safari, the installed PWA, Chrome on iOS, private browsing; also with a brand-new local database after a fresh sign-in) showed React Router's raw error page "UnknownError: Unable to open cursor", every time.

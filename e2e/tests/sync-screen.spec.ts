@@ -132,7 +132,7 @@ async function writeRows(page: Page, rows: Record<string, unknown[]>) {
 }
 
 /** The API stub: counts pushes and rejects every pushed entry again, naming the field. */
-async function stubApi(page: Page) {
+async function stubApi(page: Page, pullRows: unknown[] = []) {
   const calls = { push: 0 };
   const cors = {
     'access-control-allow-origin': siteUrl('pos'),
@@ -150,8 +150,8 @@ async function stubApi(page: Page) {
       return route.fulfill({
         headers: cors,
         body: JSON.stringify({
-          rows: [],
-          next_seq: 0,
+          rows: pullRows,
+          next_seq: pullRows.length,
           has_more: false,
           units: ['kg', 'g', 'dozen', 'piece', 'bundle', 'litre', 'ml'],
         }),
@@ -174,8 +174,13 @@ async function stubApi(page: Page) {
   return calls;
 }
 
-async function openSync(page: Page, staffId: string, language: 'en' | 'ur') {
-  const calls = await stubApi(page);
+async function openSync(
+  page: Page,
+  staffId: string,
+  language: 'en' | 'ur',
+  pullRows: unknown[] = [],
+) {
+  const calls = await stubApi(page, pullRows);
   await page.goto(siteUrl('pos'));
   await page.evaluate((lng) => localStorage.setItem('naqdpos.language', lng), language);
   await writeRows(page, seed(staffId));
@@ -253,4 +258,45 @@ test('cashier: sees that the owner must review, cannot retry', async ({ page, br
   await expect(page.getByRole('button', { name: /Try again/ })).toHaveCount(0);
   await expectHeaderNameTruncates(page);
   await screenshot(page, browserName, 'cashier-en');
+});
+
+test('a pulled row this app cannot store is listed, not dropped quietly', async ({
+  page,
+  browserName,
+}) => {
+  const now = new Date().toISOString();
+  const broken = {
+    id: '01900000-0000-7000-8000-0000000001f1',
+    shop_id: SHOP,
+    category_id: null,
+    name: 'Kinnow box',
+    name_ur: null,
+    unit: 'piece',
+    sale_price_paisa: -100, // not valid for this app
+    barcode: null,
+    track_stock: false,
+    min_qty_milli: null,
+    is_combo: false,
+    packaging_cost_paisa: 0,
+    foc_rule: null,
+    search_terms: [],
+    icon: null,
+    device_id: null,
+    created_at: now,
+    updated_at: now,
+    deleted_at: null,
+    server_seq: 1,
+  };
+  await openSync(page, OWNER, 'en', [{ table: 'products', row: broken, server_seq: 1 }]);
+  const section = page.getByTestId('pull-problems');
+  await expect(section).toBeVisible({ timeout: 15_000 });
+  await expect(section).toContainText('Not stored on this device');
+  await expect(section.getByTestId('pull-problem')).toContainText('Kinnow box');
+  await expect(section.getByTestId('pull-problem')).toContainText('Sale price could not be read.');
+  if (browserName === 'webkit') {
+    await page.screenshot({
+      path: `test-results/screenshots/sync-${browserName}-pull-en.png`,
+      fullPage: true,
+    });
+  }
 });

@@ -22,6 +22,7 @@ export * from './qty.ts';
 export * from './receipt.ts';
 export * from './reports.ts';
 export * from './sale.ts';
+export * from './salesRange.ts';
 export * from './search.ts';
 export * from './shopProfile.ts';
 export * from './staff.ts';

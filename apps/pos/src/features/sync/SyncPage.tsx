@@ -1,6 +1,13 @@
 // Sync screen (architecture §7): what is waiting, why sync is unhappy, "Sync now", and the
 // entries the server rejected (owners can send them again). Everything here is read from Dexie.
-import { can, isSyncTable, SYNC_ERROR_CODES, syncRecordName, unitServerLacks } from '@naqdpos/core';
+import {
+  can,
+  isPullProblem,
+  isSyncTable,
+  SYNC_ERROR_CODES,
+  syncRecordName,
+  unitServerLacks,
+} from '@naqdpos/core';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -49,7 +56,10 @@ function useHeldUnits() {
 export function SyncPage() {
   const { t, i18n } = useTranslation();
   const { health, outboxCount, state, isOnline } = useSyncStatus();
-  const errors = useLiveQuery(() => db.sync_errors.orderBy('id').toArray()) ?? [];
+  const records = useLiveQuery(() => db.sync_errors.orderBy('id').toArray()) ?? [];
+  // Push rejections (can be tried again) and pulled rows this app could not store (cannot).
+  const errors = records.filter((e) => !isPullProblem(e));
+  const pullProblems = records.filter((e) => isPullProblem(e));
   const held = useHeldUnits();
   const current = useCurrentStaff();
   const canRetry = can(current?.valid ? current.staff.role : null, 'retry_sync');
@@ -82,7 +92,10 @@ export function SyncPage() {
       ? t('sync.notAccepted', { count: rejected })
       : outboxCount > 0
         ? t('sync.waiting', { count: outboxCount })
-        : t('sync.allSynced');
+        : pullProblems.length > 0
+          ? t('sync.pullSkipped.count', { count: pullProblems.length })
+          : t('sync.allSynced');
+  const headlineIsPull = rejected === 0 && outboxCount === 0 && pullProblems.length > 0;
 
   const lastSync = state.lastSyncAt
     ? t('sync.lastSync', {
@@ -114,12 +127,18 @@ export function SyncPage() {
       >
         <p className="font-semibold">{headline}</p>
         {rejected > 0 && outboxCount > 0 && <p>{t('sync.waiting', { count: outboxCount })}</p>}
+        {!headlineIsPull && pullProblems.length > 0 && (
+          <p>{t('sync.pullSkipped.count', { count: pullProblems.length })}</p>
+        )}
         {held && held.count > 0 && (
           <p>{t('sync.heldForServer', { count: held.count, units: held.units.join(', ') })}</p>
         )}
         {health.reasons
           // The headline already says these.
-          .filter((reason) => reason !== 'pending' && reason !== 'rejected_entries')
+          .filter(
+            (reason) =>
+              reason !== 'pending' && reason !== 'rejected_entries' && reason !== 'pull_skipped',
+          )
           .map((reason) => (
             <p key={reason}>{t(`sync.reason.${reason}`)}</p>
           ))}
@@ -197,6 +216,33 @@ export function SyncPage() {
                       {t('sync.tryAgain')}
                     </button>
                   )}
+                </li>
+              );
+            })}
+          </ul>
+        </div>
+      )}
+      {pullProblems.length > 0 && (
+        <div
+          data-testid="pull-problems"
+          className="space-y-3 rounded-2xl border border-warning bg-surface p-4"
+        >
+          <h2 className="text-lg font-semibold text-warning-fg">{t('sync.pullSkipped.title')}</h2>
+          <p className="text-muted">{t('sync.pullSkipped.intro')}</p>
+          {!canRetry && <p className="font-medium">{t('sync.ownerReview')}</p>}
+          <ul className="divide-y divide-border">
+            {pullProblems.map((problem) => {
+              const name = syncRecordName(problem.table, problem.row);
+              const table = tableLabel(problem.table);
+              return (
+                <li key={problem.id} data-testid="pull-problem" className="py-3">
+                  <p className="font-medium break-words">{name ?? table}</p>
+                  {name && <p className="text-sm text-muted">{table}</p>}
+                  <p className="text-warning-fg">
+                    {problem.field
+                      ? t('sync.pullSkipped.field', { field: fieldLabel(problem.field) })
+                      : t('sync.pullSkipped.generic')}
+                  </p>
                 </li>
               );
             })}

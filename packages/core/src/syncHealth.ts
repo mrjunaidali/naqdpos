@@ -35,15 +35,21 @@ export type SyncReason =
   | 'device_unlinked'
   | 'age_24h'
   | 'storage_95'
-  | 'rejected_entries';
+  | 'rejected_entries'
+  | 'pull_skipped';
 
 export interface SyncHealthInput {
   outboxCount: number;
   /** created_at (ms or ISO) of the oldest outbox entry; null when the outbox is empty. */
   oldestOutboxAt: number | string | null;
   unsyncedSalesCount: number;
-  /** Entries the server rejected (sync_errors). */
+  /** Entries the server rejected (sync_errors, pushes only). */
   errorCount: number;
+  /**
+   * Pulled rows this app could not store (sync_errors with op 'pull'): a warning, not critical,
+   * because the data is safe on the server. Optional for callers from before 26 Nov 2026.
+   */
+  pullProblemCount?: number;
   isOnline: boolean;
   lastSyncAt: number | string | null;
   /** navigator.storage.persisted(); null when unknown (treated as persisted, no false alarm). */
@@ -89,6 +95,7 @@ export function syncHealth(input: SyncHealthInput): SyncHealth {
   add('warning', 'age_12h', age >= T.warningAgeMs && age < T.criticalAgeMs);
   add('warning', 'sales_100', input.unsyncedSalesCount >= T.warningSales);
   add('warning', 'storage_not_persisted', unsynced && input.storagePersisted === false);
+  add('warning', 'pull_skipped', (input.pullProblemCount ?? 0) > 0);
   add('warning', 'storage_80', ratio >= T.warningStorageRatio && ratio < T.criticalStorageRatio);
 
   add('reminder', 'age_2h', age >= T.reminderAgeMs && age < T.warningAgeMs);

@@ -1,6 +1,6 @@
 // Live sync health for the badge, banners and Sync screen: Dexie (outbox, errors, sync state)
 // plus online status and storage, fed into syncHealth() from packages/core (architecture §7).
-import { syncHealth, type SyncHealth } from '@naqdpos/core';
+import { isPullProblem, syncHealth, type SyncHealth } from '@naqdpos/core';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { useEffect, useState } from 'react';
 import { useOnline } from '../app/useOnline.ts';
@@ -13,6 +13,8 @@ export interface SyncStatus {
   health: SyncHealth;
   outboxCount: number;
   errorCount: number;
+  /** Pulled rows this app could not store (sync_errors with op 'pull'). */
+  pullProblemCount: number;
   state: SyncState;
   isOnline: boolean;
 }
@@ -66,30 +68,33 @@ export function useSyncStatus(): SyncStatus {
   const storage = useStorageInfo();
   const now = useMinuteClock();
   const data = useLiveQuery(async () => {
-    const [outboxCount, oldest, unsyncedSalesCount, errorCount, state] = await Promise.all([
+    const [outboxCount, oldest, unsyncedSalesCount, errors, state] = await Promise.all([
       db.outbox.count(),
       db.outbox.orderBy('id').first(),
       db.outbox.where('table').equals('sales').count(),
-      db.sync_errors.count(),
+      db.sync_errors.toArray(),
       readSyncState(db),
     ]);
     return {
       outboxCount,
       oldestAt: oldest?.created_at ?? null,
       unsyncedSalesCount,
-      errorCount,
+      errorCount: errors.filter((e) => !isPullProblem(e)).length,
+      pullProblemCount: errors.filter((e) => isPullProblem(e)).length,
       state,
     };
   });
 
   const outboxCount = data?.outboxCount ?? 0;
   const errorCount = data?.errorCount ?? 0;
+  const pullProblemCount = data?.pullProblemCount ?? 0;
   const state = data?.state ?? EMPTY_SYNC_STATE;
   const health = syncHealth({
     outboxCount,
     oldestOutboxAt: data?.oldestAt ?? null,
     unsyncedSalesCount: data?.unsyncedSalesCount ?? 0,
     errorCount,
+    pullProblemCount,
     isOnline,
     lastSyncAt: state.lastSyncAt,
     storagePersisted: storage.persisted,
@@ -98,5 +103,5 @@ export function useSyncStatus(): SyncStatus {
     authProblem: state.authProblem,
     now,
   });
-  return { health, outboxCount, errorCount, state, isOnline };
+  return { health, outboxCount, errorCount, pullProblemCount, state, isOnline };
 }

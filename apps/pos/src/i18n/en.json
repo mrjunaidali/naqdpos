@@ -225,7 +225,8 @@
       "update_required": "Update required to sync",
       "auth_required": "Sign in again to sync",
       "device_unlinked": "This device is no longer linked to the shop",
-      "rejected_entries": "Some changes were not accepted. See below."
+      "rejected_entries": "Some changes were not accepted. See below.",
+      "pull_skipped": "Some records from the server could not be stored on this device."
     },
     "signInAgain": "Sign in again",
     "reminderToast_one": "{{count}} change not synced. Connect to internet and tap Sync now.",
@@ -253,6 +254,15 @@
       "created_at": "Date and time",
       "updated_at": "Date and time",
       "id": "Record ID"
+    },
+    "checkSync": "Check sync",
+    "pullSkipped": {
+      "count_one": "{{count}} record from the server could not be stored",
+      "count_other": "{{count}} records from the server could not be stored",
+      "title": "Not stored on this device",
+      "intro": "This device received these from the server but could not store them. They are safe on the server. Updating the app usually fixes this.",
+      "field": "{{field}} could not be read.",
+      "generic": "This record could not be read."
     }
   },
   "role": {
@@ -582,7 +592,30 @@
     "count_other": "{{count}} sales",
     "none": "No sales yet today.",
     "notFound": "This sale is not on this device.",
-    "back": "Back to today’s sales"
+    "back": "Back to sales",
+    "titleDay": "Sales — {{date}}",
+    "titleRange": "Sales — {{from}} to {{to}}",
+    "allRange": "All sales in this range.",
+    "yoursDay": "Your sales for this business day.",
+    "noneRange": "No sales on these days.",
+    "dayClosed": "Day closed — new sales go to {{date}}.",
+    "seeOlder": "See older in Reports",
+    "range": {
+      "label": "Show sales for",
+      "today": "Today",
+      "yesterday": "Yesterday",
+      "week": "This week",
+      "custom": "Custom"
+    },
+    "from": "From",
+    "to": "To",
+    "show": "Show",
+    "rangeError": {
+      "invalid": "Pick both dates.",
+      "reversed": "The start date is after the end date.",
+      "too_long": "Pick at most 31 days. Older sales are in Reports.",
+      "future": "Pick dates up to {{date}}."
+    }
   },
   "paymentMethods": {
     "title": "Payment methods",

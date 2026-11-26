@@ -103,6 +103,14 @@ describe('syncHealth (architecture §7)', () => {
     });
   });
 
+  it('is a warning (not critical) with pulled rows this app could not store', () => {
+    expect(syncHealth(input({ pullProblemCount: 2 }))).toEqual({
+      level: 'warning',
+      reasons: ['pull_skipped'],
+    });
+    expect(syncHealth(input({ pullProblemCount: 0 })).level).toBe('ok');
+  });
+
   it('lists every reason, most severe first', () => {
     const result = syncHealth(
       aged(13 * HOUR, { errorCount: 2, updateRequired: true, unsyncedSalesCount: 30 }),

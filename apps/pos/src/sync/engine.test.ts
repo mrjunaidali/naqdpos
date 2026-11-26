@@ -733,3 +733,84 @@ describe('requeueRejected ("Try again")', () => {
     expect(await requeueRejected(['nope'], db)).toBe(0);
   });
 });
+
+// A pulled row that fails its schema used to be skipped silently (26 Nov 2026).
+describe('sync engine: pulled rows that cannot be stored', () => {
+  const page = (rows: { table: string; row: Record<string, unknown>; server_seq: number }[]) => ({
+    rows,
+    next_seq: rows.at(-1)?.server_seq ?? 0,
+    has_more: false,
+  });
+
+  it('records the row in sync_errors (op pull, with the field), stores the good rows', async () => {
+    const { db, server, engine } = setup();
+    const bad = { ...staff(1), role: 'manager' }; // not a role this app knows
+    server.api.syncPull.mockResolvedValueOnce(
+      page([
+        { table: 'staff', row: bad, server_seq: 1 },
+        { table: 'staff', row: { ...staff(2), server_seq: 2 }, server_seq: 2 },
+      ]),
+    );
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    await expect(engine.syncNow()).resolves.toBe('synced');
+    warn.mockRestore();
+    expect(await db.staff.get(STAFF(2))).toBeDefined();
+    expect(await db.staff.get(STAFF(1))).toBeUndefined();
+    const record = await db.sync_errors.get(`pull:staff:${STAFF(1)}`);
+    expect(record).toMatchObject({
+      op: 'pull',
+      code: 'pull_invalid',
+      table: 'staff',
+      field: 'role',
+      server_seq: 1,
+      row_key: `staff:${STAFF(1)}`,
+    });
+    expect(record?.message).toMatch(/^role: /);
+  });
+
+  it('one record per row; storing the row later removes it', async () => {
+    const { db, server, engine } = setup();
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    server.api.syncPull
+      .mockResolvedValueOnce(
+        page([{ table: 'staff', row: { ...staff(1), role: 'x' }, server_seq: 1 }]),
+      )
+      .mockResolvedValueOnce(
+        page([{ table: 'staff', row: { ...staff(1), role: 'y' }, server_seq: 2 }]),
+      )
+      .mockResolvedValueOnce(
+        page([{ table: 'staff', row: { ...staff(1), server_seq: 3 }, server_seq: 3 }]),
+      );
+    await engine.syncNow();
+    await engine.syncNow();
+    expect(await db.sync_errors.count()).toBe(1);
+    expect((await db.sync_errors.toArray())[0]?.server_seq).toBe(2);
+    await engine.syncNow();
+    warn.mockRestore();
+    expect(await db.sync_errors.count()).toBe(0);
+    expect(await db.staff.get(STAFF(1))).toMatchObject({ server_seq: 3 });
+  });
+
+  it('does not record tables this app version does not know (expected, re-pulled later)', async () => {
+    const { db, server, engine } = setup();
+    server.api.syncPull.mockResolvedValueOnce(
+      page([{ table: 'deliveries', row: { id: 'x' }, server_seq: 1 }]),
+    );
+    await engine.syncNow();
+    expect(await db.sync_errors.count()).toBe(0);
+  });
+
+  it('"Try again" never pushes a pull record', async () => {
+    const { db, server, engine } = setup();
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    server.api.syncPull.mockResolvedValueOnce(
+      page([{ table: 'staff', row: { ...staff(1), role: 'x' }, server_seq: 1 }]),
+    );
+    await engine.syncNow();
+    warn.mockRestore();
+    expect(await requeueRejected([`pull:staff:${STAFF(1)}`], db)).toBe(0);
+    expect(await db.outbox.count()).toBe(0);
+    expect(await db.sync_errors.count()).toBe(1);
+    expect(server.api.syncPush).not.toHaveBeenCalled();
+  });
+});

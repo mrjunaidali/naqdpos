@@ -21,10 +21,16 @@ import {
   type SyncPushRequest,
   type SyncPushResponse,
   type SyncTableSpec,
+  issueField,
+  issuesMessage,
+  PULL_INVALID,
+  PULL_OP,
+  pulledRowKey,
+  pullProblemId,
   unitServerLacks,
 } from '@naqdpos/core';
 import { dataTable, onLocalWrite, rowKey } from '../db/outbox.ts';
-import type { NaqdDb, OutboxEntry } from '../db/schema.ts';
+import type { NaqdDb, OutboxEntry, SyncErrorRow } from '../db/schema.ts';
 import {
   patchSyncState,
   readCursor,
@@ -102,14 +108,43 @@ export function createSyncEngine(deps: SyncEngineDeps) {
    * Stores server rows, except where a local edit is still waiting in the outbox: that edit is
    * newer on this device and will be pushed (and come back) itself.
    */
-  async function applyServerRows(rows: { table: string; row: Record<string, unknown> }[]) {
-    for (const { table, row } of rows) {
-      if (!isSyncTable(table)) continue; // a table this app version does not know yet
+  async function applyServerRows(
+    rows: { table: string; row: Record<string, unknown>; server_seq?: number }[],
+  ) {
+    const now = new Date().toISOString();
+    const stored: string[] = [];
+    for (const { table, row, server_seq } of rows) {
+      if (!isSyncTable(table)) continue; // a table this app version does not know yet (expected)
       const parsed = SYNC_TABLES[table].schema.safeParse(row);
-      if (!parsed.success) continue;
-      const pending = await db.outbox.where('row_key').equals(rowKey(table, parsed.data)).count();
+      if (!parsed.success) {
+        // Never drop a server row quietly: keep it for the Sync screen ("Not stored on this
+        // device"). The same row replaces its earlier record (one id per row_key).
+        const key = pulledRowKey(table, SYNC_TABLES[table].key, row);
+        console.warn(`sync: pulled ${key} not stored`, parsed.error.issues);
+        await db.sync_errors.put({
+          id: pullProblemId(key),
+          table,
+          op: PULL_OP,
+          row,
+          row_key: key,
+          created_at: now,
+          attempts: 0,
+          actor_staff_id: null,
+          server_seq: typeof server_seq === 'number' ? server_seq : null,
+          code: PULL_INVALID,
+          message: issuesMessage(parsed.error.issues),
+          field: issueField(parsed.error.issues),
+          rejected_at: now,
+        });
+        continue;
+      }
+      const key = rowKey(table, parsed.data);
+      stored.push(pullProblemId(key));
+      const pending = await db.outbox.where('row_key').equals(key).count();
       if (pending === 0) await dataTable(db, table).put(parsed.data);
     }
+    // A row that is stored now clears its earlier pull record (no-op for ids that are not there).
+    if (stored.length > 0) await db.sync_errors.bulkDelete(stored);
   }
 
   async function settle(batch: OutboxEntry[], result: SyncPushResponse): Promise<number> {
@@ -182,12 +217,16 @@ export function createSyncEngine(deps: SyncEngineDeps) {
     const unitsBefore = JSON.stringify(await readServerUnits(db));
     for (;;) {
       const page = await api.syncPull({ device_id: deviceId, since_seq: cursor });
-      await db.transaction('rw', [db.outbox, db.meta, ...dataTables()], async () => {
-        await applyServerRows(page.rows);
-        await db.meta.put({ key: SYNC_META.CURSOR, value: page.next_seq });
-        // An older API sends no units: back to the baseline, never a stale longer list.
-        await db.meta.put({ key: SYNC_META.SERVER_UNITS, value: page.units ?? null });
-      });
+      await db.transaction(
+        'rw',
+        [db.outbox, db.meta, db.sync_errors, ...dataTables()],
+        async () => {
+          await applyServerRows(page.rows);
+          await db.meta.put({ key: SYNC_META.CURSOR, value: page.next_seq });
+          // An older API sends no units: back to the baseline, never a stale longer list.
+          await db.meta.put({ key: SYNC_META.SERVER_UNITS, value: page.units ?? null });
+        },
+      );
       if (!page.has_more || page.next_seq <= cursor) break;
       cursor = page.next_seq;
     }
@@ -299,7 +338,10 @@ export function createSyncEngine(deps: SyncEngineDeps) {
   async function requeueClockErrors() {
     const now = new Date().toISOString();
     await db.transaction('rw', [db.outbox, db.sync_errors, ...dataTables()], async () => {
-      const errors = await db.sync_errors.filter((e) => e.code === 'clock_ahead').toArray();
+      const errors = (await db.sync_errors.toArray()).filter(
+        (e): e is SyncErrorRow & { op: OutboxEntry['op'] } =>
+          e.code === 'clock_ahead' && e.op !== PULL_OP,
+      );
       for (const error of errors) {
         const { id, table, op, row_key, created_at, attempts, actor_staff_id } = error;
         const entry: OutboxEntry = {

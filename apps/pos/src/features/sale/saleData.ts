@@ -22,3 +22,19 @@ export function useSaleBundle(saleId: string | undefined): SaleBundle | null | u
     return { sale, lines: lines.sort(byId), payments: payments.sort(byId) };
   }, [saleId]);
 }
+
+/**
+ * The shop's sales on these business dates, newest first (Sales screen). One single-field
+ * equals() on business_date per day, sequential: Dexie runs each as getAll() with no cursor,
+ * which iOS WebKit always allows (bug 2026-11-25). At most 31 days (SALES_MAX_DAYS).
+ */
+export async function readSalesOn(days: readonly string[], shopId: string): Promise<SaleRow[]> {
+  const sales: SaleRow[] = [];
+  for (const day of days) {
+    for (const sale of await db.sales.where('business_date').equals(day).toArray()) {
+      if (sale.shop_id === shopId) sales.push(sale);
+    }
+  }
+  // UUIDv7 ids sort by creation time.
+  return sales.sort((a, b) => b.id.localeCompare(a.id));
+}

@@ -3,6 +3,11 @@ import { z } from 'zod';
 import {
   BASELINE_SERVER_UNITS,
   issueField,
+  issuesMessage,
+  isPullProblem,
+  PULL_OP,
+  pulledRowKey,
+  pullProblemId,
   syncRecordName,
   toRetryEntry,
   unitServerLacks,
@@ -109,5 +114,24 @@ describe('sync response schemas stay backward compatible', () => {
     const page = { rows: [], next_seq: 0, has_more: false };
     expect(SyncPullResponse.parse(page).units).toBeUndefined();
     expect(SyncPullResponse.parse({ ...page, units: ['kg', 'ml'] }).units).toEqual(['kg', 'ml']);
+  });
+});
+
+describe('pull problems (pulled rows that fail their schema)', () => {
+  it('one record per row, kept apart from push rejections', () => {
+    expect(pulledRowKey('sales', 'id', { id: 'abc' })).toBe('sales:abc');
+    expect(pulledRowKey('sales', 'id', { id: 7 })).toBe('sales:?');
+    expect(pullProblemId('sales:abc')).toBe('pull:sales:abc');
+    expect(isPullProblem({ op: PULL_OP })).toBe(true);
+    expect(isPullProblem({ op: 'upsert' })).toBe(false);
+  });
+
+  it('names the failed columns in the message', () => {
+    const result = z.object({ unit: z.enum(['kg']), name: z.string() }).safeParse({ unit: 'x' });
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(issuesMessage(result.error.issues)).toMatch(/^unit: .+; name: .+$/);
+      expect(issueField(result.error.issues)).toBe('unit');
+    }
   });
 });

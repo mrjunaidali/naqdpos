@@ -204,7 +204,8 @@ describe('Urdu screens (US009)', () => {
   it('other main screens render in Urdu', async () => {
     await seedShop();
     for (const [path, heading] of [
-      ['/sales', ur.sales.title],
+      // The title names the business date shown ('سیل — 26 نومبر 2026').
+      ['/sales', new RegExp('^' + ur.sales.titleDay.split('{{')[0])],
       ['/products', ur.products.title],
       ['/stock', ur.stock.title],
       ['/expenses', ur.expenses.title],
