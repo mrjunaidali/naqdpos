@@ -86,6 +86,39 @@ export function closableDays(
   return [...days].sort();
 }
 
+/**
+ * Distinct business dates of ledger rows, oldest first: the "activity" closableDays() needs.
+ * Replaces Dexie's orderBy('business_date').uniqueKeys(), whose unique-direction key cursor iOS
+ * WebKit refuses ("UnknownError: Unable to open cursor", bug 2026-11-25): the app reads plain rows
+ * and dedupes here. Rows without a string date are skipped (an index would not hold them either).
+ */
+export function activityDates(
+  ...tables: readonly (readonly { business_date?: unknown }[])[]
+): string[] {
+  const dates = new Set<string>();
+  for (const rows of tables)
+    for (const row of rows) if (typeof row.business_date === 'string') dates.add(row.business_date);
+  return [...dates].sort();
+}
+
+/**
+ * Lines in the order an anyOf() over the sale_id index gave them (sale_id, then line id), so
+ * reading each sale's lines with a single-field equals() changes nothing downstream.
+ */
+export function sortSaleLines<T extends { sale_id: string; id: string }>(lines: readonly T[]): T[] {
+  return [...lines].sort((a, b) =>
+    a.sale_id === b.sale_id
+      ? a.id < b.id
+        ? -1
+        : a.id > b.id
+          ? 1
+          : 0
+      : a.sale_id < b.sale_id
+        ? -1
+        : 1,
+  );
+}
+
 // --- Counting ---
 
 /** Pakistani notes and coins, in paisa. */

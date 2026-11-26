@@ -32,16 +32,16 @@ function useHeldUnits() {
     const units = await readServerUnits(db);
     const held = new Set<string>();
     let count = 0;
-    await db.outbox
-      .where('table')
-      .anyOf(['products', 'sale_lines'])
-      .each((entry) => {
+    // Single-field equals() per table, no anyOf() cursor (bug 2026-11-25, iOS WebKit).
+    for (const table of ['products', 'sale_lines']) {
+      for (const entry of await db.outbox.where('table').equals(table).toArray()) {
         const unit = unitServerLacks(entry, units);
         if (unit) {
           held.add(unit);
           count += 1;
         }
-      });
+      }
+    }
     return { count, units: [...held].sort() };
   });
 }

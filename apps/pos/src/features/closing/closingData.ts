@@ -1,6 +1,7 @@
 // Daily closing on the device (US044, US045, US067): one day's rows from Dexie (all devices'
 // rows that have synced here), writing the close through the outbox.
 import {
+  activityDates,
   buildDayClose,
   type DayCloseRow,
   type ExpenseRow,
@@ -10,13 +11,14 @@ import {
   type SaleRow,
   type StaffRow,
   type StockMovementRow,
+  sortSaleLines,
 } from '@naqdpos/core';
-import { useLiveQuery } from 'dexie-react-hooks';
 import { localWriteMany } from '../../db/outbox.ts';
 import { db } from '../../db/schema.ts';
 import { getStoredDevice } from '../../db/session.ts';
 import { SYNC_META } from '../../sync/state.ts';
 import { shopClosedDates } from './closedDates.ts';
+import { useRetryingLiveQuery } from '../../db/retry.ts';
 
 export class CloseNotSaved extends Error {
   constructor(readonly reason: string) {
@@ -41,10 +43,16 @@ export async function dayRows(date: string): Promise<DayRows> {
   const inShop = <T extends { shop_id: string }>(rows: T[]) =>
     rows.filter((r) => r.shop_id === device.shop_id);
   const sales = inShop(await db.sales.where('business_date').equals(date).toArray());
-  const saleIds = sales.map((s) => s.id);
+  // One single-field equals() per sale, not anyOf() (a cursor): Day Close reads only with
+  // equals()/toArray(), which Dexie runs as getAll() with no cursor (bug 2026-11-25, iOS WebKit).
+  // Sequential on purpose: no burst of parallel requests inside the live query.
+  const lines: SaleLineRow[] = [];
+  for (const id of [...new Set(sales.map((s) => s.id))].sort()) {
+    lines.push(...(await db.sale_lines.where('sale_id').equals(id).toArray()));
+  }
   return {
     sales,
-    lines: saleIds.length ? await db.sale_lines.where('sale_id').anyOf(saleIds).toArray() : [],
+    lines: sortSaleLines(lines),
     payments: inShop(await db.payments.where('business_date').equals(date).toArray()),
     khata: inShop(await db.khata_entries.where('business_date').equals(date).toArray()),
     expenses: inShop(await db.expenses.where('business_date').equals(date).toArray()),
@@ -53,11 +61,11 @@ export async function dayRows(date: string): Promise<DayRows> {
 }
 
 export function useDayRows(date: string | undefined): DayRows | undefined {
-  return useLiveQuery(async () => (date ? dayRows(date) : undefined), [date]);
+  return useRetryingLiveQuery(async () => (date ? dayRows(date) : undefined), [date]);
 }
 
 export function useDayCloses(): DayCloseRow[] | undefined {
-  return useLiveQuery(async () => {
+  return useRetryingLiveQuery(async () => {
     const device = await getStoredDevice();
     if (!device) return [];
     return (await db.day_closes.where('shop_id').equals(device.shop_id).toArray()).sort((a, b) =>
@@ -66,23 +74,20 @@ export function useDayCloses(): DayCloseRow[] | undefined {
   });
 }
 
-/** Business dates with any activity (sales, payments, expenses, stock, khata). */
+/**
+ * Business dates with any activity (sales, payments, expenses, stock, khata). Plain toArray() per
+ * table, deduped in core: orderBy('business_date').uniqueKeys() opened a unique-direction key
+ * cursor, which iOS WebKit refuses with "UnknownError: Unable to open cursor" (bug 2026-11-25).
+ */
+export async function readActivityDates(): Promise<Set<string>> {
+  const tables = [db.sales, db.payments, db.expenses, db.stock_movements, db.khata_entries];
+  const rows: { business_date?: unknown }[][] = [];
+  for (const table of tables) rows.push(await table.toArray());
+  return new Set(activityDates(...rows));
+}
+
 export function useActivityDates(): Set<string> | undefined {
-  return useLiveQuery(async () => {
-    const dates = new Set<string>();
-    for (const table of [
-      db.sales,
-      db.payments,
-      db.expenses,
-      db.stock_movements,
-      db.khata_entries,
-    ]) {
-      for (const d of await table.orderBy('business_date').uniqueKeys()) {
-        if (typeof d === 'string') dates.add(d);
-      }
-    }
-    return dates;
-  });
+  return useRetryingLiveQuery(readActivityDates);
 }
 
 export async function closeDay(

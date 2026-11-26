@@ -13,9 +13,9 @@ import {
   type TodayTotals,
   type TrendDay,
 } from '@naqdpos/core';
-import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '../../db/schema.ts';
 import { getStoredDevice } from '../../db/session.ts';
+import { useRetryingLiveQuery } from '../../db/retry.ts';
 
 export interface HomeData {
   date: string;
@@ -34,7 +34,7 @@ export function useHomeData(
   staffId: string | null | undefined,
   ownView: boolean,
 ): HomeData | undefined {
-  return useLiveQuery(async () => {
+  return useRetryingLiveQuery(async () => {
     const device = await getStoredDevice();
     if (!device) return undefined;
     const shop = device.shop_id;

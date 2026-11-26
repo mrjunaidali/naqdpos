@@ -1,5 +1,4 @@
 import { can, formatPkMobile, type Role } from '@naqdpos/core';
-import { useLiveQuery } from 'dexie-react-hooks';
 import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useNavigate } from 'react-router';
@@ -14,6 +13,7 @@ import { SyncChip } from '../sync/SyncChip.tsx';
 import { Button } from '../ui/Button.tsx';
 import { InstallCard } from './InstallCard.tsx';
 import { STORAGE_NOTICE_KEY, STORAGE_PERSISTED_KEY } from './storage.ts';
+import { useRetryingLiveQuery } from '../db/retry.ts';
 
 const card = 'rounded-2xl border border-border bg-surface p-4';
 
@@ -31,7 +31,7 @@ export function HomePage() {
   const loaded = useHomeData(staff?.id, !isOwner);
   // Wait for who is working: otherwise an owner briefly sees the cashier view.
   const data = current === undefined ? undefined : loaded;
-  const info = useLiveQuery(async () => {
+  const info = useRetryingLiveQuery(async () => {
     const device = await getStoredDevice();
     const shop = device ? await db.shops.get(device.shop_id) : undefined;
     return { shopName: shop?.name ?? null, code: device?.code ?? null };
@@ -177,7 +177,7 @@ function Tiles({ role }: { role: Role | null }) {
 
 function StorageNotice() {
   const { t } = useTranslation();
-  const show = useLiveQuery(async () => {
+  const show = useRetryingLiveQuery(async () => {
     const persisted = (await db.meta.get(STORAGE_PERSISTED_KEY))?.value;
     const shown = (await db.meta.get(STORAGE_NOTICE_KEY))?.value === true;
     return persisted === false && !shown;

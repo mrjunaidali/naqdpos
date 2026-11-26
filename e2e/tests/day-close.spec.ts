@@ -268,25 +268,98 @@ async function writeRows(page: Page, rows: Record<string, unknown[]>) {
   );
 }
 
-test('Day Close opens with the right expected cash on a seeded shop', async ({ page }) => {
-  const errors: string[] = [];
-  page.on('pageerror', (e) => errors.push(e.message));
-  // Offline from the app's point of view: every API call fails, so sync gives up and the screen
-  // closes offline (the selling flow never waits for the network).
-  await page.route(`${API_ORIGIN}/**`, (route) => route.abort('internetdisconnected'));
+/**
+ * Real iOS WebKit refuses some IndexedDB index cursors with "UnknownError: Unable to open cursor"
+ * (bug 2026-11-25); Playwright's WebKit (another IndexedDB backend) does not, so the test makes the
+ * browser refuse them the same way. 'unique': key/value cursors in a unique direction on an index
+ * (Dexie's uniqueKeys()); 'index': every cursor on an index (also anyOf(), orderBy() on an index),
+ * except receipt_no, whose plain forward cursor the selling flow uses and iPhones run every sale.
+ * Day Close must work with both: it reads with single-field equals() / toArray() only.
+ */
+type CursorLimit = 'none' | 'unique' | 'index';
 
-  await page.goto(siteUrl('pos'));
-  await expect(page.getByRole('heading', { name: 'Sign in' })).toBeVisible();
-  await writeRows(page, seed(karachiDate(1), karachiDate(2)));
+async function emulateIosCursors(page: Page, limit: CursorLimit) {
+  await page.addInitScript((limit) => {
+    if (limit === 'none') return;
+    for (const name of ['openCursor', 'openKeyCursor'] as const) {
+      const proto = IDBIndex.prototype as unknown as Record<string, (...a: unknown[]) => unknown>;
+      const original = proto[name]!;
+      proto[name] = function (this: IDBIndex, ...args: unknown[]) {
+        const direction = args[1];
+        // receipt_no: the receipt counter's forward cursor (app start, every sale) runs on iPhones.
+        const strict = limit === 'index' && this.name !== 'receipt_no';
+        if (strict || direction === 'nextunique' || direction === 'prevunique') {
+          throw new DOMException('Unable to open cursor', 'UnknownError');
+        }
+        return original.apply(this, args);
+      };
+    }
+  }, limit);
+}
 
-  await page.goto(`${siteUrl('pos')}/closing`);
-  await expect(page.getByRole('heading', { name: /^Close day — / })).toBeVisible({
-    timeout: 15_000,
+for (const limit of ['none', 'unique', 'index'] as const) {
+  test(`Day Close opens with the right expected cash on a seeded shop (iOS cursor limits: ${limit})`, async ({
+    page,
+  }) => {
+    const errors: string[] = [];
+    page.on('pageerror', (e) => {
+      // WebKit reports the stub's aborted cross-origin API calls as page errors ("… due to access
+      // control checks") even though the app handles the failed fetch; anything else counts.
+      const aborted =
+        e.message.includes('access control checks') && e.message.includes(new URL(API_ORIGIN).host);
+      if (!aborted) errors.push(e.message);
+    });
+    await emulateIosCursors(page, limit);
+    // Offline from the app's point of view: every API call fails, so sync gives up and the screen
+    // closes offline (the selling flow never waits for the network).
+    await page.route(`${API_ORIGIN}/**`, (route) => route.abort('internetdisconnected'));
+
+    await page.goto(siteUrl('pos'));
+    await expect(page.getByRole('heading', { name: 'Sign in' })).toBeVisible();
+    await writeRows(page, seed(karachiDate(1), karachiDate(2)));
+
+    await page.goto(`${siteUrl('pos')}/closing`);
+    await expect(page.getByRole('heading', { name: /^Close day — / })).toBeVisible({
+      timeout: 15_000,
+    });
+    await expect(page.getByText('Unable to open cursor')).toHaveCount(0);
+    // Opening Rs 4,000 + cash sales Rs 1,300 + khata cash Rs 250 − expenses Rs 150 = Rs 5,400.
+    await expect(page.getByLabel('Opening cash (Rs)')).toHaveValue('4000');
+    const expected = page.locator('p', { hasText: 'Expected cash' });
+    await expect(expected).toContainText('5,400');
+    expect(errors).toEqual([]);
   });
-  await expect(page.getByText('Unable to open cursor')).toHaveCount(0);
-  // Opening Rs 4,000 + cash sales Rs 1,300 + khata cash Rs 250 − expenses Rs 150 = Rs 5,400.
-  await expect(page.getByLabel('Opening cash (Rs)')).toHaveValue('4000');
-  const expected = page.locator('p', { hasText: 'Expected cash' });
-  await expect(expected).toContainText('5,400');
-  expect(errors).toEqual([]);
-});
+}
+
+for (const language of ['en', 'ur'] as const) {
+  test(`a read that keeps failing shows the friendly screen, never the raw error page (${language})`, async ({
+    page,
+  }) => {
+    // Every index read fails like a lost connection: reopen-and-retry gives up, the route asks
+    // for a reload. Before the fix this was React Router's "Unexpected Application Error!".
+    await page.addInitScript(() => {
+      for (const name of ['getAll', 'openCursor', 'openKeyCursor'] as const) {
+        const proto = IDBIndex.prototype as unknown as Record<string, unknown>;
+        proto[name] = () => {
+          throw new DOMException('Unable to open cursor', 'UnknownError');
+        };
+      }
+    });
+    await page.route(`${API_ORIGIN}/**`, (route) => route.abort('internetdisconnected'));
+    await page.goto(siteUrl('pos'));
+    await page.evaluate((lng) => localStorage.setItem('naqdpos.language', lng), language);
+    await writeRows(page, seed(karachiDate(1), karachiDate(2)));
+    await page.goto(`${siteUrl('pos')}/closing`);
+
+    const screen = page.getByTestId('route-error');
+    await expect(screen).toBeVisible({ timeout: 15_000 });
+    await expect(page.getByText('Unexpected Application Error!')).toHaveCount(0);
+    if (language === 'en') {
+      await expect(screen).toContainText('Please reload the app');
+      await expect(page.getByRole('button', { name: 'Reload app' })).toBeVisible();
+    } else {
+      await expect(page.locator('html')).toHaveAttribute('dir', 'rtl');
+      await expect(page.getByRole('button', { name: 'ایپ دوبارہ لوڈ کریں' })).toBeVisible();
+    }
+  });
+}

@@ -11,11 +11,11 @@ import {
   type StaffRow,
 } from '@naqdpos/core';
 import { isShopSuspended } from '../../app/suspension.ts';
-import { useLiveQuery } from 'dexie-react-hooks';
 import { localWriteMany } from '../../db/outbox.ts';
 import { db } from '../../db/schema.ts';
 import { getStoredDevice } from '../../db/session.ts';
 import { shopClosedDates } from '../closing/closedDates.ts';
+import { useRetryingLiveQuery } from '../../db/retry.ts';
 
 export class KhataNotSaved extends Error {
   constructor(readonly reason: string) {
@@ -31,7 +31,7 @@ async function shopDevice() {
 }
 
 export function useCustomers(): CustomerRow[] | undefined {
-  return useLiveQuery(async () => {
+  return useRetryingLiveQuery(async () => {
     const device = await getStoredDevice();
     if (!device) return [];
     return (await db.customers.where('shop_id').equals(device.shop_id).toArray()).filter(
@@ -41,29 +41,29 @@ export function useCustomers(): CustomerRow[] | undefined {
 }
 
 export function useCustomer(id: string | null | undefined): CustomerRow | null | undefined {
-  return useLiveQuery(async () => (id ? ((await db.customers.get(id)) ?? null) : null), [id]);
+  return useRetryingLiveQuery(
+    async () => (id ? ((await db.customers.get(id)) ?? null) : null),
+    [id],
+  );
 }
 
 /** Every customer's balance (sum of their entries); a customer with no entries has 0. */
 export function useBalances(): Map<string, KhataEntryRow[]> | undefined {
-  return useLiveQuery(async () => {
+  return useRetryingLiveQuery(async () => {
     const device = await getStoredDevice();
     const byCustomer = new Map<string, KhataEntryRow[]>();
     if (!device) return byCustomer;
-    await db.khata_entries
-      .where('shop_id')
-      .equals(device.shop_id)
-      .each((e) => {
-        const list = byCustomer.get(e.customer_id) ?? [];
-        list.push(e);
-        byCustomer.set(e.customer_id, list);
-      });
+    for (const e of await db.khata_entries.where('shop_id').equals(device.shop_id).toArray()) {
+      const list = byCustomer.get(e.customer_id) ?? [];
+      list.push(e);
+      byCustomer.set(e.customer_id, list);
+    }
     return byCustomer;
   });
 }
 
 export function useKhataEntries(id: string | null | undefined): KhataEntryRow[] | undefined {
-  return useLiveQuery(
+  return useRetryingLiveQuery(
     async () => (id ? db.khata_entries.where('customer_id').equals(id).toArray() : []),
     [id],
   );

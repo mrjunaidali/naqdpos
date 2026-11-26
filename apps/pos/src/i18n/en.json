@@ -138,6 +138,15 @@
     "title": "Page not found",
     "goHome": "Go to home"
   },
+  "routeError": {
+    "title": "Something went wrong on this screen",
+    "body": "Your sales and changes are saved on this device. Try again, or reload the app.",
+    "closingBody": "Day Close could not open. Your sales and changes are saved on this device. Try again, or reload the app.",
+    "reloadNeeded": "Please reload the app. Your unsynced changes are safe on this device.",
+    "tryAgain": "Try again",
+    "reload": "Reload app",
+    "details": "Details for support"
+  },
   "sync": {
     "synced": "Synced",
     "pending_one": "{{count}} pending",

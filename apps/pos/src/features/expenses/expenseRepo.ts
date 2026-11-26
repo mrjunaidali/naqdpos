@@ -9,7 +9,7 @@ import {
   type StaffRow,
 } from '@naqdpos/core';
 import { isShopSuspended } from '../../app/suspension.ts';
-import { useLiveQuery } from 'dexie-react-hooks';
+import { useRetryingLiveQuery } from '../../db/retry.ts';
 import type { TFunction } from 'i18next';
 import { localWriteMany } from '../../db/outbox.ts';
 import { db } from '../../db/schema.ts';
@@ -34,7 +34,7 @@ export function categoryName(
 }
 
 export function useExpenseCategories(): ExpenseCategoryRow[] | undefined {
-  return useLiveQuery(async () => {
+  return useRetryingLiveQuery(async () => {
     const device = await getStoredDevice();
     if (!device) return [];
     return (await db.expense_categories.where('shop_id').equals(device.shop_id).toArray())
@@ -44,7 +44,7 @@ export function useExpenseCategories(): ExpenseCategoryRow[] | undefined {
 }
 
 export function useExpenses(): ExpenseRow[] | undefined {
-  return useLiveQuery(async () => {
+  return useRetryingLiveQuery(async () => {
     const device = await getStoredDevice();
     if (!device) return [];
     return db.expenses.where('shop_id').equals(device.shop_id).toArray();

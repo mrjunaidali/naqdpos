@@ -1,5 +1,4 @@
 import { dailySummary, displayName, receiptText, withLogo, type DaySummary } from '@naqdpos/core';
-import { useLiveQuery } from 'dexie-react-hooks';
 import { useTranslation } from 'react-i18next';
 import { Link, useParams } from 'react-router';
 import { db } from '../../db/schema.ts';
@@ -15,6 +14,7 @@ import { useShopLogo } from '../settings/logo.ts';
 import { useRs } from '../sale/saleFormat.ts';
 import { methodName } from '../settings/paymentMethods.ts';
 import { costsAt, dayRows, useDayCloses } from './closingData.ts';
+import { useRetryingLiveQuery } from '../../db/retry.ts';
 
 /** Daily summary (US045): after closing and from past closes; WhatsApp and print. */
 export function SummaryPage() {
@@ -23,7 +23,7 @@ export function SummaryPage() {
   const dates = useDates();
   const rs = useRs();
   const logo = useShopLogo();
-  const summary = useLiveQuery(async (): Promise<DaySummary | null> => {
+  const summary = useRetryingLiveQuery(async (): Promise<DaySummary | null> => {
     const device = await getStoredDevice();
     if (!device || !businessDate) return null;
     const close = (await db.day_closes.where('business_date').equals(businessDate).toArray()).find(

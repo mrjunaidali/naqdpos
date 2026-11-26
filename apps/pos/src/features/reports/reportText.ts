@@ -1,14 +1,14 @@
 // Small display helpers shared by the report screens.
 import type { TFunction } from 'i18next';
-import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '../../db/schema.ts';
 import { getStoredDevice } from '../../db/session.ts';
 import { categoryName } from '../expenses/expenseRepo.ts';
 import { methodName } from '../settings/paymentMethods.ts';
+import { useRetryingLiveQuery } from '../../db/retry.ts';
 
 /** Names for payment methods, expense categories and staff from this device's data. */
 export function useReportNames() {
-  return useLiveQuery(async () => {
+  return useRetryingLiveQuery(async () => {
     const device = await getStoredDevice();
     const [methods, categories, staff] = await Promise.all([
       db.payment_methods.toArray(),

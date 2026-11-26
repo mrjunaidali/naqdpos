@@ -41,12 +41,22 @@ import { StaffFormPage } from './features/staff/StaffFormPage.tsx';
 import { StaffLayout } from './features/staff/StaffLayout.tsx';
 import { StaffListPage } from './features/staff/StaffListPage.tsx';
 import { SyncPage } from './features/sync/SyncPage.tsx';
+import { RouteError } from './app/RouteError.tsx';
+
+/**
+ * Every screen gets a friendly error screen inside the layout (header stays); the root one covers
+ * the layout itself. Never React Router's raw error page (bug 2026-11-25).
+ */
+function withErrorScreens(children: RouteObject[]): RouteObject[] {
+  return children.map((route) => ({ errorElement: <RouteError />, ...route }));
+}
 
 export const routes: RouteObject[] = [
   {
     path: '/',
     element: <RootLayout />,
-    children: [
+    errorElement: <RouteError fullPage />,
+    children: withErrorScreens([
       {
         index: true,
         element: (
@@ -135,6 +145,7 @@ export const routes: RouteObject[] = [
       {
         // Daily closing and summaries (US044, US045): owners only.
         path: 'closing',
+        errorElement: <RouteError area="closing" />,
         element: (
           <Gate state="ready">
             <OwnerPinGate>
@@ -145,6 +156,7 @@ export const routes: RouteObject[] = [
       },
       {
         path: 'closing/history',
+        errorElement: <RouteError area="closing" />,
         element: (
           <Gate state="ready">
             <OwnerPinGate>
@@ -155,6 +167,7 @@ export const routes: RouteObject[] = [
       },
       {
         path: 'closing/:businessDate',
+        errorElement: <RouteError area="closing" />,
         element: (
           <Gate state="ready">
             <OwnerPinGate>
@@ -324,6 +337,6 @@ export const routes: RouteObject[] = [
         ],
       },
       { path: '*', element: <NotFoundPage /> },
-    ],
+    ]),
   },
 ];

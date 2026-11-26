@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import fixture from './fixtures/expected-cash.json' with { type: 'json' };
 import {
+  activityDates,
   buildDayClose,
   businessDateFor,
   closableDays,
@@ -9,6 +10,7 @@ import {
   expectedCash,
   openingDefault,
   rowsNotSeenAtClosing,
+  sortSaleLines,
   type DayCloseRow,
   type SummaryInput,
 } from './closing.ts';
@@ -394,5 +396,49 @@ describe('daily summary', () => {
     const s = dailySummary({ ...base, close: { ...close, server_seq: null } });
     expect(s.late).toEqual({ status: 'waiting' });
     expect(receiptText(s.doc)).toContain('Waiting to sync');
+  });
+});
+
+// Bug 2026-11-25: iOS WebKit refuses Dexie's orderBy().uniqueKeys(); the app dedupes in JS.
+describe('activityDates', () => {
+  it('is the distinct dates of all tables, oldest first, like uniqueKeys() on each index', () => {
+    const sales = [{ business_date: '2026-11-23' }, { business_date: '2026-11-21' }];
+    const payments = [{ business_date: '2026-11-21' }, { business_date: '2026-11-22' }];
+    const expenses: { business_date: string }[] = [];
+    expect(activityDates(sales, payments, expenses)).toEqual([
+      '2026-11-21',
+      '2026-11-22',
+      '2026-11-23',
+    ]);
+  });
+
+  it('skips rows without a string date (an index holds no such key)', () => {
+    expect(activityDates([{ business_date: null }, {}, { business_date: '2026-11-20' }])).toEqual([
+      '2026-11-20',
+    ]);
+    expect(activityDates()).toEqual([]);
+  });
+
+  it('feeds closableDays the same days as before', () => {
+    const dates = activityDates([{ business_date: '2026-11-20' }, { business_date: '2026-11-21' }]);
+    expect(closableDays(dates, new Set(['2026-11-20']), '2026-11-22')).toEqual(['2026-11-21']);
+  });
+});
+
+describe('sortSaleLines', () => {
+  it('orders by sale_id, then line id (the anyOf() order on the sale_id index)', () => {
+    const lines = [
+      { sale_id: 'b', id: '2' },
+      { sale_id: 'a', id: '9' },
+      { sale_id: 'b', id: '1' },
+      { sale_id: 'a', id: '3' },
+    ];
+    expect(sortSaleLines(lines).map((l) => `${l.sale_id}${l.id}`)).toEqual([
+      'a3',
+      'a9',
+      'b1',
+      'b2',
+    ]);
+    expect(lines[0]).toEqual({ sale_id: 'b', id: '2' }); // input untouched
   });
 });

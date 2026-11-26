@@ -12,6 +12,7 @@ import type {
 import { useEffect, useState } from 'react';
 import { api, ApiError } from '../../api/index.ts';
 import { db } from '../../db/schema.ts';
+import { readWithRetry } from '../../db/retry.ts';
 import { getStoredDevice } from '../../db/session.ts';
 
 export interface ReportResults {
@@ -67,10 +68,12 @@ async function remember(key: string, value: unknown, savedAt: string) {
     await db.report_cache.put({ key, saved_at: savedAt, value });
     const count = await db.report_cache.count();
     if (count > MAX_CACHED_REPORTS) {
-      const old = await db.report_cache
-        .orderBy('saved_at')
-        .limit(count - MAX_CACHED_REPORTS)
-        .primaryKeys();
+      // A few rows: read them and pick the oldest in JS, no orderBy().limit() index cursor
+      // (bug 2026-11-25, iOS WebKit).
+      const old = (await db.report_cache.toArray())
+        .sort((x, y) => (x.saved_at < y.saved_at ? -1 : x.saved_at > y.saved_at ? 1 : 0))
+        .slice(0, count - MAX_CACHED_REPORTS)
+        .map((row) => row.key);
       await db.report_cache.bulkDelete(old);
     }
   });
@@ -90,7 +93,7 @@ export async function loadReport<K extends ReportKind>(
   const key = reportKey(kind, device.shop_id, from, to, filters);
   const cached = async (): Promise<ReportState<ReportResults[K]>> => {
     if (!ownerDevice) return { status: 'needs_internet' };
-    const row = await db.report_cache.get(key);
+    const row = await readWithRetry(() => db.report_cache.get(key));
     return row
       ? { status: 'ready', data: row.value as ReportResults[K], asOf: row.saved_at, offline: true }
       : { status: 'needs_internet' };

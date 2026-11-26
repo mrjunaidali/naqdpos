@@ -6,6 +6,20 @@ _Nothing open._
 
 ## Fixed
 
+### 2026-11-25 — Day Close crashes on iPhone: "Unable to open cursor" — fixed 2026-11-26
+
+Tapping Day Close on iPhone (Safari, the installed PWA, Chrome on iOS, private browsing; also with a brand-new local database after a fresh sign-in) showed React Router's raw error page "UnknownError: Unable to open cursor", every time.
+
+**Cause.** `useActivityDates()` (`features/closing/closingData.ts`) found the "oldest unclosed day with activity" with `table.orderBy('business_date').uniqueKeys()` on sales, payments, expenses, stock movements and khata. Dexie runs that as `IDBIndex.openKeyCursor(null, 'nextunique')`, a unique-direction key cursor on an index, which iOS WebKit refuses with `UnknownError: Unable to open cursor`. It runs first on every Day Close visit, with or without data, so it failed every time and on fresh databases. Nothing else in the app used `uniqueKeys()`; ordinary forward index cursors work on iPhone (the receipt counter's `startsWith().each()` runs on every sale). The error went to React Router, which has no error screen of ours, so the raw page showed. Playwright's WebKit (another IndexedDB backend) runs the query fine, so the e2e test refuses those cursors the way iOS does.
+
+**Fix.**
+1. Day Close reads with single-field `equals()` / plain `toArray()` only: activity dates from one `toArray()` per ledger table, deduped in core (`activityDates()`); sale lines with `where('sale_id').equals()` per sale instead of `anyOf()`, kept in the same order (`sortSaleLines()`). Same results on every browser; no schema or Dexie version change.
+2. Same clean-up elsewhere: the Sync screen's `anyOf()`, the reports cache's `orderBy('saved_at').limit()` and the khata balances' `each()` now read with `equals()` / `toArray()`.
+3. Friendly error screens (en + ur, RTL): every screen inside the layout, Day Close with its own message, and an app-wide one; "Try again" and "Reload app"; never React Router's raw page.
+4. Reopen-and-retry (`db/retry.ts`): on `DatabaseClosedError`, "Connection to Indexed Database server lost" or `UnknownError` a read closes and reopens the database once and tries again; a second failure shows "Please reload the app" (the outbox stays on disk). Used by Day Close, reports, khata, expenses and Home.
+
+**Tests.** e2e `day-close.spec.ts` on Chromium and WebKit with iOS cursor limits emulated (unique cursors refused: the iPhone failure, reproduced before the fix; every index cursor refused), plus the friendly screen in en and ur. Unit: Day Close with every index cursor refused in fake-indexeddb (fails on the old code with the iPhone error), friendly screens, retry helper, `activityDates` / `sortSaleLines`.
+
 ### 2026-11-26 — New Sale: product tiles right-aligned on mobile — fixed 2026-11-26
 
 On iPhone the product tile content (icon, name, price/unit) was right-aligned; on desktop it was centred.

@@ -9,7 +9,7 @@ import {
   type SaleRow,
 } from '@naqdpos/core';
 import { fireEvent, screen, waitFor } from '@testing-library/react';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { db } from '../../db/schema.ts';
 import { writeCurrentStaffId } from '../../staff/currentStaff.ts';
 import { resetApiMock } from '../../test/apiMock.ts';
@@ -374,5 +374,73 @@ describe('daily summary (US045)', () => {
     expect(
       await screen.findByRole('link', { name: new RegExp(shown(YESTERDAY)) }),
     ).toBeInTheDocument();
+  });
+});
+
+// Bug 2026-11-25: on iPhone Day Close showed "UnknownError: Unable to open cursor" on React
+// Router's raw error page. iOS WebKit refuses some index cursors (Dexie's uniqueKeys()); here
+// fake-indexeddb refuses every index cursor the same way, and Day Close must still open.
+describe('Day Close on iOS WebKit (US044, bug 2026-11-25)', () => {
+  type Patched = Record<string, unknown>;
+  const restore: (() => void)[] = [];
+  function refuse(proto: Patched, name: string, error: () => unknown) {
+    const original = proto[name];
+    proto[name] = () => {
+      throw error();
+    };
+    restore.push(() => {
+      proto[name] = original;
+    });
+  }
+  const unableToOpenCursor = () => new DOMException('Unable to open cursor', 'UnknownError');
+  const indexProto = IDBIndex.prototype as unknown as Patched;
+  afterEach(async () => {
+    for (const undo of restore.splice(0)) undo();
+    await i18nForDates.changeLanguage('en');
+  });
+
+  it('opens with every index cursor refused: Day Close reads with equals()/toArray() only', async () => {
+    await seedShop();
+    await db.day_closes.put(
+      close(DAY_BEFORE, { counted_cash_paisa: 500_000, owner_withdrawal_paisa: 300_000 }),
+    );
+    await sale(TODAY, 21_500);
+    refuse(indexProto, 'openCursor', unableToOpenCursor);
+    refuse(indexProto, 'openKeyCursor', unableToOpenCursor);
+    renderAt('/closing');
+    expect(await screen.findByLabelText('Opening cash (Rs)')).toHaveValue('2000');
+    expect(screen.getByText('Expected cash').closest('p')).toHaveTextContent('Rs 2,215');
+    expect(screen.queryByText(/Unable to open cursor/)).not.toBeInTheDocument();
+  });
+
+  it('a read error shows the friendly Day Close screen; Try again opens it once reads work', async () => {
+    await seedShop();
+    await sale(TODAY, 21_500);
+    // Not an IndexedDB error, so it is not retried: the route's error screen catches it.
+    refuse(indexProto, 'getAll', () => new TypeError('broken read'));
+    renderAt('/closing');
+    expect(await screen.findByText(/Day Close could not open/)).toBeInTheDocument();
+    expect(screen.queryByText('Unexpected Application Error!')).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Reload app' })).toBeInTheDocument();
+    for (const undo of restore.splice(0)) undo();
+    fireEvent.click(screen.getByRole('button', { name: 'Try again' }));
+    expect(await screen.findByLabelText('Opening cash (Rs)')).toBeInTheDocument();
+  });
+
+  it('a read that fails again after reopening asks to reload the app (Urdu, RTL)', async () => {
+    await i18nForDates.changeLanguage('ur');
+    await seedShop();
+    await sale(TODAY, 21_500);
+    refuse(indexProto, 'getAll', unableToOpenCursor);
+    renderAt('/closing');
+    expect(
+      await screen.findByText(
+        'براہِ کرم ایپ دوبارہ لوڈ کریں۔ آپ کی غیر سنک تبدیلیاں اس ڈیوائس پر محفوظ ہیں۔',
+      ),
+    ).toBeInTheDocument();
+    expect(document.documentElement).toHaveAttribute('dir', 'rtl');
+    expect(screen.getByRole('button', { name: 'ایپ دوبارہ لوڈ کریں' })).toBeInTheDocument();
+    // Nothing to try again: only a reload helps now.
+    expect(screen.queryByRole('button', { name: 'دوبارہ کوشش کریں' })).not.toBeInTheDocument();
   });
 });

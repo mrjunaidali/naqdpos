@@ -1024,3 +1024,19 @@ Bug 2026-11-26 (docs/bugs.md): New Sale tiles were start-aligned on phones (righ
 **Tests**: Pos 416 (SaleWide tile test now checks centred classes and 2-line names instead of one-line `truncate`). E2E product tiles 8/8 (Chromium + WebKit × 375/1280 × en/ur); before the fix all 8 failed (WebKit 375px: icon 22.5px, names up to 34px off-centre). Full e2e 22 passed; the 2 admin smoke tests need the admin site, not served on this machine. WebKit screenshots: `e2e/test-results/screenshots/tiles-webkit-{375,1280}-{en,ur}.png`.
 
 **Follow-up**: in Urdu the price reads "کلو/Rs 300" (mixed-direction text in `products.pricePerUnit`); not changed here.
+
+## Fix: Day Close on iPhone ("Unable to open cursor"), friendly errors, reopen-and-retry (26 Nov 2026)
+
+Bug 2026-11-25 (docs/bugs.md). Cause: `orderBy('business_date').uniqueKeys()` in `useActivityDates()` opens a unique-direction index key cursor, which iOS WebKit refuses.
+
+- **Day Close reads** (`features/closing/closingData.ts`): `readActivityDates()` = one `toArray()` per ledger table + core `activityDates()`; `dayRows()` reads sale lines with `where('sale_id').equals()` per sale (sequential) + core `sortSaleLines()` (the old `anyOf()` order). All other reads were already single-field `equals()`.
+- **Other readers**: `SyncPage` held-units count (`anyOf` → `equals` per table), `reportsData.remember()` (`orderBy().limit()` → `toArray()` + sort), `khataRepo.useBalances()` (`each()` → `toArray()`). Left as is: the receipt counter's `where('receipt_no').startsWith().each()` (a forward cursor iPhones run on every sale) and `outbox.orderBy('id')` (primary key).
+- **Errors** (`app/RouteError.tsx`, `routes.tsx`): root `errorElement` (full page) and one per screen inside the layout (`withErrorScreens`), Day Close routes with their own text; "Try again" (navigates to the same location, which resets the boundary) and "Reload app"; details for support folded away. Strings `routeError.*` en + ur.
+- **Reopen-and-retry** (`db/retry.ts`): `readWithRetry()`, `isRecoverableDbError()`, `DbUnavailableError`, `useRetryingLiveQuery()`; one shared reopen when several reads fail together. Used in closing (closed dates, day rows, activity, day closes, summary), reports (names, cached report), khata, expenses categories, Home.
+- No schema or Dexie version change.
+
+**Files**: `packages/core/src/closing{,.test}.ts`; `apps/pos/src/db/{retry,retry.test}.ts` (new), `app/RouteError.tsx` (new), `routes.tsx`, `app/HomePage.tsx`, `features/closing/{closingData,closedDates}.ts`, `features/closing/{SummaryPage,Closing.test}.tsx`, `features/home/homeData.ts`, `features/khata/khataRepo.ts`, `features/expenses/expenseRepo.ts`, `features/reports/{reportsData,reportText}.ts`, `features/sync/SyncPage.tsx`, `i18n/{en,ur}.json`; `e2e/tests/day-close.spec.ts`; docs.
+
+**Tests**: Core 425 (+4). Pos 425 (+9: retry helper ×6; Day Close with every index cursor refused, friendly Day Close screen + Try again, reload-needed screen in Urdu/RTL). DB 208 and API db 58 (expected-cash shared fixture unchanged). E2E 30 passed on Chromium + WebKit (Day Close with no / unique / all index cursors refused; friendly screen en + ur); the 2 admin smoke tests need the admin site, not served on this machine. Lint, typecheck, format pass.
+
+**Note**: Playwright's WebKit does not refuse unique cursors (different IndexedDB backend from iOS); the e2e test emulates iOS by refusing them. A check on a real iPhone after the staging deploy is still needed.
