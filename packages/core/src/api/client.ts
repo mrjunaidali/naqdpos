@@ -91,13 +91,23 @@ export class ApiError extends Error {
   readonly code: string;
   /** 426 upgrade_required only: the oldest app version the API accepts. */
   readonly minVersion: string | undefined;
+  /** 500 internal: the request id the API logged the error under (for support). */
+  readonly requestId: string | undefined;
 
-  constructor(status: number, code: string, message?: string, minVersion?: string) {
-    super(message ?? `API error ${status} (${code})`);
+  constructor(
+    status: number,
+    code: string,
+    message?: string,
+    minVersion?: string,
+    requestId?: string,
+  ) {
+    const base = message ?? `API error ${status} (${code})`;
+    super(requestId ? `${base} [request ${requestId}]` : base);
     this.name = 'ApiError';
     this.status = status;
     this.code = code;
     this.minVersion = minVersion;
+    this.requestId = requestId;
   }
 }
 
@@ -141,6 +151,7 @@ export function createApiClient(options: ApiClientOptions) {
           ours.data.error,
           ours.data.message,
           ours.data.min_version,
+          ours.data.request_id,
         );
       const auth = AuthErrorResponse.safeParse(json);
       if (auth.success)

@@ -277,6 +277,8 @@ export const ErrorResponse = z.object({
   message: z.string().optional(),
   /** With 426 upgrade_required: the oldest app version the API accepts (§4). */
   min_version: z.string().optional(),
+  /** With 500 internal: the request's id, also in the API log line (added 26 Nov 2026). */
+  request_id: z.string().optional(),
 });
 export type ErrorResponse = z.infer<typeof ErrorResponse>;
 

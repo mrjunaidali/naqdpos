@@ -2,7 +2,17 @@
 
 ## Open
 
-_Nothing open._
+### 2026-11-26 — Staging: GET /sync/pull answers 500 for a fresh device — investigating
+
+A new device (incognito desktop Chrome as owner, the iPhone) gets `500 {"error":"internal"}` from `GET /sync/pull?since_seq=0`, so no products or sales arrive. On the iPhone the setup screen shows "Something went wrong. Please try again.": that text comes from `GET /me` failing during setup (`SetupPage`), so `/me` fails too.
+
+**Checked (not the cause on a database built from `db/migrations`):**
+- `sync_units()`, `sync_pull` and `sync_push` are executable by `naqdpos_app`; a db test now pins the grants of every function (only internal security-definer helpers and the admin CLI are excluded).
+- A missing grant would answer 403, not 500: the sync routes map SQLSTATE 42501 to `forbidden`.
+- A fresh device pulling the whole shop from 0 through the real API as `naqdpos_app` (owner and shop mode, default and small pages; products incl. ml, sales, lines, payments, khata, day closes) gets 200 and every row parses.
+- The original desktop calls the same `sync_units()` on each pull, so the new function alone cannot break only fresh devices; its pulls may be failing too without anyone noticing (it shows local data).
+
+**Next:** the API log line of the 500. 500s now carry `request_id` in the body and `X-Request-Id`, and the log line has `requestId` plus the Postgres SQLSTATE / routine / detail (`pg`). Read-only checks on staging in the progress entry of 26 Nov 2026.
 
 ## Fixed
 

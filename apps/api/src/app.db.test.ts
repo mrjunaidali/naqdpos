@@ -3,7 +3,13 @@
 import { randomUUID } from 'node:crypto';
 import { existsSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { hashPin, MeResponse } from '@naqdpos/core';
+import {
+  hashPin,
+  isSyncTable,
+  MeResponse,
+  SYNC_TABLES,
+  type SyncPullResponse,
+} from '@naqdpos/core';
 import { sql } from 'kysely';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { createApp } from './app.ts';
@@ -542,6 +548,198 @@ describe('/sync/push and /sync/pull', () => {
     });
     expect(res.status).toBe(403);
     expect(await res.json()).toEqual({ error: 'forbidden' });
+  });
+});
+
+// Staging, 26 Nov 2026: GET /sync/pull answered 500 for a fresh device (since_seq=0), so a new
+// phone or browser got no products or sales. Through the real API (naqdpos_app, RLS on): one
+// device fills the shop, a second device registered afterwards pulls everything from 0.
+describe('a fresh device pulls the whole shop from since_seq=0', () => {
+  it('gets products (also ml), sales, lines, payments, khata and day closes, every row parseable', async () => {
+    const o = await owner();
+    const shopId = o.shop.shop_id;
+    const actor = o.shop.owner_staff_id;
+    const register = async (mode: 'owner' | 'shop') => {
+      const id = randomUUID();
+      const res = await post('/devices', { id, shop_id: shopId, name: 'Phone', mode }, o.token);
+      expect(res.status).toBe(201);
+      return { id, headers: { ...bearer(o.token), 'x-device-id': id, 'x-app-version': '0.0.0' } };
+    };
+    const first = await register('owner');
+    const now = new Date().toISOString();
+    const day = '2026-11-25';
+    const common = { shop_id: shopId, device_id: first.id, server_seq: null };
+    const mutable = { ...common, created_at: now, updated_at: now, deleted_at: null };
+    const product = (name: string, unit: string, price: number) => ({
+      ...mutable,
+      id: randomUUID(),
+      category_id: null,
+      name,
+      name_ur: null,
+      unit,
+      sale_price_paisa: price,
+      barcode: null,
+      track_stock: false,
+      min_qty_milli: null,
+      is_combo: false,
+      packaging_cost_paisa: 0,
+      foc_rule: null,
+      search_terms: [],
+      icon: null,
+    });
+    const tomato = product('Tomato', 'kg', 16_000);
+    const roseWater = product('Rose water', 'ml', 5_000);
+    const customer = {
+      ...mutable,
+      id: randomUUID(),
+      mobile: '+923001234567',
+      name: 'Aslam',
+      address: null,
+      credit_limit_paisa: null,
+      whatsapp_opt_in: false,
+    };
+    const saleId = randomUUID();
+    const sale = {
+      ...common,
+      id: saleId,
+      receipt_no: 'A1-000001',
+      business_date: day,
+      staff_id: actor,
+      customer_id: customer.id,
+      order_type: 'walk_in',
+      source: 'walk_in',
+      subtotal_paisa: 46_000,
+      discount_paisa: 0,
+      rounding_paisa: 0,
+      total_paisa: 46_000,
+      note: null,
+      discount_approved_by_staff_id: null,
+      created_at: now,
+    };
+    const line = (p: typeof tomato, qty: number, total: number) => ({
+      ...common,
+      id: randomUUID(),
+      sale_id: saleId,
+      product_id: p.id,
+      name_snapshot: p.name,
+      name_ur_snapshot: null,
+      unit_snapshot: p.unit,
+      qty_milli: qty,
+      unit_price_paisa: p.sale_price_paisa,
+      discount_paisa: 0,
+      is_foc: false,
+      by_amount: false,
+      line_total_paisa: total,
+      created_at: now,
+    });
+    const payment = {
+      ...common,
+      id: randomUUID(),
+      business_date: day,
+      kind: 'sale',
+      sale_id: saleId,
+      customer_id: null,
+      method_code: 'cash',
+      amount_paisa: 16_000,
+      reference: null,
+      staff_id: actor,
+      created_at: now,
+    };
+    const credit = {
+      ...common,
+      id: randomUUID(),
+      customer_id: customer.id,
+      business_date: day,
+      type: 'credit_sale',
+      amount_paisa: 30_000,
+      sale_id: saleId,
+      payment_id: null,
+      note: null,
+      staff_id: actor,
+      created_at: now,
+    };
+    const close = {
+      ...common,
+      id: randomUUID(),
+      business_date: day,
+      opening_cash_paisa: 0,
+      expected_cash_paisa: 16_000,
+      counted_cash_paisa: 16_000,
+      difference_paisa: 0,
+      owner_withdrawal_paisa: 0,
+      note: null,
+      closed_by_staff_id: actor,
+      closed_at: now,
+      seen_through_seq: 0,
+    };
+    const entry = (table: string, row: object, op = 'insert') => ({
+      id: randomUUID(),
+      table,
+      op,
+      actor_staff_id: actor,
+      row,
+    });
+    const entries = [
+      entry('products', tomato, 'upsert'),
+      entry('products', roseWater, 'upsert'),
+      entry('customers', customer, 'upsert'),
+      entry('sales', sale),
+      // 1 kg tomato Rs 160 + 6 ml rose water at Rs 50 = Rs 300 (on khata)
+      entry('sale_lines', line(tomato, 1000, 16_000)),
+      entry('sale_lines', line(roseWater, 6000, 30_000)),
+      entry('payments', payment),
+      entry('khata_entries', credit),
+      entry('day_closes', close),
+    ];
+    const pushed = await app.request('/sync/push', {
+      method: 'POST',
+      headers: first.headers,
+      body: JSON.stringify({ device_id: first.id, entries }),
+    });
+    expect(pushed.status).toBe(200);
+    expect(await pushed.json()).toMatchObject({ errors: [], conflicts: [] });
+
+    for (const mode of ['owner', 'shop'] as const) {
+      const fresh = await register(mode);
+      const rows: { table: string; row: Record<string, unknown> }[] = [];
+      let since = 0;
+      for (let pageNo = 0; pageNo < 20; pageNo++) {
+        const res = await app.request(
+          // The app's default page (500) on the owner device; tiny pages on the shop device.
+          `/sync/pull?device_id=${fresh.id}&since_seq=${since}${mode === 'shop' ? '&limit=3' : ''}`,
+          { headers: fresh.headers },
+        );
+        const body = (await res.json()) as SyncPullResponse & { error?: string };
+        expect(res.status, `${mode} page ${pageNo}: ${JSON.stringify(body)}`).toBe(200);
+        expect(body.units).toEqual(expect.arrayContaining(['ml']));
+        rows.push(...body.rows);
+        if (!body.has_more) break;
+        since = body.next_seq;
+      }
+      const tables = new Set(rows.map((r) => r.table));
+      for (const t of [
+        'products',
+        'customers',
+        'sales',
+        'sale_lines',
+        'payments',
+        'khata_entries',
+        'day_closes',
+      ])
+        expect(tables.has(t), `${mode}: ${t}`).toBe(true);
+      // What the app would store: every pulled row passes its table's schema.
+      for (const { table, row } of rows) {
+        if (!isSyncTable(table)) continue;
+        const parsed = SYNC_TABLES[table].schema.safeParse(row);
+        expect(parsed.success, `${mode}: ${table} ${JSON.stringify(row)}`).toBe(true);
+      }
+      expect(
+        rows
+          .filter((r) => r.table === 'sale_lines')
+          .map((r) => r.row.unit_snapshot)
+          .sort(),
+      ).toEqual(['kg', 'ml']);
+    }
   });
 });
 

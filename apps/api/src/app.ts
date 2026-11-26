@@ -2,9 +2,10 @@
 // transaction as the signed-in user, call SQL, return JSON. Data rules live in SQL and RLS.
 import { OpenAPIHono } from '@hono/zod-openapi';
 import { cors } from 'hono/cors';
+import { requestId, type RequestIdVariables } from 'hono/request-id';
 import type { AuthService, AuthUser } from './auth.ts';
 import type { Db, TxContext } from './db/index.ts';
-import { errorBody } from './errors.ts';
+import { errorBody, pgDetails } from './errors.ts';
 import type { Logger } from './logger.ts';
 import type { Mailer } from './mailer.ts';
 import type { ObjectStore } from './storage.ts';
@@ -40,7 +41,7 @@ export interface AppDeps {
 
 export interface AppEnv {
   /** Set by requireUser on routes that need a session. */
-  Variables: { user: AuthUser; tx: TxContext };
+  Variables: { user: AuthUser; tx: TxContext } & RequestIdVariables;
 }
 
 export function createApp(deps: AppDeps) {
@@ -57,13 +58,17 @@ export function createApp(deps: AppDeps) {
     },
   });
 
+  // Every request gets an id (an incoming X-Request-Id is kept): in the log lines, the
+  // X-Request-Id response header and the 500 body, so a user's error matches its log line.
+  app.use('*', requestId());
+
   app.use(
     '*',
     cors({
       origin: deps.origins,
       allowHeaders: ['Authorization', 'Content-Type', 'X-Device-Id', 'X-App-Version'],
       // The bearer plugin returns the session token in this header after sign-in.
-      exposeHeaders: ['set-auth-token'],
+      exposeHeaders: ['set-auth-token', 'X-Request-Id'],
       credentials: true,
     }),
   );
@@ -73,6 +78,7 @@ export function createApp(deps: AppDeps) {
     await next();
     deps.logger.info(
       {
+        requestId: c.get('requestId'),
         method: c.req.method,
         path: c.req.path,
         status: c.res.status,
@@ -108,8 +114,12 @@ export function createApp(deps: AppDeps) {
 
   app.notFound((c) => c.json(errorBody('not_found'), 404));
   app.onError((error, c) => {
-    deps.logger.error({ err: error, path: c.req.path }, 'unhandled error');
-    return c.json(errorBody('internal'), 500);
+    const id = c.get('requestId');
+    deps.logger.error(
+      { err: error, requestId: id, method: c.req.method, path: c.req.path, pg: pgDetails(error) },
+      'unhandled error',
+    );
+    return c.json({ ...errorBody('internal'), request_id: id }, 500);
   });
 
   return app;

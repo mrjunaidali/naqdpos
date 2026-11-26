@@ -293,3 +293,42 @@ describe('/sync/* (architecture §4)', () => {
     );
   });
 });
+
+// Staging, 26 Nov 2026: a 500 said only {"error":"internal"}; now the body, the X-Request-Id
+// header and the log line share one id.
+describe('unexpected errors carry a request id', () => {
+  function failing() {
+    const logger = createLogger({ NODE_ENV: 'test', LOG_LEVEL: 'info' });
+    const logged = vi.spyOn(logger, 'error').mockImplementation(() => undefined);
+    const pgError = Object.assign(new Error('function public.sync_units() does not exist'), {
+      code: '42883',
+      routine: 'ParseFuncOrColumn',
+    });
+    const res = app({ logger, checkDb: () => Promise.reject(pgError) });
+    return { res, logged };
+  }
+
+  it('returns the id in the 500 body and header, and logs it with the Postgres details', async () => {
+    const { res, logged } = failing();
+    const response = await res.request('/health');
+    expect(response.status).toBe(500);
+    const body = (await response.json()) as { error: string; request_id: string };
+    expect(body.error).toBe('internal');
+    expect(body.request_id).toMatch(/\S{8,}/);
+    expect(response.headers.get('x-request-id')).toBe(body.request_id);
+    expect(logged).toHaveBeenCalledWith(
+      expect.objectContaining({
+        requestId: body.request_id,
+        path: '/health',
+        pg: expect.objectContaining({ code: '42883', routine: 'ParseFuncOrColumn' }) as unknown,
+      }),
+      'unhandled error',
+    );
+  });
+
+  it('keeps an incoming X-Request-Id (e.g. from the proxy)', async () => {
+    const { res } = failing();
+    const response = await res.request('/health', { headers: { 'x-request-id': 'edge-123' } });
+    expect(((await response.json()) as { request_id: string }).request_id).toBe('edge-123');
+  });
+});

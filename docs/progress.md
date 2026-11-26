@@ -1054,3 +1054,23 @@ Investigation of "old sales missing after the Day Close changes": not data loss 
 **Files**: `packages/core/src/{salesRange,salesRange.test}.ts` (new), `index.ts`, `sync/outbox{,.test}.ts`, `syncHealth{,.test}.ts`; `apps/pos/src/features/sale/{SalesListPage.tsx,saleData.ts,SalesHistory.test.tsx (new)}`, `sync/{engine,engine.test,useSyncStatus,SyncChip}.ts(x)`, `db/{outbox,schema}.ts`, `features/sync/SyncPage{,.test}.tsx`, `i18n/{en,ur}.json`, `i18n/urdu.test.tsx`; `e2e/tests/{sales-history.spec.ts (new),sync-screen.spec.ts}`; docs (architecture §4 Pull 2, backlog US018, bugs, progress).
 
 **Tests**: Core 436 (+11: ranges, cap, URL round trip, cashier always today, closed-day notice, pull-record helpers, `pull_skipped` warning). Pos 440 (+15: sales history owner presets / custom / back keeps range / after Day Close / index cursors refused / Urdu, cashier own day only; engine records a bad pulled row with its field, one record per row and cleared when stored, unknown tables not recorded, Try again ignores pull records; Sync screen section, "Check sync" chip, Urdu). E2E 38 passed on Chromium + WebKit at 375px (sales history en / ur / cashier with index cursors refused; pull record on the Sync screen); the 2 admin smoke tests need the admin site, not served on this machine. Screenshots: `e2e/test-results/screenshots/sales-webkit-375-{en,ur,cashier-en}.png`, `sync-webkit-pull-en.png`.
+
+## Diagnostics for the staging pull 500; sales list never shows the previous range (26 Nov 2026)
+
+Bug "Staging: GET /sync/pull answers 500 for a fresh device" (docs/bugs.md, Open). Not reproducible on a database built from `db/migrations`; no migration written until the cause is known.
+
+- **Request ids** (`apps/api/src/app.ts`): Hono `requestId()` on every request (an incoming `X-Request-Id` is kept; exposed through CORS). The request log line and the error log line carry `requestId`; the error line adds `pg` (SQLSTATE, routine, table/column/constraint, detail, hint, where; `pgDetails()` in `errors.ts`, never bound values). The 500 body is `{"error":"internal","request_id":"…"}` (`ErrorResponse.request_id`, optional). The app's `ApiError` keeps `requestId` and appends `[request …]` to its message (shown as the Sync screen's last error).
+- **Tests**: API: fresh device pulls the whole shop from 0 as `naqdpos_app` (owner + shop mode, default and small pages, products incl. ml, sales, lines, payments, khata, day closes; every row parses with its table schema); 500 body / header / log share the request id, an incoming id is kept. DB: `naqdpos_app` may execute every non-trigger function in `public` except a fixed list of internal helpers and the admin CLI. Core: `ApiError` keeps the request id.
+- **Sales screen**: each range's result carries its range key, so the previous range's sales never show under a new title while the new one loads (made the week test flaky); the title and picker stay on screen meanwhile.
+
+**Read-only checks for staging** (owner role, Railway Postgres):
+```sql
+select current_database();
+select version from schema_migrations order by version desc limit 5;
+select p.proname, pg_get_function_identity_arguments(p.oid) as args,
+       has_function_privilege('naqdpos_app', p.oid, 'execute') as api_can_execute
+from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+where n.nspname = 'public' and p.proname in ('sync_units', 'sync_pull', 'sync_push', 'sync_device', 'me')
+order by 1;
+select rolname, rolconfig from pg_roles where rolname = 'naqdpos_app';
+```

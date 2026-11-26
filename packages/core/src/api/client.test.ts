@@ -77,6 +77,16 @@ describe('createApiClient', () => {
     expect(error).toMatchObject({ status: 409, code: 'conflict' });
   });
 
+  it('keeps the request id of a 500, also in the message (Sync screen, support)', async () => {
+    const api = createApiClient({
+      baseUrl: 'https://api.test',
+      fetch: fakeFetch(500, { error: 'internal', request_id: 'req-42' }),
+    });
+    const error = await api.createShop(shop).catch((e: unknown) => e);
+    expect(error).toMatchObject({ status: 500, code: 'internal', requestId: 'req-42' });
+    expect((error as Error).message).toContain('[request req-42]');
+  });
+
   it("turns Better Auth's error body into ApiError with its code", async () => {
     const api = createApiClient({
       baseUrl: 'https://api.test',

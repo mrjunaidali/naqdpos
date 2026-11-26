@@ -247,3 +247,37 @@ describe('the migration re-checks the ml unit idempotently', () => {
     expect(await constraintOids()).toEqual(before);
   });
 });
+
+// Staging, 26 Nov 2026: GET /sync/pull and /me answered 500. Grants must never drift: the API
+// role may execute every non-trigger function in public except these, which only run inside
+// owner-run (security definer) functions or from the admin CLI.
+describe('naqdpos_app may execute what the API calls', () => {
+  const NOT_FOR_THE_API = [
+    'admin_assert', // inside admin_* (security definer)
+    'admin_audit', // inside admin_* (security definer)
+    'admin_grant', // admin CLI (db/scripts/admin.ts), owner role
+    'admin_revoke', // admin CLI
+    'admin_write_product', // inside admin_save_product / admin_import_products
+    'owner_pin_target', // inside owner_set_first_pin / pin reset (security definer)
+    'seed_expense_categories', // inside create_shop / admin_create_shop
+    'seed_payment_methods', // inside create_shop / admin_create_shop
+    'uuid_v7', // column defaults and owner-run functions
+  ];
+
+  it('every other function is executable, including the sync functions', async () => {
+    const { rows } = await admin.query<{ proname: string }>(`
+      select distinct p.proname
+      from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+      where n.nspname = 'public' and p.prokind = 'f' and p.prorettype <> 'trigger'::regtype
+        and not has_function_privilege('naqdpos_app', p.oid, 'execute')
+      order by 1`);
+    expect(rows.map((r) => r.proname)).toEqual(NOT_FOR_THE_API);
+    for (const fn of ['sync_pull(uuid,bigint,integer)', 'sync_push(uuid,jsonb)', 'sync_units()']) {
+      const { rows: can } = await admin.query<{ ok: boolean }>(
+        `select has_function_privilege('naqdpos_app', $1, 'execute') as ok`,
+        [`public.${fn}`],
+      );
+      expect(can[0]!.ok, fn).toBe(true);
+    }
+  });
+});
