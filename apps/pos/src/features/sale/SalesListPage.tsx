@@ -43,15 +43,21 @@ export function SalesListPage() {
   const current = closed ? businessDateFor(new Date(), closed) : undefined;
   const range =
     current && viewer.ready ? salesRangeFromParams(params, current, viewer.isOwner) : undefined;
-  const sales = useRetryingLiveQuery(async () => {
+  const rangeKey = range ? `${range.from}|${range.to}` : '';
+  // Each result carries its range: useLiveQuery keeps the previous result until the new read
+  // ends, and the old range's sales must never show under the new title.
+  const loaded = useRetryingLiveQuery(async () => {
     if (!range) return undefined;
     const device = await getStoredDevice();
-    if (!device) return [];
-    return readSalesOn(datesBetween(range.from, range.to), device.shop_id);
-  }, [range?.from, range?.to]);
-  if (!sales || !range || !current) return null;
+    const sales = device
+      ? await readSalesOn(datesBetween(range.from, range.to), device.shop_id)
+      : [];
+    return { key: rangeKey, sales };
+  }, [rangeKey]);
+  const sales = loaded?.key === rangeKey ? loaded.sales : undefined;
+  if (!range || !current) return null;
 
-  const mine = sales.filter((s) => visibleTo(s, viewer.staffId, viewer.isOwner));
+  const mine = (sales ?? []).filter((s) => visibleTo(s, viewer.staffId, viewer.isOwner));
   const oneDay = range.from === range.to;
   const isCurrent = oneDay && range.from === current;
   const time = new Intl.DateTimeFormat(intlLocale(i18n.language), {
@@ -85,40 +91,45 @@ export function SalesListPage() {
             ? t('sales.allToday')
             : t('sales.allRange')}
       </p>
-      <div className="rounded-2xl bg-hero p-4 text-hero-fg">
-        <p className="text-sm text-hero-muted">{t('sales.count', { count: mine.length })}</p>
-        <p className="text-3xl font-bold" dir="ltr">
-          {rs(sumPaisa(mine.map((s) => s.total_paisa)))}
-        </p>
-      </div>
-      {mine.length === 0 ? (
-        <p className="text-muted">{isCurrent ? t('sales.none') : t('sales.noneRange')}</p>
-      ) : (
-        <ul className="divide-y divide-border rounded-2xl border border-border bg-surface">
-          {mine.map((s) => (
-            <li key={s.id}>
-              <Link
-                to={`/sales/${s.id}`}
-                state={{ salesSearch: back }}
-                className="flex min-h-14 items-center justify-between gap-3 px-4 py-2"
-              >
-                <span>
-                  <span className="block font-medium" dir="ltr">
-                    {s.receipt_no}
-                  </span>
-                  <span className="block text-sm text-muted">
-                    {oneDay
-                      ? time.format(new Date(s.created_at))
-                      : `${dates.date(s.business_date)} · ${time.format(new Date(s.created_at))}`}
-                  </span>
-                </span>
-                <span className="font-semibold" dir="ltr">
-                  {rs(s.total_paisa)}
-                </span>
-              </Link>
-            </li>
-          ))}
-        </ul>
+      {/* The title and picker stay while another range loads; only the figures wait. */}
+      {sales && (
+        <>
+          <div className="rounded-2xl bg-hero p-4 text-hero-fg">
+            <p className="text-sm text-hero-muted">{t('sales.count', { count: mine.length })}</p>
+            <p className="text-3xl font-bold" dir="ltr">
+              {rs(sumPaisa(mine.map((s) => s.total_paisa)))}
+            </p>
+          </div>
+          {mine.length === 0 ? (
+            <p className="text-muted">{isCurrent ? t('sales.none') : t('sales.noneRange')}</p>
+          ) : (
+            <ul className="divide-y divide-border rounded-2xl border border-border bg-surface">
+              {mine.map((s) => (
+                <li key={s.id}>
+                  <Link
+                    to={`/sales/${s.id}`}
+                    state={{ salesSearch: back }}
+                    className="flex min-h-14 items-center justify-between gap-3 px-4 py-2"
+                  >
+                    <span>
+                      <span className="block font-medium" dir="ltr">
+                        {s.receipt_no}
+                      </span>
+                      <span className="block text-sm text-muted">
+                        {oneDay
+                          ? time.format(new Date(s.created_at))
+                          : `${dates.date(s.business_date)} · ${time.format(new Date(s.created_at))}`}
+                      </span>
+                    </span>
+                    <span className="font-semibold" dir="ltr">
+                      {rs(s.total_paisa)}
+                    </span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          )}
+        </>
       )}
       {viewer.isOwner && (
         <Link
