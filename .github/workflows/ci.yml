@@ -96,11 +96,12 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.cache/ms-playwright
-          key: playwright-${{ runner.os }}-${{ steps.pw.outputs.version }}
+          # The browser list is in the key: a cache made for Chromium alone has no WebKit.
+          key: playwright-${{ runner.os }}-${{ steps.pw.outputs.version }}-chromium-webkit
       - if: steps.pw-cache.outputs.cache-hit != 'true'
-        run: pnpm --filter @naqdpos/e2e exec playwright install --with-deps chromium
+        run: pnpm --filter @naqdpos/e2e exec playwright install --with-deps chromium webkit
       - if: steps.pw-cache.outputs.cache-hit == 'true'
-        run: pnpm --filter @naqdpos/e2e exec playwright install-deps chromium
+        run: pnpm --filter @naqdpos/e2e exec playwright install-deps chromium webkit
       - run: pnpm e2e
       - if: failure()
         uses: actions/upload-artifact@v4
