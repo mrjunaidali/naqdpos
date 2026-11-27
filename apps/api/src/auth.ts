@@ -11,7 +11,9 @@ import {
 import { betterAuth, type BetterAuthOptions } from 'better-auth';
 import { APIError, isAPIError } from 'better-auth/api';
 import { bearer, emailOTP, oneTimeToken, twoFactor } from 'better-auth/plugins';
-import pg from 'pg';
+import { PostgresDialect } from 'kysely';
+import type pg from 'pg';
+import { createPool, readRetryPool } from './db/pool.ts';
 import type { Env } from './env.ts';
 import type { Logger } from './logger.ts';
 import { CODE_MINUTES, codeEmail, maskEmail, type Mailer } from './mailer.ts';
@@ -152,8 +154,12 @@ const twoFactorSchema = {
  * policies on the auth tables require. The request pool never sets it, so tenant queries
  * cannot read sessions or tokens even though both pools use the same naqdpos_app role.
  */
-export function createAuthPool(connectionString: string): pg.Pool {
-  return new pg.Pool({ connectionString, max: 5, options: '-c app.context=auth' });
+export function createAuthPool(connectionString: string, logger?: Logger): pg.Pool {
+  return createPool(
+    connectionString,
+    { max: 5, options: '-c app.context=auth', name: 'auth' },
+    logger,
+  );
 }
 
 export interface AuthDeps {
@@ -165,6 +171,8 @@ export interface AuthDeps {
   sendOtp?: SendOtp;
   /** Tests only: a shorter one-time-token lifetime. */
   oneTimeTokenMinutes?: number;
+  /** Tests only: Better Auth's rate limit (off in tests by default). */
+  rateLimit?: { enabled: boolean; window: number; max: number };
 }
 
 function googleKeys(env: Env) {
@@ -212,8 +220,19 @@ export function authOptions(env: Env, deps: AuthDeps) {
     trustedOrigins: env.APP_ORIGINS,
     // In memory: correct for ONE API instance only. More copies need storage: 'database'
     // (deployment §5). Code sending has Better Auth's stricter built-in rule on top.
-    rateLimit: { enabled: env.NODE_ENV !== 'test', storage: 'memory', window: 60, max: 100 },
-    database: deps.pool,
+    rateLimit: {
+      enabled: env.NODE_ENV !== 'test',
+      window: 60,
+      max: 100,
+      ...deps.rateLimit,
+      storage: 'memory',
+    },
+    // Through Kysely with the read-retry wrapper: a session lookup (findSession) that hits a
+    // dropped connection runs once more on a new one. Writes are never retried (db/pool.ts).
+    database: {
+      dialect: new PostgresDialect({ pool: readRetryPool(deps.pool, 'auth', deps.logger) }),
+      type: 'postgres',
+    },
     ...authSchemaOptions,
     session: {
       ...authSchemaOptions.session,
@@ -225,7 +244,15 @@ export function authOptions(env: Env, deps: AuthDeps) {
       ...authSchemaOptions.account,
       accountLinking: { enabled: true, trustedProviders: ['google', 'email-otp'] },
     },
-    advanced: { database: { generateId: 'uuid' } },
+    advanced: {
+      database: { generateId: 'uuid' },
+      // The client IP for rate limits and sessions.ip_address: only the one header the host's
+      // edge sets (Railway: x-real-ip), as a single address. X-Forwarded-For is not read: a
+      // client can put anything in it. Unset = one shared bucket per path (deployment §2).
+      ...(env.CLIENT_IP_HEADER && {
+        ipAddress: { ipAddressHeaders: [env.CLIENT_IP_HEADER] },
+      }),
+    },
     ...(google && { socialProviders: { google } }),
     plugins: [
       emailOTP({

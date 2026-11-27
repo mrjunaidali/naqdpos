@@ -54,6 +54,20 @@ describe('API settings', () => {
     expect(s3Settings(env)).toBeNull();
   });
 
+  it('CLIENT_IP_HEADER is a lower-case header name; LOG_FULL_CLIENT_IP is off by default', () => {
+    const env = loadEnv({ ...production, CLIENT_IP_HEADER: 'X-Real-IP' });
+    expect(env.CLIENT_IP_HEADER).toBe('x-real-ip');
+    expect(env.LOG_FULL_CLIENT_IP).toBe(false);
+    expect(loadEnv({ ...production, LOG_FULL_CLIENT_IP: 'true' }).LOG_FULL_CLIENT_IP).toBe(true);
+    expect(loadEnv(production).CLIENT_IP_HEADER).toBeUndefined();
+    expect(problems(() => loadEnv({ ...production, CLIENT_IP_HEADER: 'x real ip' }))).toContain(
+      'CLIENT_IP_HEADER',
+    );
+    expect(problems(() => loadEnv({ ...production, LOG_FULL_CLIENT_IP: 'yes' }))).toContain(
+      'LOG_FULL_CLIENT_IP',
+    );
+  });
+
   it('treats empty optional values as not set', () => {
     const env = loadEnv({ ...development, GOOGLE_CLIENT_ID: '', SMTP_HOST: '' });
     expect(env.GOOGLE_CLIENT_ID).toBeUndefined();

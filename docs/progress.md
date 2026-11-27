@@ -1173,3 +1173,45 @@ Cause behind the staging pull 500 (docs/bugs.md 2026-11-26): the staging `api` s
   - `docs/deployment.md` §3: new request headers must already be allowed by the live API (or be optional); after a red CI on an API commit, redeploy `api` and `worker` by hand; check that the active `api` commit is current.
 - **Tests**: core 455, API unit 113, POS 440 (the Urdu file 5 times in a row), admin 21; lint, typecheck and format pass. DB tests not run here (no SQL change).
 - **Follow-up**: redeploy staging `api` then `worker` from the newest green `main`. Consider widening the `api` and `worker` watch paths or redeploying them after every red CI.
+
+## 2026-11-28 — Fix: per-client sign-in rate limits, dropped database connections, API never behind the POS
+
+From the staging `api` log of 27 Nov (docs/bugs.md).
+
+- **Client IP (rate limits):**
+  - `CLIENT_IP_HEADER` (Railway `x-real-ip`) → Better Auth `advanced.ipAddress.ipAddressHeaders`. It takes one valid address from that header only; `X-Forwarded-For` is never read.
+  - `apps/api/src/clientIp.ts`: the same rule for our request log, plus `maskIp` (IPv4 `a.b.c.x`, IPv6 the first 3 groups).
+  - `LOG_FULL_CLIENT_IP=true` logs the full IP for the spoof test. The API warns at start while it is on, and in production when `CLIENT_IP_HEADER` is unset.
+  - The `/files` limiter stays per user (it can't be faked, so it needs no IP).
+- **Connection drops:**
+  - `apps/api/src/db/pool.ts`: `createPool` with keep-alive (10 s), idle timeout 10 s, connect timeout 5 s, and a pool `'error'` handler.
+  - `readRetryPool` (used by Kysely and by Better Auth through a `PostgresDialect`):
+    - logs a connection that drops while a request holds it, instead of crashing;
+    - runs a plain `SELECT` outside a transaction once more on a new connection. Never writes, locking reads, CTEs or anything inside a transaction.
+  - `withUserTx(…, { readOnly })` / `withReadTx`: a `READ ONLY` transaction, retried once on a connection error. Used for the reports, the admin session check, the shop list and detail, and the `/files` checks.
+  - `{ repeatable: true }` for the sync pull. It isn't read-only (`sync_mark_device` updates `last_seq_pulled = greatest(…)`), but running it twice gives the same result.
+  - `GET /me` is not retried: `accept_invites()` writes.
+- **Deploys:**
+  - `api` and `worker` have no watch paths any more: deployment §3 and the §6 step 3 table. `apps/api/railway.json` and `railway.worker.json` no longer have `watchPatterns`; the worker start command now matches the dashboard.
+  - The 828fad4 cause is in §3: the unit-test job failed, then a POS-only green commit.
+  - A worker restart during the 02:00 backup is documented as safe in §5: dump first, a single atomic `PutObject`, retention last, and pg-boss retries.
+- **Docs:** `.env.example`; deployment §2 (two settings, client IP), §3, §5 (backup restart, database connections), §6 step 9 (spoof test); docs/bugs.md.
+- **Tests:**
+  - New:
+    - `db/pool.test.ts`: what counts as a connection error; SELECT retried once; writes, locking reads, CTEs and anything inside a transaction never retried.
+    - `pool.db.test.ts`: real `pg_terminate_backend` mid-request.
+      - A read transaction is retried; a write is not.
+      - A read-only transaction refuses a write.
+      - An idle drop is logged and the pool goes on.
+      - The auth pool retries a SELECT, keeps `app.context`, and doesn't retry a write.
+      - No unhandled errors, which caught the held-connection crash.
+    - `rateLimit.db.test.ts`: the same IP gets 429 and another IP has its own limit; a faked `X-Forwarded-For` doesn't help; without the setting every client shares one bucket.
+    - `clientIp.test.ts`: reading and masking.
+    - `app.test.ts`: the request log `ip` field (masked, full, missing, not configured).
+    - `env.test.ts`: the two settings.
+    - `backup.db.test.ts`: a failed dump uploads nothing; a failed upload prunes nothing; both fail the job, so pg-boss retries.
+  - Totals: core 455, admin 21, API unit 144, POS 440, DB 209, API DB 75 (with `pg_dump` 18 on PATH; without it the two existing backup tests fail with ENOENT on this PC). Lint, typecheck and format pass.
+- **Follow-up (staging):**
+  - Set `CLIENT_IP_HEADER=x-real-ip` and run the spoof test with `LOG_FULL_CLIENT_IP=true`, then remove that setting.
+  - Clear the watch paths of `api` and `worker` in both environments.
+  - Production gets the same settings before the pilot.

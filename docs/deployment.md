@@ -57,6 +57,8 @@ Moving a part = changing its settings. Nothing host-specific is in code. Secrets
 | api | `S3_BUCKET` | `naqdpos-files-prod` | `naqdpos-files-staging` | |
 | api | `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY` | files-prod token | files-staging token | Token scoped to **that bucket only** |
 | api | `MIN_APP_VERSION` | (unset) | (unset) | Raise only for a breaking sync change (architecture §4) |
+| api | `CLIENT_IP_HEADER` | `x-real-ip` | `x-real-ip` | The header in which the host's edge puts the client IP (Railway documents `X-Real-IP`). Sign-in rate limits are per client IP, and the request log shows it masked. Name only a header the edge **overwrites**, checked with the spoof test (§6 step 9). Unset: all clients share one sign-in bucket per path, and the API warns at start |
+| api | `LOG_FULL_CLIENT_IP` | (unset) | (unset; `true` only during the spoof test) | `true` = the request log shows the full client IP instead of `203.0.113.x` / `2001:db8:85a3:x:x:x:x:x`. Temporary; the API warns at start while it is on |
 | api, worker | `LOG_LEVEL` | `info` | `info` | `NODE_ENV` is already `production` in the image |
 | worker | `BACKUP_S3_ENDPOINT`, `BACKUP_S3_REGION` | `https://<account-id>.r2.cloudflarestorage.com`, `auto` | same | |
 | worker | `BACKUP_S3_BUCKET` | `naqdpos-backups-prod` | `naqdpos-backups-staging` | |
@@ -71,7 +73,7 @@ Moving a part = changing its settings. Nothing host-specific is in code. Secrets
 
 `shared.APP_DB_PASSWORD` is a Railway **shared variable** per environment holding the `naqdpos_app` password (runbook "First deploy"). `${{Postgres.…}}` are Railway reference variables to the environment's Postgres service.
 
-**Rate limiting is in memory** (Better Auth's limiter, plus 30 `/files` requests per user per minute). That is correct with **one API instance** (Replicas **1** on the `api` service, §6 step 3). Before running more API copies, switch Better Auth's `rateLimit.storage` to `'database'` (a table in a migration) and move the `/files` counter to Postgres too; otherwise each copy counts separately. Behind Railway the client IP comes from `X-Forwarded-For`; if the API logs "Rate limiting could not determine a client IP", set Better Auth's `advanced.ipAddress.ipAddressHeaders`.
+**Rate limiting is in memory** (Better Auth's limiter, plus 30 `/files` requests per user per minute). That is correct with **one API instance** (Replicas **1** on the `api` service, §6 step 3). Before running more API copies, switch Better Auth's `rateLimit.storage` to `'database'` (a table in a migration) and move the `/files` counter to Postgres too; otherwise each copy counts separately. **Client IP (bug 2026-11-27):** Better Auth reads only the header named in `CLIENT_IP_HEADER` (`advanced.ipAddress.ipAddressHeaders`), and only when it holds exactly one valid address. Without the setting it read `X-Forwarded-For`, which on Railway is missing or a list, so it logged "Rate limiting could not determine a client IP" and every client shared one bucket. `X-Forwarded-For` is never used: a client can fake it, and Railway publishes no proxy ranges for `trustedProxies`. The `/files` limit counts per **user**, not per IP, so it can't be faked and doesn't need the header. The IP also lands in `sessions.ip_address` (Better Auth). In the request log it is masked: IPv4 without the last octet, IPv6 with only the first three groups.
 
 ## 3. Environments, CI and deploys
 
@@ -98,8 +100,8 @@ Moving a part = changing its settings. Nothing host-specific is in code. Secrets
 - **Deploy order: API before POS** (bug 2026-11-25). The POS is a static build that goes live within a minute; the API builds longer, runs its migrations in pre-deploy and passes a health check first, and if that fails the old API keeps running. A POS that knows something new (a unit, a column) can therefore talk to an older API for a while. So:
   - **Code**: the app must cope with an older API. New product units are held in the outbox until a pull lists them (architecture §4 Push 5); other new fields stay optional (§4 compatibility).
   - **New request headers** (bug 2026-11-27): the browser preflights every custom header, and an API whose CORS `allowHeaders` (`apps/api/src/app.ts`) lacks it fails the **whole request** with "CORS error", before the API sees it. So a header the client starts sending must first be allowed by an API that is **already live** on that environment: allow it in the API in one release, send it from the apps in a later one, or make it optional the way `X-App-Language` is (the shared client retries once without it after a network-level failure and then leaves it off for the session; emails fall back to English). The test "preflight allows every header the shared client sends" in `apps/api/src/app.test.ts` fails when the client sends a header the API doesn't allow.
-  - **A red CI can leave the API behind** (the same bug): with **Wait for CI**, a commit whose CI fails is deployed nowhere. The next green commit is deployed only to services whose **watch paths** it touches, so a POS-only fix after a red API commit deploys the new POS on top of the old API. After a red CI on a commit that touched `apps/api/**`, `packages/core/**` or `db/**`, redeploy `api` and `worker` by hand once CI is green again (Railway → service → Deployments → **Deploy latest commit**), API first.
-  - **Check after every staging deploy**: the commit of the active `api` deployment is the newest commit that touched its watch paths (`git log -1 --format=%h -- apps/api packages/core db pnpm-lock.yaml`), and it is not older than the active `pos` deployment's.
+  - **A red CI used to leave the API behind** (the same bug): with **Wait for CI**, a commit whose CI fails is deployed nowhere. With watch paths, the next green commit went only to the services whose paths it touched, so a POS-only fix after a red API commit put the new POS on top of the old API (`828fad4`: the unit-test job failed on a flaky POS test; then `a792aea`, POS-only and green, deployed only `pos`). **So `api` and `worker` have no watch paths** (§6 step 3): every green commit on the branch rebuilds them, and the API is never on an older commit than the POS. `pos` and `admin` keep theirs. The cost is an API build for POS-only or docs commits: build minutes, no downtime (the old API serves until the new one passes `/health`).
+  - **Check after every staging deploy**: the active `api` deployment is on the same commit as the newest green `main` commit, and never older than the active `pos` deployment's. If not (a build failed, or a service was paused), redeploy it: Railway → service → Deployments → **Deploy latest commit**, `api` first.
   - **Deploying by hand** (production, or redeploying staging): deploy `api` first, wait until its deployment is **Active** and the pre-deploy log ends with `db:deploy: migrations are up to date`, then deploy `pos` (and `admin`). Railway has no cross-service ordering; on staging both services start from the same push, so the safeguard in code is what protects devices there.
   - **After every deploy** (staging and production), before announcing anything: the `api` deployment's pre-deploy log ends with `db:deploy: migrations are up to date` (and names each new file), and in the environment's Postgres → Query tab
     ```sql
@@ -132,6 +134,19 @@ Both apps use **`deploy/static.Dockerfile`** (build arg `APP=pos|admin`): a Node
 ## 5. Backups and operations
 
 - **Backups (US008):** the worker runs `pg_dump --format=custom` with `DATABASE_ADMIN_URL` **every night at 02:00 Asia/Karachi** (pg-boss cron; a night missed during a deploy runs once when the worker is back; 2 retries, 10 minutes apart). The dump is encrypted with **AES-256-GCM** (`BACKUP_ENCRYPTION_KEY`, streamed, file `NQBK1 | IV | ciphertext | tag`) and uploaded to the **backups bucket** as `backups/daily/YYYY-MM-DD.dump.enc`; on the 1st of the month also `backups/monthly/YYYY-MM.dump.enc`. The newest **30 daily and 12 monthly** are kept; older ones are deleted. **Restore drill once a month** (runbook).
+- **Restart during the 02:00 backup is safe:**
+  - `pg_dump` writes to a temp file; the upload starts only after the dump and the encryption finish.
+  - Each upload is one `PutObject` (no multipart), which S3/R2 store only when the whole body has arrived. An interrupted upload leaves no object, or the previous one under that key.
+  - Retention runs only after both uploads succeeded, so a broken night never prunes good backups.
+  - pg-boss fails a job whose worker died (lost heartbeat, or `expireInSeconds` 60 minutes) and runs it again (2 retries, 10 minutes apart). On `SIGTERM` the worker waits up to 30 s for a running job.
+  - Tests: `backup.db.test.ts` "a run that breaks part-way". A truncated file also can't pass as a backup: AES-GCM checks the tag on restore.
+- **Database connections (bug 2026-11-27, "read ECONNRESET" in Better Auth findSession):**
+  - Both API pools (app role, auth) use TCP keep-alive (first probe after 10 s), close idle connections after 10 s (pg-pool's default, set on purpose) and give up connecting after 5 s.
+  - A connection that drops while idle or while a request holds it is logged as a warning (`idle database connection dropped` / `database connection dropped while in use`), not a crash.
+  - **Reads are retried once** on a new connection: read-only transactions (`withReadTx`: sync pull, reports, admin session check, shop list and detail, `/files` checks) and plain `SELECT`s outside a transaction (Better Auth's session lookups). The sync pull is retried too: its one write, the device mark, only moves forward.
+  - **Writes are never retried**, including every `POST /auth/*`: a write may have committed before the connection dropped, and a second code email or a used-up code would confuse people.
+  - The log line for a retry is `database connection dropped during a read …: retrying once`. A few a day are fine; many mean the database or network has a problem.
+  - Railway documents no idle timeout for Postgres or the private network (only 60 s for idle HTTP/1.1 at the edge).
 - **Health:** `GET /health` checks DB connectivity; Railway's healthcheck uses it on deploy and restarts on failure. The static sites are checked on `/`.
 - **Logs:** pino JSON logs to stdout; Railway keeps them. Never logged: tokens, PINs, PIN hashes, codes, passwords, connection strings (logger redaction, tested). Email logs show recipient and subject only.
 - **Scaling path:** more API copies (first: shared rate-limit storage, §2) → PgBouncer (transaction mode) in front of Postgres → bigger Postgres → read replica for reports. `set_config(..., true)` is transaction-scoped, so it is safe with transaction pooling.
@@ -180,7 +195,7 @@ Records are added in steps 3 (Resend) and 6 (Railway domains). Use **DNS only (g
    | --- | --- | --- | --- | --- |
    | Build → Builder | Dockerfile | Dockerfile | Dockerfile | Dockerfile |
    | Build → Dockerfile path | `apps/api/Dockerfile` | `apps/api/Dockerfile` | `deploy/static.Dockerfile` | `deploy/static.Dockerfile` |
-   | Source → Watch paths | `/apps/api/**`, `/packages/core/**`, `/db/**`, `/pnpm-lock.yaml` | same as `api` | `/apps/pos/**`, `/packages/core/**`, `/deploy/**`, `/pnpm-lock.yaml` | `/apps/admin/**`, `/packages/core/**`, `/deploy/**`, `/pnpm-lock.yaml` |
+   | Source → Watch paths | **empty** (every commit, §3) | **empty** (every commit) | `/apps/pos/**`, `/packages/core/**`, `/deploy/**`, `/pnpm-lock.yaml` | `/apps/admin/**`, `/packages/core/**`, `/deploy/**`, `/pnpm-lock.yaml` |
    | Deploy → Custom start command | `node /repo/apps/api/src/server.ts` | **`node /repo/apps/api/src/worker.ts`** | empty (image's Caddy) | empty |
    | Deploy → Pre-deploy command | **`node /repo/db/scripts/migrate.ts`** | **empty** (never migrations) | empty | empty |
    | Deploy → Healthcheck path | `/health` | empty (no HTTP) | `/` | `/` |
@@ -203,7 +218,7 @@ Without it there are **no backups** (bug 2026-11-27: staging ran without a worke
 2. **Encryption key**: `openssl rand -base64 32` (Git Bash), or `node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"`. Save it in the password manager (`NaqdPOS <env> BACKUP_ENCRYPTION_KEY`, with the date) **before** you paste it into Railway. A **different** key per environment.
 3. Railway → the environment → **+ Create → GitHub Repo** → this repo. Rename the service to **`worker`**. Settings:
    - Source: branch **`main`** (staging) / **`release`** (production); **Wait for CI** on; **Root directory empty**.
-   - Build and deploy settings from the `worker` column of the step 3 table: Builder **Dockerfile**, Dockerfile path **`apps/api/Dockerfile`**, Custom start command **`node /repo/apps/api/src/worker.ts`**, **Pre-deploy command empty**, no healthcheck (it serves no HTTP), restart **Always**, **1** replica, the watch paths. Config file path empty.
+   - Build and deploy settings from the `worker` column of the step 3 table: Builder **Dockerfile**, Dockerfile path **`apps/api/Dockerfile`**, Custom start command **`node /repo/apps/api/src/worker.ts`**, **Pre-deploy command empty**, no healthcheck (it serves no HTTP), restart **Always**, **1** replica, **no watch paths** (empty: it rebuilds on every commit, like `api`). Config file path empty.
    - Networking: **no public domain** (don't click Generate Domain; delete one if it appears).
 4. **Variables** (worker → Variables → Raw editor):
    ```
@@ -256,6 +271,12 @@ For each public service: Railway → service → Settings → Networking → **C
 - Admin portal: create a test shop → "Email sent to …"; the invite email arrives.
 - **The `worker` service exists and is running** (step 4a): its latest log shows `NaqdPOS worker started`, and each morning `backup uploaded` for the night (or right after `pnpm backup:now`); the backups bucket has `backups/daily/<date>.dump.enc`. Do the restore drill once on staging (runbook §4) before the pilot, and once on production after its first backup.
 - `MIN_APP_VERSION` is unset.
+- **Client IP** (once per environment, and again if the host or its edge changes):
+  - Set `CLIENT_IP_HEADER=x-real-ip` and, for the test only, `LOG_FULL_CLIENT_IP=true`, then redeploy `api`.
+  - From a PC: `curl -s -H "X-Real-IP: 1.2.3.4" -H "X-Forwarded-For: 5.6.7.8" https://<api>/health`.
+  - The API log's `request` line for `/health` must show your **own** public IP as `ip` (compare with `curl -s https://api.ipify.org`), never `1.2.3.4` or `5.6.7.8`. If it shows `1.2.3.4`, the edge passes the header through: unset `CLIENT_IP_HEADER` and don't use it.
+  - Then remove `LOG_FULL_CLIENT_IP` and redeploy. The line now shows `ip` masked (`a.b.c.x`), and the start no longer warns about full IPs.
+- The `api` and `worker` deployments are on the newest green `main` commit, never older than `pos` (§3).
 
 ## 7. Cost plan (estimates)
 

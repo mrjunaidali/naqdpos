@@ -4,6 +4,7 @@ import { OpenAPIHono } from '@hono/zod-openapi';
 import { cors } from 'hono/cors';
 import { requestId, type RequestIdVariables } from 'hono/request-id';
 import type { AuthService, AuthUser } from './auth.ts';
+import { clientIp, maskIp } from './clientIp.ts';
 import type { Db, TxContext } from './db/index.ts';
 import { errorBody, pgDetails } from './errors.ts';
 import type { Logger } from './logger.ts';
@@ -37,6 +38,10 @@ export interface AppDeps {
   mailer?: Mailer | null;
   /** The shop app's address for invite emails (POS_URL). */
   posUrl?: string | undefined;
+  /** CLIENT_IP_HEADER: the header with the client IP (Railway: x-real-ip); unset = none. */
+  clientIpHeader?: string | undefined;
+  /** LOG_FULL_CLIENT_IP: log the full IP (temporary, for the spoof test); default masked. */
+  logFullClientIp?: boolean;
 }
 
 export interface AppEnv {
@@ -82,6 +87,8 @@ export function createApp(deps: AppDeps) {
   app.use('*', async (c, next) => {
     const start = performance.now();
     await next();
+    // Only when the host's client-IP header is configured; masked unless LOG_FULL_CLIENT_IP.
+    const ip = deps.clientIpHeader ? clientIp(c.req.raw.headers, deps.clientIpHeader) : undefined;
     deps.logger.info(
       {
         requestId: c.get('requestId'),
@@ -89,6 +96,7 @@ export function createApp(deps: AppDeps) {
         path: c.req.path,
         status: c.res.status,
         ms: Math.round(performance.now() - start),
+        ...(ip !== undefined && { ip: ip && (deps.logFullClientIp ? ip : maskIp(ip)) }),
       },
       'request',
     );

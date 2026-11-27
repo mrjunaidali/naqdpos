@@ -20,7 +20,7 @@ import {
 import { sql, type RawBuilder } from 'kysely';
 import type { z } from 'zod';
 import type { AppDeps, AppEnv } from '../app.ts';
-import { withUserTx, type TxContext } from '../db/index.ts';
+import { withReadTx, type TxContext } from '../db/index.ts';
 import { shopRole } from '../db/roles.ts';
 import { errorBody, pgCode } from '../errors.ts';
 import { requireUser } from './require-user.ts';
@@ -64,7 +64,7 @@ const expensesRoute = reportRoute('expenses', ExpenseReportQuery, ExpenseReportS
 
 type Outcome = { ok: true; value: unknown } | { ok: false; status: 400 | 403; message?: string };
 
-export function reportRoutes(deps: Pick<AppDeps, 'db' | 'auth'>) {
+export function reportRoutes(deps: Pick<AppDeps, 'db' | 'auth' | 'logger'>) {
   const app = new OpenAPIHono<AppEnv>();
   app.use('/reports/*', requireUser(deps.auth));
 
@@ -76,7 +76,7 @@ export function reportRoutes(deps: Pick<AppDeps, 'db' | 'auth'>) {
     const range = validateRange(q.from, q.to);
     if (range) return { ok: false, status: 400, message: range };
     try {
-      return await withUserTx(deps.db, context, async (tx) => {
+      return await withReadTx(deps, context, async (tx) => {
         if (!can(await shopRole(tx, q.shop_id), 'see_reports'))
           return { ok: false, status: 403 } as const;
         const { rows } = await query.execute(tx);

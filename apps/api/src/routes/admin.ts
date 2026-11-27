@@ -19,7 +19,8 @@ import { createMiddleware } from 'hono/factory';
 import { sql } from 'kysely';
 import { z } from 'zod';
 import type { AppDeps, AppEnv } from '../app.ts';
-import { withUserTx, type Db } from '../db/index.ts';
+import { withReadTx, withUserTx, type Db } from '../db/index.ts';
+import type { Logger } from '../logger.ts';
 import { errorBody, pgCode } from '../errors.ts';
 import { registerAdminShopRoutes } from './adminShop.ts';
 
@@ -28,8 +29,12 @@ const PAGE_SIZE = 25;
 
 type AdminEnv = AppEnv & { Variables: { sessionId: string } };
 
-async function sessionState(db: Db, userId: string, sessionId: string): Promise<AdminSessionState> {
-  return withUserTx(db, { userId, deviceId: null }, async (tx) => {
+async function sessionState(
+  deps: { db: Db; logger?: Logger | undefined },
+  userId: string,
+  sessionId: string,
+): Promise<AdminSessionState> {
+  return withReadTx(deps, { userId, deviceId: null }, async (tx) => {
     const { rows } = await sql<{
       s: string;
     }>`select admin_session_ok(${sessionId}::uuid) as s`.execute(tx);
@@ -51,9 +56,9 @@ function requireSession(deps: Pick<AppDeps, 'auth'>) {
 }
 
 /** A verified admin session, or 401 (signed out / older than 12 hours) / 403. */
-function requireAdmin(deps: Pick<AppDeps, 'db'>) {
+function requireAdmin(deps: Pick<AppDeps, 'db' | 'logger'>) {
   return createMiddleware<AdminEnv>(async (c, next) => {
-    const state = await sessionState(deps.db, c.get('user').id, c.get('sessionId'));
+    const state = await sessionState(deps, c.get('user').id, c.get('sessionId'));
     if (state === 'no_session' || state === 'session_expired') {
       return c.json(errorBody('unauthorized', state), 401);
     }
@@ -152,13 +157,13 @@ export function adminRoutes(deps: Pick<AppDeps, 'db' | 'auth' | 'logger' | 'mail
   registerAdminShopRoutes(app, deps);
 
   const adminOnly = async (userId: string, sessionId: string) => {
-    const state = await sessionState(deps.db, userId, sessionId);
+    const state = await sessionState(deps, userId, sessionId);
     return state === 'admin_required' || state === 'no_session' ? null : state;
   };
 
   return app
     .openapi(me, async (c) => {
-      const state = await sessionState(deps.db, c.get('user').id, c.get('sessionId'));
+      const state = await sessionState(deps, c.get('user').id, c.get('sessionId'));
       return c.json({ email: c.get('user').email, state }, 200);
     })
     .openapi(enroll, async (c) => {
@@ -198,7 +203,7 @@ export function adminRoutes(deps: Pick<AppDeps, 'db' | 'auth' | 'logger' | 'mail
     })
     .openapi(listShops, async (c) => {
       const { page, ...filters } = c.req.valid('query');
-      const result = await withUserTx(deps.db, c.get('tx'), async (tx) => {
+      const result = await withReadTx(deps, c.get('tx'), async (tx) => {
         const { rows } = await sql<{ r: unknown }>`
           select admin_list_shops(${JSON.stringify(filters)}::jsonb, ${page}, ${PAGE_SIZE}) as r`.execute(
           tx,
@@ -209,7 +214,7 @@ export function adminRoutes(deps: Pick<AppDeps, 'db' | 'auth' | 'logger' | 'mail
     })
     .openapi(getShop, async (c) => {
       const { id } = c.req.valid('param');
-      const result = await withUserTx(deps.db, c.get('tx'), async (tx) => {
+      const result = await withReadTx(deps, c.get('tx'), async (tx) => {
         const { rows } = await sql<{ r: unknown }>`select admin_get_shop(${id}::uuid) as r`.execute(
           tx,
         );

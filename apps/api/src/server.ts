@@ -13,8 +13,8 @@ import { s3Store } from './storage.ts';
 // Startup check: lists every missing or invalid setting by name, then stops (env.ts).
 const env = loadEnv();
 const logger = createLogger(env);
-const db = createDb(env.DATABASE_URL);
-const authPool = createAuthPool(env.DATABASE_URL);
+const db = createDb(env.DATABASE_URL, logger);
+const authPool = createAuthPool(env.DATABASE_URL, logger);
 const mail = mailSettings(env);
 const mailer = mail ? createMailer(mail, logger) : null;
 const s3 = s3Settings(env);
@@ -39,6 +39,12 @@ try {
   logger.error({ err: error }, 'could not check the database migrations; starting anyway');
 }
 
+// Without the client-IP header every client shares one sign-in rate-limit bucket per path.
+if (env.NODE_ENV === 'production' && !env.CLIENT_IP_HEADER)
+  logger.warn('CLIENT_IP_HEADER is not set: sign-in rate limits are shared by all clients');
+if (env.LOG_FULL_CLIENT_IP)
+  logger.warn('LOG_FULL_CLIENT_IP is on: full client IPs are logged (turn it off after the test)');
+
 // A wrong email login is logged loudly at start, but doesn't stop the API: selling never needs
 // email, and the host would restart it in a loop.
 if (mailer) void mailer.verify();
@@ -52,6 +58,8 @@ const app = createApp({
   files: s3 ? s3Store(s3) : null,
   mailer,
   posUrl: env.POS_URL,
+  clientIpHeader: env.CLIENT_IP_HEADER,
+  logFullClientIp: env.LOG_FULL_CLIENT_IP,
   checkDb: async () => {
     try {
       await sql`select 1`.execute(db);

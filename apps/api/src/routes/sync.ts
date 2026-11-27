@@ -145,27 +145,34 @@ export function syncRoutes(deps: Pick<AppDeps, 'db' | 'auth' | 'minAppVersion' |
         return c.json(errorBody('bad_request', 'device_id must match X-Device-Id'), 400);
       }
       const result = await run(() =>
-        withUserTx(deps.db, tx, async (t) => {
-          // units: what the database accepts, so the app holds back rows it would reject.
-          // A database behind this API version has no sync_units() (staging, 26 Nov 2026:
-          // migration 20261126090000 not applied, every pull answered 500). Then the pull
-          // answers like an older server, without units: the app sends only the original units.
-          const { rows } = await sql<{ r: SyncPullResponse; has_units: boolean }>`
+        withUserTx(
+          deps.db,
+          tx,
+          async (t) => {
+            // units: what the database accepts, so the app holds back rows it would reject.
+            // A database behind this API version has no sync_units() (staging, 26 Nov 2026:
+            // migration 20261126090000 not applied, every pull answered 500). Then the pull
+            // answers like an older server, without units: the app sends only the original units.
+            const { rows } = await sql<{ r: SyncPullResponse; has_units: boolean }>`
             select sync_pull(${query.device_id}, ${query.since_seq}, ${query.limit}) as r,
               to_regprocedure('public.sync_units()') is not null as has_units`.execute(t);
-          const page = rows[0]!.r;
-          if (!rows[0]!.has_units) {
-            deps.logger.warn(
-              { requestId: c.get('requestId'), path: c.req.path },
-              'sync_units() is missing: the database is behind this API (run the migrations)',
-            );
-            return page;
-          }
-          const units = await sql<{ units: string[] }>`select public.sync_units() as units`.execute(
-            t,
-          );
-          return { ...page, units: units.rows[0]!.units };
-        }),
+            const page = rows[0]!.r;
+            if (!rows[0]!.has_units) {
+              deps.logger.warn(
+                { requestId: c.get('requestId'), path: c.req.path },
+                'sync_units() is missing: the database is behind this API (run the migrations)',
+              );
+              return page;
+            }
+            const units = await sql<{
+              units: string[];
+            }>`select public.sync_units() as units`.execute(t);
+            return { ...page, units: units.rows[0]!.units };
+          },
+          // Safe to run twice: the same page, and the device mark only moves forward
+          // (sync_mark_device: greatest(...)). Retried once if the connection drops.
+          { repeatable: true, logger: deps.logger },
+        ),
       );
       if (!result.ok) return c.json(errorBody('forbidden'), 403);
       return c.json(result.value, 200);

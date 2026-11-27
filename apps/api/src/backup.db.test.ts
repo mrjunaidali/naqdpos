@@ -144,4 +144,41 @@ describe('nightly backup and restore (US008)', () => {
     await client.end();
     expect(Number(rows[0]!.n)).toBe(0);
   });
+
+  // A worker restart (deploy) during the 02:00 run: pg-boss fails the job (heartbeat lost, or
+  // expireInSeconds) and runs it again (retryLimit 2). That is safe only if a broken run never
+  // leaves a file that looks like a backup and never prunes the good ones.
+  describe('a run that breaks part-way (worker restart)', () => {
+    const oldBackup = () => {
+      const store = memoryStore();
+      store.objects.set('backups/daily/2026-11-26.dump.enc', {
+        body: Buffer.from('yesterday'),
+        lastModified: new Date(),
+      });
+      return store;
+    };
+
+    it('a failed dump uploads nothing and deletes nothing, and the job fails (so it is retried)', async () => {
+      const store = oldBackup();
+      await expect(
+        runBackup({ adminUrl: urlFor('naqdpos_no_such_db'), store, encryptionKey: key, logger }),
+      ).rejects.toThrow();
+      expect([...store.objects.keys()]).toEqual(['backups/daily/2026-11-26.dump.enc']);
+    });
+
+    it('a failed upload stops before retention: the older backups stay, the job fails', async () => {
+      const store = oldBackup();
+      const deleteCalls: string[][] = [];
+      const broken = {
+        ...store,
+        putFile: () => Promise.reject(new Error('connection reset during upload')),
+        delete: (keys: string[]) => (deleteCalls.push(keys), store.delete(keys)),
+      };
+      await expect(
+        runBackup({ adminUrl: urlFor('naqdpos_test'), store: broken, encryptionKey: key, logger }),
+      ).rejects.toThrow('connection reset during upload');
+      expect(deleteCalls).toEqual([]);
+      expect([...store.objects.keys()]).toEqual(['backups/daily/2026-11-26.dump.enc']);
+    });
+  });
 });

@@ -2,6 +2,17 @@
 
 ## Open
 
+### 2026-11-27 — Staging API log: shared sign-in rate limit; "read ECONNRESET" in findSession — fixed in code; staging settings to do
+
+**Rate limit.** Better Auth logged "Rate limiting could not determine a client IP and is falling back to a single shared per-path bucket". It read only `X-Forwarded-For`, and only when that held a single address; on Railway it doesn't. So all clients shared one sign-in limit: one busy shop could lock out every other. **Fix:** a new setting `CLIENT_IP_HEADER` (Railway: `x-real-ip`, which Railway documents) goes to Better Auth's `ipAddressHeaders`; `X-Forwarded-For` is never read. The request log shows the IP masked; `LOG_FULL_CLIENT_IP=true` (temporary) shows it in full for the spoof test. Railway doesn't document whether a client-sent `X-Real-IP` is overwritten: deployment.md §6 step 9 has the curl test.
+
+**ECONNRESET.** At 12:10 UTC a request failed in Better Auth `findSession` with "read ECONNRESET" from pg-pool: a pooled connection had been dropped. Also found: neither pool had an `'error'` handler, so a connection dropped while idle in the pool, or while a request held it, was an unhandled `'error'` event that crashes the API. **Fix:**
+- `apps/api/src/db/pool.ts`: keep-alive, explicit timeouts, and error handlers (pool and held clients).
+- One retry on a new connection for reads only: read-only transactions, plain `SELECT`s outside a transaction (Better Auth), and the sync pull (idempotent).
+- Writes and `POST /auth/*` are never retried.
+
+**Still to do on staging:** set `CLIENT_IP_HEADER`, run the spoof test, and clear the `api` and `worker` watch paths (deployment §3).
+
 ### 2026-11-27 — Staging: POS sign-in code and sync pull fail with "CORS error" — cause found; staging API needs a redeploy
 
 In the POS (private window) `POST /auth/email-otp/send-verification-otp` and `GET /sync/pull` both fail with "CORS error" in the browser.

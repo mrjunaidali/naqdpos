@@ -21,7 +21,7 @@ import {
 import { sql } from 'kysely';
 import type { z } from 'zod';
 import type { AppDeps, AppEnv } from '../app.ts';
-import { withUserTx } from '../db/index.ts';
+import { withReadTx } from '../db/index.ts';
 import { shopRole } from '../db/roles.ts';
 import { errorBody } from '../errors.ts';
 import { requireUser } from './require-user.ts';
@@ -108,7 +108,7 @@ export function fileRoutes(deps: Pick<AppDeps, 'db' | 'auth' | 'files' | 'logger
   });
 
   const roleIn = (context: AppEnv['Variables']['tx'], shopId: string) =>
-    withUserTx(deps.db, context, (tx) => shopRole(tx, shopId));
+    withReadTx(deps, context, (tx) => shopRole(tx, shopId));
 
   return app
     .openapi(uploadRoute, async (c) => {
@@ -128,7 +128,7 @@ export function fileRoutes(deps: Pick<AppDeps, 'db' | 'auth' | 'files' | 'logger
     })
     .openapi(cleanupRoute, async (c) => {
       const shopId = c.req.valid('json').shop_id;
-      const current = await withUserTx(deps.db, c.get('tx'), async (tx) => {
+      const current = await withReadTx(deps, c.get('tx'), async (tx) => {
         if (!can(await shopRole(tx, shopId), 'manage_shop_settings'))
           return { allowed: false } as const;
         const { rows } = await sql<{ logo_path: string | null }>`

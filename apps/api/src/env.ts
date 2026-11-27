@@ -49,6 +49,22 @@ const ApiSchema = z.object({
   GOOGLE_CLIENT_ID: optional,
   GOOGLE_CLIENT_SECRET: optional,
 
+  /**
+   * The request header in which the host's edge proxy puts the client's IP (Railway:
+   * x-real-ip). Used for Better Auth's rate limits and the request log. Only a header the edge
+   * overwrites may be named here (deployment §2: the spoof test). Unset = no client IP.
+   */
+  CLIENT_IP_HEADER: z
+    .string()
+    .regex(/^[A-Za-z0-9-]+$/, 'must be a header name, e.g. x-real-ip')
+    .transform((v) => v.toLowerCase())
+    .optional(),
+  /** Temporary (the spoof test): the full client IP in the request log instead of a masked one. */
+  LOG_FULL_CLIENT_IP: z
+    .enum(['true', 'false'])
+    .default('false')
+    .transform((v) => v === 'true'),
+
   // Raised only for a breaking sync change: older apps then get 426 on /sync/* (architecture §4).
   MIN_APP_VERSION: z
     .string()

@@ -39,6 +39,35 @@ function app(overrides: Partial<AppDeps> = {}) {
 
 const signedIn = { authorization: 'Bearer good', 'content-type': 'application/json' };
 
+// The client IP in the request log (CLIENT_IP_HEADER): personal data, so masked unless
+// LOG_FULL_CLIENT_IP is on for the spoof test (deployment §2).
+describe('client IP in the request log', () => {
+  async function loggedIp(overrides: Partial<AppDeps>, headers: Record<string, string>) {
+    const logger = createLogger({ NODE_ENV: 'test', LOG_LEVEL: 'info' });
+    const info = vi.spyOn(logger, 'info').mockImplementation(() => undefined);
+    await app({ logger, ...overrides }).request('/health', { headers });
+    const line = info.mock.calls.find((call) => call[1] === 'request')![0] as Record<
+      string,
+      unknown
+    >;
+    return 'ip' in line ? line.ip : 'absent';
+  }
+  const fromEdge = { 'x-real-ip': '203.0.113.7', 'x-forwarded-for': '10.9.9.9' };
+
+  it('masked by default, from the configured header only', async () => {
+    expect(await loggedIp({ clientIpHeader: 'x-real-ip' }, fromEdge)).toBe('203.0.113.x');
+  });
+  it('in full with LOG_FULL_CLIENT_IP (the spoof test)', async () => {
+    expect(await loggedIp({ clientIpHeader: 'x-real-ip', logFullClientIp: true }, fromEdge)).toBe(
+      '203.0.113.7',
+    );
+  });
+  it('null when the header is missing; no ip field when no header is configured', async () => {
+    expect(await loggedIp({ clientIpHeader: 'x-real-ip' }, {})).toBeNull();
+    expect(await loggedIp({}, fromEdge)).toBe('absent');
+  });
+});
+
 describe('GET /health', () => {
   it('reports ok when the database answers', async () => {
     const res = await app().request('/health');
