@@ -71,7 +71,7 @@ Moving a part = changing its settings. Nothing host-specific is in code. Secrets
 
 `shared.APP_DB_PASSWORD` is a Railway **shared variable** per environment holding the `naqdpos_app` password (runbook "First deploy"). `${{Postgres.…}}` are Railway reference variables to the environment's Postgres service.
 
-**Rate limiting is in memory** (Better Auth's limiter, plus 30 `/files` requests per user per minute). That is correct with **one API instance** (`numReplicas: 1` in `apps/api/railway.json`). Before running more API copies, switch Better Auth's `rateLimit.storage` to `'database'` (a table in a migration) and move the `/files` counter to Postgres too; otherwise each copy counts separately. Behind Railway the client IP comes from `X-Forwarded-For`; if the API logs "Rate limiting could not determine a client IP", set Better Auth's `advanced.ipAddress.ipAddressHeaders`.
+**Rate limiting is in memory** (Better Auth's limiter, plus 30 `/files` requests per user per minute). That is correct with **one API instance** (Replicas **1** on the `api` service, §6 step 3). Before running more API copies, switch Better Auth's `rateLimit.storage` to `'database'` (a table in a migration) and move the `/files` counter to Postgres too; otherwise each copy counts separately. Behind Railway the client IP comes from `X-Forwarded-For`; if the API logs "Rate limiting could not determine a client IP", set Better Auth's `advanced.ipAddress.ipAddressHeaders`.
 
 ## 3. Environments, CI and deploys
 
@@ -91,7 +91,7 @@ Moving a part = changing its settings. Nothing host-specific is in code. Secrets
 - **Production deploys release tags**: Railway can't follow tags, so the production services track the branch **`release`**, and `.github/workflows/release.yml` moves `release` to the commit of every pushed `v*` tag (only tags on `main`). To release: `git tag v1.2.0 && git push origin v1.2.0`. Nobody pushes to `release` by hand. Optionally protect `release` in GitHub so only the Actions bot may push.
 - **Migrations** (bug 2026-11-26: staging's `api` had no pre-deploy step, so two migrations never ran and every sync pull failed):
   - **Only the `api` service runs them**, as its **pre-deploy command** `node /repo/db/scripts/migrate.ts` (the same script as `pnpm db:deploy`; call `node` directly: `pnpm` in the image would make corepack fetch it at run time). It runs in the new API image before that version starts, with the `api` service's variables, and connects with **`DATABASE_ADMIN_URL`** (owner role, `${{Postgres.DATABASE_URL}}?sslmode=disable`), never `DATABASE_URL` (`naqdpos_app` may not create tables). The `worker` has **no** pre-deploy command.
-  - It comes from `apps/api/railway.json` (`preDeployCommand`) **only if the service's Config file path is `apps/api/railway.json`** (§4 step 3). Check in Railway → `api` → a deployment: its steps must include **Pre-deploy**. If they don't, set the config file path (preferred: it also brings the `/health` check and watch paths), or type the command into Settings → Deploy → **Pre-deploy command**.
+  - It is the `api` service's dashboard setting Settings → Deploy → **Pre-deploy command** (§6 step 3 table; config files are no longer read). Check in Railway → `api` → a deployment: its steps must include **Pre-deploy**. If they don't, the setting is empty: the API then refuses to start after the next migration (below) and every deploy fails until it is set.
   - The log lists each file (`db:deploy: pending …`, dbmate's `Applying:` / `Applied:`, then `db:deploy: applied …`) and ends with **`db:deploy: migrations are up to date`**. Any failure (a migration error, the database unreachable, a migration still pending afterwards) exits non-zero: Railway stops the deploy and the old API keeps running.
   - **The API refuses to start when the database is behind it.** At start it compares the files in `db/migrations` (in the image) with `public.applied_migrations()` (a security-definer function: `naqdpos_app` sees the versions, not `schema_migrations`), logs `FATAL the database is behind this API` with the missing versions, and exits, so the deploy fails its healthcheck and the old API keeps serving. A database it can't reach doesn't stop it (`/health` answers 503). A database *ahead* of the API (a rollback) is fine. The sync pull's fallback for a missing `sync_units()` stays for older APIs.
   - Staging gets every migration before production. The database must always be rebuildable from `db/migrations`.
@@ -169,24 +169,60 @@ Records are added in steps 3 (Resend) and 6 (Railway domains). Use **DNS only (g
 
 1. railway.com → **New project** `naqdpos` → connect the GitHub repo. In project settings create two **environments**: `staging` and `production`.
 2. In **each** environment add a **PostgreSQL** database (name the service `Postgres`). It must be **version 18** (Railway's PostgreSQL template default; staging runs 18.7): check the template's image tag before creating it, and afterwards in the database's Query tab: `select version();` must say `PostgreSQL 18.x`. (`pg_dump` in the image is 18; it can dump 18 or older, not newer.)
-3. In each environment create four services from the GitHub repo. For every service: **Root directory empty** (the Dockerfiles need the whole repo), **Config file path** as below, **branch** `main` in staging and `release` in production, and **"Wait for CI" on**.
+3. In each environment create four services from the GitHub repo and type in their settings. **The Railway dashboard is the source of truth** for build and deploy settings: Railway deprecated Config as Code (new services can't use a config file; existing ones stop being read on **2026-12-01**). The files `apps/api/railway.json`, `apps/api/railway.worker.json`, `apps/pos/railway.json`, `apps/admin/railway.json` are **reference only**: Railway ignores them, and changing them changes nothing. When a setting changes, change it in **both** environments in the dashboard, then update this table (and the file, to keep it a true record).
 
-   | Service | Config file path | Public networking |
-   | --- | --- | --- |
-   | `api` | `apps/api/railway.json` | yes (custom domain) |
-   | `worker` | `apps/api/railway.worker.json` | none |
-   | `pos` | `apps/pos/railway.json` | yes (custom domain) |
-   | `admin` | `apps/admin/railway.json` | yes (custom domain) |
+   Every service: **branch** `main` (staging) / `release` (production), **Wait for CI** on, **Root directory empty** (the Dockerfiles need the whole repo), **Config file path empty**.
 
-   The config files set the Dockerfile, the start command, `/health` checks, watch paths, one replica, and the API's pre-deploy migration. **Without the config file path Railway ignores them**: the `api` then has no Pre-deploy step (no migrations), and the `worker` runs the image's default command, i.e. a second API instead of the worker (its log says `NaqdPOS API listening`, not `NaqdPOS worker started`). After creating each service, open its first deployment and check: `api` shows a **Pre-deploy** step; `worker` logs `NaqdPOS worker started`.
+   | Setting (Railway → service → Settings) | `api` | `worker` | `pos` | `admin` |
+   | --- | --- | --- | --- | --- |
+   | Build → Builder | Dockerfile | Dockerfile | Dockerfile | Dockerfile |
+   | Build → Dockerfile path | `apps/api/Dockerfile` | `apps/api/Dockerfile` | `deploy/static.Dockerfile` | `deploy/static.Dockerfile` |
+   | Source → Watch paths | `/apps/api/**`, `/packages/core/**`, `/db/**`, `/pnpm-lock.yaml` | same as `api` | `/apps/pos/**`, `/packages/core/**`, `/deploy/**`, `/pnpm-lock.yaml` | `/apps/admin/**`, `/packages/core/**`, `/deploy/**`, `/pnpm-lock.yaml` |
+   | Deploy → Custom start command | `node /repo/apps/api/src/server.ts` | **`node /repo/apps/api/src/worker.ts`** | empty (image's Caddy) | empty |
+   | Deploy → Pre-deploy command | **`node /repo/db/scripts/migrate.ts`** | **empty** (never migrations) | empty | empty |
+   | Deploy → Healthcheck path | `/health` | empty (no HTTP) | `/` | `/` |
+   | Deploy → Healthcheck timeout | 60 s | — | 60 s | 60 s |
+   | Deploy → Restart policy | On failure, max 10 retries | **Always** | On failure, max 10 retries | On failure, max 10 retries |
+   | Deploy → Replicas | **1** (in-memory rate limits, §2) | **1** | 1 | 1 |
+   | Networking | public, custom domain (step 6) | **none** (no domain) | public, custom domain | public, custom domain |
+
+   The API image's default command is `node src/server.ts`, so a `worker` without its start command runs a second API (log `NaqdPOS API listening`, not `NaqdPOS worker started`), and an `api` without its pre-deploy command never migrates. After creating or changing a service, open its next deployment and check: `api` shows a **Pre-deploy** step whose log ends with `db:deploy: migrations are up to date`; `worker` shows no Pre-deploy step and logs `NaqdPOS worker started`; `pos` / `admin` pass the `/` healthcheck.
+
+   **Moving off config files (before 2026-12-01, both environments):** type every setting of the table into each service, clear its Config file path, redeploy, and do the checks above. A service that still relied on its file silently loses the settings on that date (for `api`: the pre-deploy migration).
 4. Create the **shared variable** `APP_DB_PASSWORD` in each environment (`openssl rand -base64 24 | tr '+/' '-_'`, no quotes), then set every variable from the §2 table on each service. Email: set `RESEND_API_KEY` and leave `SMTP_*` empty (the Hobby plan blocks outbound SMTP ports 25/465/587/2525; with `SMTP_*` the code request would fail after the 10-second timeout).
 5. Railway gives each Dockerfile service its variables as build arguments, so `APP`, `VITE_API_URL` and `VITE_POS_URL` reach the static builds. Changing a `VITE_*` value needs a **redeploy** (it is baked in at build time).
+
+### 4a. The `worker` service (checklist, once per environment)
+
+Without it there are **no backups** (bug 2026-11-27: staging ran without a worker, so US008 never ran there). Do it in staging first, then in production with the production values from §2.
+
+1. **R2 first** (§6 step 2), if not done: bucket `naqdpos-backups-staging` / `naqdpos-backups-prod` (Asia-Pacific, public access off, **no CORS**) and its own token (**Object Read & Write**, "Apply to specific buckets only" = that one bucket). The token's Access Key ID and Secret are shown **once**: put them in the password manager straight away. Read & Write includes list and delete, which the retention needs.
+2. **Encryption key**: `openssl rand -base64 32` (Git Bash), or `node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"`. Save it in the password manager (`NaqdPOS <env> BACKUP_ENCRYPTION_KEY`, with the date) **before** you paste it into Railway. A **different** key per environment.
+3. Railway → the environment → **+ Create → GitHub Repo** → this repo. Rename the service to **`worker`**. Settings:
+   - Source: branch **`main`** (staging) / **`release`** (production); **Wait for CI** on; **Root directory empty**.
+   - Build and deploy settings from the `worker` column of the step 3 table: Builder **Dockerfile**, Dockerfile path **`apps/api/Dockerfile`**, Custom start command **`node /repo/apps/api/src/worker.ts`**, **Pre-deploy command empty**, no healthcheck (it serves no HTTP), restart **Always**, **1** replica, the watch paths. Config file path empty.
+   - Networking: **no public domain** (don't click Generate Domain; delete one if it appears).
+4. **Variables** (worker → Variables → Raw editor):
+   ```
+   DATABASE_ADMIN_URL=${{Postgres.DATABASE_URL}}?sslmode=disable
+   BACKUP_S3_ENDPOINT=https://<account-id>.r2.cloudflarestorage.com
+   BACKUP_S3_REGION=auto
+   BACKUP_S3_BUCKET=naqdpos-backups-staging
+   BACKUP_S3_ACCESS_KEY_ID=<backups token access key id>
+   BACKUP_S3_SECRET_ACCESS_KEY=<backups token secret>
+   BACKUP_ENCRYPTION_KEY=<the key from step 2>
+   LOG_LEVEL=info
+   ```
+   `DATABASE_ADMIN_URL` is the **owner** role: pg-boss creates and uses its own schema `pgboss`, and `pg_dump` must read every schema and every row (RLS would hide rows from `naqdpos_app`). Not needed and not set on the worker: `DATABASE_URL`, `BETTER_AUTH_*`, `APP_ORIGINS`, `POS_URL`, email, and the files bucket's `S3_*` (that token must never reach the backups, and the other way round). No `TZ`: the 02:00 schedule and the backup date use `Asia/Karachi` in code; log timestamps are UTC.
+5. **Deploy and check the log**. It must show `NaqdPOS worker started` with `"queue":"nightly-backup","cron":"0 2 * * *","tz":"Asia/Karachi"`. `Invalid worker settings:` lists what is missing; `NaqdPOS API listening` means the start command is missing (it is running a second API); the deployment must have **no Pre-deploy** step (only `api` runs migrations, §3).
+6. **A backup now**, without waiting for 02:00: runbook §3.1 (`pnpm backup:now` from a PC). It needs the Postgres public URL (Railway → Postgres → Settings → Networking → TCP proxy); without one, wait for the 02:00 run. The worker log then shows `backup uploaded` with `backups/daily/<today>.dump.enc`, and the bucket has that object.
+7. **Restore drill** once (runbook §4), staging before the pilot, production after its first backup.
 
 ### 5. First deploy (order matters)
 
 1. Deploy `api`. The pre-deploy command runs every migration (this creates the role `naqdpos_app` **without login**); its log ends with `db:deploy: migrations are up to date`. The first API start then fails its healthcheck: expected.
 2. Give `naqdpos_app` its password: runbook **"First deploy: the app role"**. Redeploy `api`; `/health` must return `{"ok":true,"db":true}`.
-3. Deploy `worker`, `pos`, `admin`. The worker log shows `NaqdPOS worker started` with the 02:00 Asia/Karachi schedule.
+3. Deploy `worker` (step 4a), `pos`, `admin`. The worker log shows `NaqdPOS worker started` with the 02:00 Asia/Karachi schedule.
 
 ### 6. Custom domains
 
@@ -215,7 +251,7 @@ For each public service: Railway → service → Settings → Networking → **C
 - Sign in on the POS with an email code (the email arrives in English and Urdu; the log shows `email sent` with `via: resend-https` and a masked address); create or open a shop; set a logo in Settings → Shop; it shows in the header and on a receipt.
 - Browser dev tools on POS and admin: no CSP errors in the console; response headers as in §4.
 - Admin portal: create a test shop → "Email sent to …"; the invite email arrives.
-- The next morning: the worker log shows `backup uploaded` and the backups bucket has `backups/daily/<date>.dump.enc`. Do the restore drill once on staging (runbook) before the pilot.
+- **The `worker` service exists and is running** (step 4a): its latest log shows `NaqdPOS worker started`, and each morning `backup uploaded` for the night (or right after `pnpm backup:now`); the backups bucket has `backups/daily/<date>.dump.enc`. Do the restore drill once on staging (runbook §4) before the pilot, and once on production after its first backup.
 - `MIN_APP_VERSION` is unset.
 
 ## 7. Cost plan (estimates)
