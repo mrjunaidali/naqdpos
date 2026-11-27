@@ -222,10 +222,16 @@ describe('Urdu screens (US009)', () => {
   it('Settings switches the language and keeps it on the device', async () => {
     await seedShop();
     renderAt('/settings');
-    fireEvent.click(
-      await screen.findByRole('button', { name: new RegExp(ur.language.switchLabel) }),
-    );
-    await waitFor(() => expect(i18n.language).toBe('en'));
+    const switchName = new RegExp(ur.language.switchLabel);
+    await screen.findByRole('button', { name: switchName });
+    // On a slow CI runner the page can re-render after the button first appears, and a click
+    // on the replaced button is lost (CI failed 3 times on 27 Nov, blocking staging deploys).
+    // Click the current button until the switch happens; never twice once it has (one click
+    // switches synchronously: the resources are bundled).
+    await waitFor(() => {
+      if (i18n.language === 'ur') fireEvent.click(screen.getByRole('button', { name: switchName }));
+      expect(i18n.language).toBe('en');
+    });
     expect(localStorage.getItem(LANGUAGE_STORAGE_KEY)).toBe('en');
     expect(document.documentElement.dir).toBe('ltr');
     expect(await screen.findByRole('heading', { name: en.settings.title })).toBeInTheDocument();

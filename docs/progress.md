@@ -1162,3 +1162,14 @@ Cause behind the staging pull 500 (docs/bugs.md 2026-11-26): the staging `api` s
 - **Follow-up**:
   - Review the wording of the Urdu footers (new text).
   - Editing templates without a deploy (database + admin portal) would be a separate story.
+
+## 2026-11-27 — Fix: staging POS "CORS error" on sign-in and sync (POS ahead of the API)
+
+- **Cause** (docs/bugs.md, 27 Nov): flaky POS language tests made CI red on `6f82774`, `e475a2f` and `828fad4`, so Railway (Wait for CI) skipped them. `a792aea` touched only `apps/pos`, so only the POS was redeployed. It sent `X-App-Language` to the staging API, which was still on `5ff03ce`. That API's CORS doesn't allow the header, so the browser failed every request. The API code and image of `828fad4` are fine.
+- **Built**:
+  - `packages/core/src/api/client.ts`: after a network-level failure (which is how a CORS failure looks), a request that carried `X-App-Language` is retried once without it. If the retry works, the header stays off for that client's session. Offline, the error is still `network` and the language is kept.
+  - `apps/api/src/app.test.ts`: the preflight on `/sync/pull` and `/auth/email-otp/send-verification-otp` returns 204 and allows every header the real shared client sends (captured with every option set). A new client header fails the test until the API allows it. Checked: the test fails with `X-App-Language` removed from `allowHeaders`.
+  - `apps/pos/src/i18n/urdu.test.tsx`: "Settings switches the language" clicks the current button until the switch happens (on slow CI, a click on a re-rendered button was lost).
+  - `docs/deployment.md` §3: new request headers must already be allowed by the live API (or be optional); after a red CI on an API commit, redeploy `api` and `worker` by hand; check that the active `api` commit is current.
+- **Tests**: core 455, API unit 113, POS 440 (the Urdu file 5 times in a row), admin 21; lint, typecheck and format pass. DB tests not run here (no SQL change).
+- **Follow-up**: redeploy staging `api` then `worker` from the newest green `main`. Consider widening the `api` and `worker` watch paths or redeploying them after every red CI.

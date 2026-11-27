@@ -2,6 +2,16 @@
 
 ## Open
 
+### 2026-11-27 — Staging: POS sign-in code and sync pull fail with "CORS error" — cause found; staging API needs a redeploy
+
+In the POS (private window) `POST /auth/email-otp/send-verification-otp` and `GET /sync/pull` both fail with "CORS error" in the browser.
+
+**Cause.** Since `828fad4` the shared client sends `X-App-Language` on every request. That commit's API allows the header, but it never reached staging. CI failed on `6f82774`, `e475a2f` and `828fad4` because of flaky POS language tests, and Railway's **Wait for CI** skipped those commits on every service. `a792aea` (only `apps/pos/i18n`) passed CI, so Railway deployed the **POS** from it, `828fad4`'s client change included. The **API** was not redeployed, because its watch paths didn't match, so it stayed on the last green API commit (`5ff03ce`), whose CORS list lacks `X-App-Language`. The browser's preflight then failed every request. The API image of `828fad4` itself is fine: templates load, and CI's Docker build passed.
+
+**Fix (code).** The client retries once without `X-App-Language` after a network-level failure and leaves it off for the session, so a POS ahead of the API still works. An API test checks that the preflight allows every header the real client sends, on Hono and Better Auth routes. The flaky Settings language test now clicks until the switch happens. Rules added to deployment.md §3 (new headers; a red CI leaves the API behind).
+
+**Still to do on staging.** Redeploy `api` (then `worker`) from the newest green `main`; check the pre-deploy log and that the active `api` commit is current (deployment.md §3).
+
 ### 2026-11-26 — Staging: GET /sync/pull answers 500 for a fresh device — cause found; staging needs its migrations
 
 A new device (incognito desktop Chrome as owner, the iPhone) gets `500 {"error":"internal"}` from `GET /sync/pull?since_seq=0`, so no products or sales arrive. On the iPhone the setup screen shows "Something went wrong. Please try again.": that text comes from `GET /me` failing during setup (`SetupPage`), so `/me` fails too.

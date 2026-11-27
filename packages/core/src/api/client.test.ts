@@ -76,6 +76,45 @@ describe('createApiClient', () => {
     expect(without.mock.calls[0]![1].headers).not.toHaveProperty('x-app-language');
   });
 
+  // Staging 2026-11-27: a POS newer than the API sent X-App-Language, the old API's CORS did not
+  // allow it, and every request failed in the browser like a network error.
+  const healthy = () =>
+    Promise.resolve({ ok: true, status: 200, json: () => Promise.resolve({ ok: true, db: true }) });
+  it('retries once without X-App-Language when the request fails like CORS, then stops sending it', async () => {
+    const fetch = vi.fn<FetchLike>((_url, init) =>
+      'x-app-language' in init.headers
+        ? Promise.reject(new TypeError('Failed to fetch'))
+        : healthy(),
+    );
+    const api = createApiClient({ baseUrl: 'https://api.test', fetch, getLanguage: () => 'ur' });
+    await expect(api.health()).resolves.toEqual({ ok: true, db: true });
+    expect(fetch).toHaveBeenCalledTimes(2);
+    expect(fetch.mock.calls[1]![1].headers).not.toHaveProperty('x-app-language');
+    await api.health();
+    expect(fetch).toHaveBeenCalledTimes(3);
+    expect(fetch.mock.calls[2]![1].headers).not.toHaveProperty('x-app-language');
+  });
+
+  it('offline: the retry fails too, the error is "network" and the language is kept', async () => {
+    let online = false;
+    const fetch = vi.fn<FetchLike>(() =>
+      online ? healthy() : Promise.reject(new TypeError('Failed to fetch')),
+    );
+    const api = createApiClient({ baseUrl: 'https://api.test', fetch, getLanguage: () => 'ur' });
+    await expect(api.health()).rejects.toMatchObject({ status: 0, code: 'network' });
+    expect(fetch).toHaveBeenCalledTimes(2);
+    online = true;
+    await api.health();
+    expect(fetch.mock.calls[2]![1].headers['x-app-language']).toBe('ur');
+  });
+
+  it('without a language a network failure is not retried', async () => {
+    const fetch = vi.fn<FetchLike>(() => Promise.reject(new TypeError('Failed to fetch')));
+    const api = createApiClient({ baseUrl: 'https://api.test', fetch });
+    await expect(api.health()).rejects.toMatchObject({ code: 'network' });
+    expect(fetch).toHaveBeenCalledTimes(1);
+  });
+
   it('invites carry the email language, English by default', async () => {
     const urdu = fakeFetch(200, { id: SHOP_ID });
     await createApiClient({ baseUrl: 'https://api.test', fetch: urdu }).adminCreateInvite(

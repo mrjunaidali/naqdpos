@@ -120,6 +120,11 @@ export const SuccessResponse = z.object({ success: z.boolean() });
 
 export function createApiClient(options: ApiClientOptions) {
   const baseUrl = options.baseUrl.replace(/\/+$/, '');
+  // X-App-Language is optional (emails fall back to English). An API older than the app does not
+  // allow it in CORS, and the browser then fails the request like a network error (staging bug
+  // 2026-11-27: sign-in and sync broke). So after such a failure the request is tried once
+  // without it; if that works, the header stays off for the rest of this session.
+  let sendLanguage = true;
 
   async function request<S extends z.ZodType>(
     method: string,
@@ -133,19 +138,31 @@ export function createApiClient(options: ApiClientOptions) {
     const deviceId = await options.getDeviceId?.();
     if (deviceId) headers['x-device-id'] = deviceId;
     if (options.appVersion) headers['x-app-version'] = options.appVersion;
-    const language = options.getLanguage?.();
+    const language = sendLanguage ? options.getLanguage?.() : undefined;
     if (language) headers[APP_LANGUAGE_HEADER] = language;
     if (body !== undefined) headers['content-type'] = 'application/json';
 
-    let response: Awaited<ReturnType<FetchLike>>;
-    try {
-      response = await options.fetch(`${baseUrl}${path}`, {
+    const send = (h: Record<string, string>) =>
+      options.fetch(`${baseUrl}${path}`, {
         method,
-        headers,
+        headers: h,
         ...(body !== undefined && { body: JSON.stringify(body) }),
       });
+
+    let response: Awaited<ReturnType<FetchLike>>;
+    try {
+      response = await send(headers);
     } catch {
-      throw new ApiError(0, 'network', 'Could not reach the server');
+      if (!language) throw new ApiError(0, 'network', 'Could not reach the server');
+      const withoutLanguage = { ...headers };
+      delete withoutLanguage[APP_LANGUAGE_HEADER];
+      try {
+        response = await send(withoutLanguage);
+      } catch {
+        // Offline (or a real network failure): keep sending the language next time.
+        throw new ApiError(0, 'network', 'Could not reach the server');
+      }
+      sendLanguage = false;
     }
     const json: unknown = await response.json().catch(() => undefined);
     if (!response.ok) {

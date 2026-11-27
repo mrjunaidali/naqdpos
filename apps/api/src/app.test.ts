@@ -1,3 +1,4 @@
+import { createApiClient, type FetchLike } from '@naqdpos/core';
 import { describe, expect, it, vi } from 'vitest';
 import { createApp, type AppDeps } from './app.ts';
 import type { AuthService } from './auth.ts';
@@ -162,6 +163,52 @@ describe('other routes', () => {
     );
     const other = await app().request('/health', { headers: { origin: 'https://evil.test' } });
     expect(other.headers.get('access-control-allow-origin')).toBeNull();
+  });
+
+  // Staging 2026-11-27: the POS sent X-App-Language to an API that did not allow it, and the
+  // browser failed sign-in and sync with "CORS error". The header list comes from the real
+  // shared client (every option set, with a body), so a new client header fails this test until
+  // the API allows it.
+  it('preflight allows every header the shared client sends, on Hono and Better Auth routes', async () => {
+    const sent = vi.fn<FetchLike>(() =>
+      Promise.resolve({ ok: true, status: 200, json: () => Promise.resolve({ success: true }) }),
+    );
+    await createApiClient({
+      baseUrl: 'https://api.test',
+      fetch: sent,
+      getToken: () => 'token',
+      getDeviceId: () => '019a9b8e-1c2d-7e3f-8a4b-5c6d7e8f9a0e',
+      appVersion: '1.0.0',
+      getLanguage: () => 'ur',
+    }).sendSignInCode('ali@shop.pk');
+    // accept is a CORS-safelisted header: browsers never preflight it.
+    const clientHeaders = Object.keys(sent.mock.calls[0]![1].headers).filter((h) => h !== 'accept');
+    expect(clientHeaders).toEqual(
+      expect.arrayContaining(['authorization', 'x-device-id', 'x-app-version', 'x-app-language']),
+    );
+    for (const [path, method] of [
+      ['/sync/pull', 'GET'],
+      ['/auth/email-otp/send-verification-otp', 'POST'],
+    ] as const) {
+      const preflight = await app().request(path, {
+        method: 'OPTIONS',
+        headers: {
+          origin: 'http://localhost:5173',
+          'access-control-request-method': method,
+          'access-control-request-headers': [...clientHeaders, 'content-type'].join(','),
+        },
+      });
+      expect(preflight.status, path).toBe(204);
+      expect(preflight.headers.get('access-control-allow-origin'), path).toBe(
+        'http://localhost:5173',
+      );
+      const allowed = (preflight.headers.get('access-control-allow-headers') ?? '')
+        .toLowerCase()
+        .split(',')
+        .map((h) => h.trim());
+      for (const header of [...clientHeaders, 'content-type'])
+        expect(allowed, `${path}: ${header}`).toContain(header);
+    }
   });
 
   it('serves the OpenAPI document and a JSON 404', async () => {
