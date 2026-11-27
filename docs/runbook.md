@@ -39,9 +39,17 @@ Remove: `pnpm admin:revoke person@example.com` the same way. Both are audit-logg
 - **List backups:** `pnpm backup:restore --list` (needs the `BACKUP_S3_*` settings of that environment in `.env` or the shell).
 - **The encryption key** is in Railway (`worker` → `BACKUP_ENCRYPTION_KEY`) **and in the password manager**. Losing it makes every backup useless. Never change it without keeping the old one (§3.2).
 
-### 3.1 A backup now (before a risky change)
+### 3.1 A backup now
 
-Railway → `worker` → **Restart** does not start a backup. Instead, on a PC:
+Railway → `worker` → **Restart** does not start a backup. Ask the running worker for one from a PC:
+
+```sh
+DATABASE_ADMIN_URL='<public URL>' pnpm backup:now
+```
+
+(PowerShell: `$env:DATABASE_ADMIN_URL='<public URL>'; pnpm backup:now`, then `Remove-Item Env:DATABASE_ADMIN_URL`.) It prints the host and database it used (check it is the right environment) and `queued job <id>`. All it does is queue one job in that database's pg-boss queue. The worker picks it up within seconds and does exactly what it does at 02:00, so its log shows `backup uploaded` with `backups/daily/<today>.dump.enc`, and the backups bucket has the file (a second run the same day overwrites it). `no queue "nightly-backup"` = the worker has never started on that database.
+
+A local copy outside the backups bucket (before a risky change) instead:
 
 ```sh
 pg_dump --format=custom --no-password -d '<public URL>' -f before-change.dump
@@ -71,7 +79,13 @@ Once a month (first working day), and once on staging before the pilot. Takes ab
    pnpm backup:restore backups/daily/2026-12-01.dump.enc postgres://postgres:<pw>@localhost:5432/naqdpos_restore_drill
    ```
    It refuses a database that already has tables. The file is fully decrypted and checked (a wrong key or a changed file stops here) before `pg_restore` runs, in one transaction. It prints row counts of `shops`, `staff`, `products`, `sales`, `khata_entries`, `expenses`.
-5. **Compare** with production (Railway → Postgres → Query): `select count(*) from shops;` and `select count(*) from sales where business_date < current_date;`. The restored numbers must match yesterday's (sales made after 02:00 today are not in the backup).
+5. **Compare** with the environment the backup came from (Railway → that environment → Postgres → Query; read-only `select`s, nothing else there):
+   ```sql
+   select (select count(*) from shops) shops, (select count(*) from staff) staff,
+          (select count(*) from products) products, (select count(*) from sales) sales,
+          (select count(*) from khata_entries) khata, (select count(*) from expenses) expenses;
+   ```
+   Every number must match the restore's, except rows added after the backup ran (a 02:00 backup misses today's sales: compare `sales` with `… where business_date < current_date`). For a backup made minutes ago with `pnpm backup:now` (staging) they match exactly unless someone used staging in between.
 6. **Spot check:** `select max(business_date) from sales;` in the scratch database is yesterday's date (or the last day anyone sold).
 7. **Clean up:** `psql -U postgres -c "drop database naqdpos_restore_drill"` and remove the backup settings from `.env`.
 8. **Record it** in the drill log below: date, environment, backup key, counts match yes/no, time taken, problems.

@@ -26,6 +26,7 @@
     "i18n:import-review": "node scripts/urdu-review.ts import",
     "admin:grant": "node db/scripts/admin.ts grant",
     "admin:revoke": "node db/scripts/admin.ts revoke",
+    "backup:now": "node --env-file-if-exists=.env apps/api/scripts/backup-now.ts",
     "backup:restore": "node --env-file-if-exists=.env apps/api/scripts/backup-restore.ts",
     "e2e": "pnpm --filter @naqdpos/e2e e2e"
   },
