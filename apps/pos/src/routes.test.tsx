@@ -75,7 +75,8 @@ describe('routes and app state', () => {
       button.click();
       await Promise.resolve();
     });
-    expect(await screen.findByRole('heading', { name: /بخیر/ })).toBeInTheDocument();
+    // Any time of day: صبح بخیر / السلام علیکم (12:00–17:00) / شام بخیر.
+    expect(await screen.findByRole('heading', { name: /بخیر|السلام علیکم/ })).toBeInTheDocument();
     expect(document.documentElement.dir).toBe('rtl');
   });
 });

@@ -1,0 +1,3 @@
+Subject: Your shop {{shopName}} is ready on NaqdPOS
+
+Assalam o alaikum! Your shop {{shopName}} is ready on NaqdPOS. Open {{inviteLink}} and sign in with {{email}}.

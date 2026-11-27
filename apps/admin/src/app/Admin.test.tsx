@@ -291,6 +291,7 @@ describe('new shop and invites (US012)', () => {
       owner_name: 'Bilal',
       owner_mobile: '+923001234567',
       owner_email: 'bilal@example.test',
+      language: 'en',
     });
     const text =
       'Assalam o alaikum! Your shop Bilal Sabzi is ready on NaqdPOS. Open https://pos.test and sign in with bilal@example.test.';
@@ -326,7 +327,7 @@ describe('new shop and invites (US012)', () => {
     });
     fireEvent.click(screen.getByRole('button', { name: 'New invite' }));
     await waitFor(() =>
-      expect(api.adminCreateInvite).toHaveBeenCalledWith(SHOP, 'new@example.test'),
+      expect(api.adminCreateInvite).toHaveBeenCalledWith(SHOP, 'new@example.test', 'en'),
     );
   });
 });

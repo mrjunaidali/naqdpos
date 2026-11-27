@@ -30,6 +30,8 @@ RUN pnpm install --frozen-lockfile --prod --filter "@naqdpos/api..." --filter "@
 # symlinks, so @naqdpos/core is loaded from packages/core/src, outside node_modules.
 COPY packages/core/src packages/core/src
 COPY apps/api/src apps/api/src
+# Email wording (docs/emails.md); read and checked when the API starts.
+COPY apps/api/emails apps/api/emails
 COPY apps/api/scripts apps/api/scripts
 COPY db/migrations db/migrations
 COPY db/scripts/migrate.ts db/scripts/migrate.ts

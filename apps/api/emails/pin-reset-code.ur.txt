@@ -1,0 +1,3 @@
+Subject: NaqdPOS PIN ری سیٹ کوڈ
+
+آپ کا NaqdPOS PIN ری سیٹ کوڈ {{code}} ہے۔ یہ {{expiresInMinutes}} منٹ کے لیے درست ہے۔ اگر آپ نے PIN بدلنے کا نہیں کہا تو اس ای میل کو نظر انداز کریں۔

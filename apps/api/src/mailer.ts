@@ -1,11 +1,12 @@
-// Email (deployment §2): Resend's HTTPS API, or any SMTP server. Plain text, one email in English
-// then Urdu: sign-in happens before the server knows the reader's language. Codes are never
-// logged, and recipients only masked (o***@example.com).
+// Email (deployment §2): Resend's HTTPS API, or any SMTP server. The wording is in
+// apps/api/emails (docs/emails.md): plain text and HTML, in the recipient's language. Codes are
+// never logged, recipients only masked.
 //
 // Two transports because some hosts (Railway Hobby) block outbound SMTP ports and allow only
 // HTTPS. Both sit behind the same Mailer, so callers don't know which one is in use.
-import { inviteMessage } from '@naqdpos/core';
 import nodemailer from 'nodemailer';
+import type { EmailLanguage } from '@naqdpos/core';
+import { loadEmailTemplates, renderEmail, type RenderedEmail } from './email/templates.ts';
 import type { Logger } from './logger.ts';
 
 export interface Mail {
@@ -182,39 +183,38 @@ export function createMailer(
   };
 }
 
-const SEP = '\n\n— — —\n\n';
-const bilingual = (en: string, ur: string) => `${en}${SEP}${ur}`;
+/** How long a sign-in or PIN reset code works; Better Auth's expiry is set from it (auth.ts). */
+export const CODE_MINUTES = 5;
+
+// Read and checked at start: a broken template file stops the API before it can send anything.
+const templates = loadEmailTemplates();
 
 /**
- * Sign-in and PIN reset codes. This app uses Better Auth's 'email-verification' OTP type only
- * for owner PIN resets (architecture §5), so those mails say "PIN reset code".
+ * Sign-in and PIN reset codes (templates sign-in-code, pin-reset-code), in the app's language.
+ * This app uses Better Auth's 'email-verification' OTP type only for owner PIN resets
+ * (architecture §5).
  */
-export function codeEmail(type: string, otp: string): { subject: string; text: string } {
-  if (type === 'email-verification') {
-    return {
-      subject: 'NaqdPOS PIN reset code / NaqdPOS PIN ری سیٹ کوڈ',
-      text: bilingual(
-        `Your NaqdPOS PIN reset code is ${otp}. It is valid for 5 minutes. If you did not ask to reset your PIN, ignore this email.`,
-        `آپ کا NaqdPOS PIN ری سیٹ کوڈ ${otp} ہے۔ یہ 5 منٹ کے لیے درست ہے۔ اگر آپ نے PIN بدلنے کا نہیں کہا تو اس ای میل کو نظر انداز کریں۔`,
-      ),
-    };
-  }
-  return {
-    subject: 'NaqdPOS sign-in code / NaqdPOS لاگ ان کوڈ',
-    text: bilingual(
-      `Your NaqdPOS sign-in code is ${otp}. It is valid for 5 minutes. If you did not ask for it, ignore this email.`,
-      `آپ کا NaqdPOS لاگ ان کوڈ ${otp} ہے۔ یہ 5 منٹ کے لیے درست ہے۔ اگر آپ نے یہ کوڈ نہیں مانگا تو اس ای میل کو نظر انداز کریں۔`,
-    ),
-  };
+export function codeEmail(
+  type: string,
+  otp: string,
+  language: EmailLanguage = 'en',
+): RenderedEmail {
+  const values = { code: otp, expiresInMinutes: String(CODE_MINUTES) };
+  return type === 'email-verification'
+    ? renderEmail(templates, 'pin-reset-code', language, values)
+    : renderEmail(templates, 'sign-in-code', language, values);
 }
 
-/** Owner invite (US012): the same words as the WhatsApp text the admin portal shows. */
-export function inviteEmail(shopName: string, posUrl: string, email: string) {
-  return {
-    subject: `Your shop ${shopName} is ready on NaqdPOS / آپ کی دکان ${shopName} NaqdPOS پر تیار ہے`,
-    text: bilingual(
-      inviteMessage(shopName, posUrl, email),
-      `السلام علیکم! آپ کی دکان ${shopName} NaqdPOS پر تیار ہے۔ ${posUrl} کھولیں اور ${email} سے سائن ان کریں۔`,
-    ),
-  };
+/** Owner invite (US012, template invite), in the language the admin chose. */
+export function inviteEmail(
+  shopName: string,
+  posUrl: string,
+  email: string,
+  language: EmailLanguage = 'en',
+): RenderedEmail {
+  return renderEmail(templates, 'invite', language, {
+    shopName,
+    inviteLink: posUrl,
+    email,
+  });
 }

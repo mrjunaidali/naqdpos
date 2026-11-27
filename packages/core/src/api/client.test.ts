@@ -59,6 +59,39 @@ describe('createApiClient', () => {
     expect(sentBody(fetch)).toMatchObject({ name: 'Ali Fruit' });
   });
 
+  it('sends the UI language as X-App-Language when there is one', async () => {
+    const withLang = fakeFetch(200, { ok: true, db: true });
+    await createApiClient({
+      baseUrl: 'https://api.test',
+      fetch: withLang,
+      getLanguage: () => 'ur',
+    }).health();
+    expect(withLang.mock.calls[0]![1].headers['x-app-language']).toBe('ur');
+    const without = fakeFetch(200, { ok: true, db: true });
+    await createApiClient({
+      baseUrl: 'https://api.test',
+      fetch: without,
+      getLanguage: () => '',
+    }).health();
+    expect(without.mock.calls[0]![1].headers).not.toHaveProperty('x-app-language');
+  });
+
+  it('invites carry the email language, English by default', async () => {
+    const urdu = fakeFetch(200, { id: SHOP_ID });
+    await createApiClient({ baseUrl: 'https://api.test', fetch: urdu }).adminCreateInvite(
+      SHOP_ID,
+      'ali@example.com',
+      'ur',
+    );
+    expect(sentBody(urdu)).toEqual({ email: 'ali@example.com', language: 'ur' });
+    const plain = fakeFetch(200, { id: SHOP_ID });
+    await createApiClient({ baseUrl: 'https://api.test', fetch: plain }).adminCreateInvite(
+      SHOP_ID,
+      'ali@example.com',
+    );
+    expect(sentBody(plain)).toEqual({ email: 'ali@example.com', language: 'en' });
+  });
+
   it('rejects invalid input before calling the network', async () => {
     const fetch = fakeFetch(201, {});
     const api = createApiClient({ baseUrl: 'https://api.test', fetch });

@@ -2,14 +2,19 @@
 // bearer session tokens for the installed PWA, and single-use tokens to hand a Google sign-in
 // back to the app. Users and sessions are rows in our Postgres.
 import { AsyncLocalStorage } from 'node:async_hooks';
-import { EMAIL_SEND_FAILED } from '@naqdpos/core';
+import {
+  APP_LANGUAGE_HEADER,
+  EMAIL_SEND_FAILED,
+  emailLanguage,
+  type EmailLanguage,
+} from '@naqdpos/core';
 import { betterAuth, type BetterAuthOptions } from 'better-auth';
 import { APIError, isAPIError } from 'better-auth/api';
 import { bearer, emailOTP, oneTimeToken, twoFactor } from 'better-auth/plugins';
 import pg from 'pg';
 import type { Env } from './env.ts';
 import type { Logger } from './logger.ts';
-import { codeEmail, maskEmail, type Mailer } from './mailer.ts';
+import { CODE_MINUTES, codeEmail, maskEmail, type Mailer } from './mailer.ts';
 
 const SEND_FAILED_MESSAGE = "Couldn't send the code, try again";
 
@@ -29,7 +34,21 @@ async function trackSend<T>(fn: () => Promise<T>): Promise<{ value: T; sendFaile
   return { value, sendFailed: mark.failed };
 }
 
-export type SendOtp = (email: string, otp: string, type: string) => Promise<void>;
+/** `language`: the email's language, from the app's X-App-Language header (default English). */
+export type SendOtp = (
+  email: string,
+  otp: string,
+  type: string,
+  language: EmailLanguage,
+) => Promise<void>;
+
+/** The app's language on the request behind a code: HTTP requests and server-side calls alike. */
+function requestLanguage(ctx: unknown): EmailLanguage {
+  const c = ctx as { headers?: Headers; request?: Request } | undefined;
+  const header =
+    c?.headers?.get?.(APP_LANGUAGE_HEADER) ?? c?.request?.headers.get(APP_LANGUAGE_HEADER);
+  return emailLanguage(header);
+}
 
 export type PinResetCodeCheck = 'ok' | 'invalid' | 'expired' | 'too_many';
 
@@ -61,8 +80,8 @@ export interface AuthService {
   verifyBackupCode(headers: Headers, code: string): Promise<boolean>;
   /** Mints a single-use, short-lived token for a session (server side only). */
   createOneTimeToken(sessionToken: string): Promise<string>;
-  /** Emails a fresh PIN reset code (email-verification OTP) to this address. */
-  sendPinResetCode(email: string): Promise<void>;
+  /** Emails a fresh PIN reset code (email-verification OTP) to this address, in this language. */
+  sendPinResetCode(email: string, language: EmailLanguage): Promise<void>;
   /**
    * Checks and USES UP a PIN reset code (single use, 3 wrong tries, 5 minutes): verifyEmailOTP
    * consumes it and creates no session.
@@ -157,8 +176,8 @@ function googleKeys(env: Env) {
 export function authOptions(env: Env, deps: AuthDeps) {
   const sendOtp: SendOtp =
     deps.sendOtp ??
-    (async (email, otp, type) => {
-      const mail = codeEmail(type, otp);
+    (async (email, otp, type, language) => {
+      const mail = codeEmail(type, otp, language);
       if (deps.mailer) {
         try {
           await deps.mailer.send({ to: email, ...mail });
@@ -211,7 +230,10 @@ export function authOptions(env: Env, deps: AuthDeps) {
     plugins: [
       emailOTP({
         otpLength: 6,
-        sendVerificationOTP: ({ email, otp, type }) => sendOtp(email, otp, type),
+        // Set here, not left to the library default, because the emails state it (mailer.ts).
+        expiresIn: CODE_MINUTES * 60,
+        sendVerificationOTP: ({ email, otp, type }, ctx) =>
+          sendOtp(email, otp, type, requestLanguage(ctx)),
       }),
       // Admins sign in with Google or an email code (no password): enrolment is passwordless.
       // The plugin's own sign-in step only covers password sign-in, so /admin/* also checks
@@ -332,9 +354,12 @@ export function createAuth(env: Env, deps: AuthDeps): AuthService {
       }
     },
     createOneTimeToken,
-    async sendPinResetCode(email) {
+    async sendPinResetCode(email, language) {
       const { sendFailed } = await trackSend(() =>
-        auth.api.sendVerificationOTP({ body: { email, type: 'email-verification' } }),
+        auth.api.sendVerificationOTP({
+          body: { email, type: 'email-verification' },
+          headers: new Headers({ [APP_LANGUAGE_HEADER]: language }),
+        }),
       );
       if (sendFailed) throw sendFailedError();
     },

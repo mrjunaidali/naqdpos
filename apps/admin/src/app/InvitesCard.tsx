@@ -1,9 +1,10 @@
-import { OWNER_JOINED_MESSAGE, type AdminCatalogue } from '@naqdpos/core';
+import { OWNER_JOINED_MESSAGE, type AdminCatalogue, type EmailLanguage } from '@naqdpos/core';
 import { useState } from 'react';
 import { api } from '../api/index.ts';
 import { useFailure, when } from './adminContext.ts';
 import { InviteMessage } from './InviteMessage.tsx';
-import { Alert, Button, Card, Field } from './ui.tsx';
+import { EMAIL_LANGUAGE_OPTIONS } from './labels.ts';
+import { Alert, Button, Card, Field, Select } from './ui.tsx';
 
 const STATUS_STYLE = {
   pending: 'bg-warning-soft text-warning-fg',
@@ -27,6 +28,7 @@ export function InvitesCard({
   const fail = useFailure();
   const [showing, setShowing] = useState<string>();
   const [email, setEmail] = useState(catalogue.invites[0]?.email ?? '');
+  const [language, setLanguage] = useState<EmailLanguage>('en');
   const [error, setError] = useState<string>();
   const [busy, setBusy] = useState(false);
   /** The invite just created, and whether the API emailed it. */
@@ -100,7 +102,7 @@ export function InvitesCard({
             const value = email.trim().toLowerCase();
             if (!value) return;
             void run(async () => {
-              const r = await api.adminCreateInvite(shopId, value);
+              const r = await api.adminCreateInvite(shopId, value, language);
               setCreated({ id: r.id, emailed: r.emailed });
               setShowing(r.id);
             }, 'Could not create the invite.');
@@ -112,6 +114,14 @@ export function InvitesCard({
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
+            />
+          </div>
+          <div>
+            <Select
+              label="Email language"
+              value={language}
+              onChange={(e) => setLanguage(e.target.value as EmailLanguage)}
+              options={EMAIL_LANGUAGE_OPTIONS}
             />
           </div>
           <Button type="submit" disabled={busy || !email.trim()}>

@@ -1,10 +1,10 @@
-import { normalizePkMobile, SHOP_TYPES, type ShopType } from '@naqdpos/core';
+import { normalizePkMobile, SHOP_TYPES, type EmailLanguage, type ShopType } from '@naqdpos/core';
 import { useState, type FormEvent } from 'react';
 import { Link } from 'react-router';
 import { api } from '../api/index.ts';
 import { useFailure } from './adminContext.ts';
 import { InviteMessage } from './InviteMessage.tsx';
-import { SHOP_TYPE_LABELS } from './labels.ts';
+import { EMAIL_LANGUAGE_OPTIONS, SHOP_TYPE_LABELS } from './labels.ts';
 import { Alert, Button, Card, Field, Select } from './ui.tsx';
 
 const EMPTY = {
@@ -16,6 +16,7 @@ const EMPTY = {
   ownerName: '',
   ownerMobile: '',
   ownerEmail: '',
+  language: 'en' as EmailLanguage,
 };
 type Errors = Partial<Record<keyof typeof EMPTY, string>>;
 
@@ -59,6 +60,7 @@ export function NewShopPage() {
         owner_name: form.ownerName.trim(),
         owner_mobile: mobile,
         owner_email: email,
+        language: form.language,
       });
       setCreated({ shopId: r.shop_id, name: form.name.trim(), email, mobile, emailed: r.emailed });
     } catch (err) {
@@ -159,6 +161,12 @@ export function NewShopPage() {
             value={form.ownerEmail}
             onChange={(e) => set('ownerEmail')(e.target.value)}
             error={errors.ownerEmail}
+          />
+          <Select
+            label="Invite email language"
+            value={form.language}
+            onChange={(e) => set('language')(e.target.value)}
+            options={EMAIL_LANGUAGE_OPTIONS}
           />
           <p className="text-sm text-muted">
             The owner signs in with this email (Google or an email code) and sets their own PIN.

@@ -1109,3 +1109,56 @@ Cause behind the staging pull 500 (docs/bugs.md 2026-11-26): the staging `api` s
 - **Why**: Railway deprecated Config as Code: new services (the staging `worker`) can't use a config file, and existing ones stop being read on 2026-12-01. Staging `worker` set up by hand (builder Dockerfile, `apps/api/Dockerfile`, start command `node /repo/apps/api/src/worker.ts`) and running (`NaqdPOS worker started`); first backup at 02:00 PKT (no public database URL, so no `backup:now`).
 - **Docs**: deployment.md §6 step 3 is now one table of every dashboard setting for `api`, `worker`, `pos`, `admin` (builder, Dockerfile path, watch paths, start and pre-deploy commands, healthcheck path / timeout, restart policy, replicas, networking), the source of truth for staging and production; the four `railway*.json` files are reference only. A "moving off config files before 2026-12-01" step; §2 replicas, §3 "Migrations" and step 4a point at the dashboard settings.
 - **Follow-up (by hand, both environments, before 2026-12-01)**: type the table into every service, clear its Config file path, redeploy, check the `api` deployment still has its Pre-deploy step. Production `worker` still to create (step 4a). Staging restore drill after the first night's backup.
+
+## Email templates per language, text + HTML (27 Nov 2026)
+
+- **Templates** (`apps/api/emails/`, docs/emails.md): one file set per email per language for `sign-in-code`, `pin-reset-code` and `invite`:
+  - `<email>.<lang>.txt` holds `Subject: …`, an empty line and the plain-text body.
+  - `<email>.<lang>.html` holds the HTML body, ending with a "You received this because…" footer.
+  - `layout.<lang>.html` holds the NaqdPOS name, the card and the page language and direction, with `{{subject}}` and `{{content}}` slots.
+  - The files hold only text and placeholders: `{{code}}` and `{{expiresInMinutes}}` for the codes, and `{{shopName}}`, `{{inviteLink}}` and `{{email}}` for the invite.
+  - The subject and text wording is unchanged. Only the footers are new.
+- **HTML**:
+  - Tables and inline styles only (no `<style>`, classes, images or scripts), colours from the theme greys.
+  - Urdu uses `lang="ur" dir="rtl"`, right alignment and an Urdu font stack (Noto Nastaliq Urdu … Tahoma). Codes, emails and links are `dir="ltr"`.
+  - Every value is HTML-escaped. The text part gets the values as typed.
+- **Loader** (`apps/api/src/email/templates.ts`), run once at API start:
+  - It refuses to start, naming each file, on:
+    - a missing file, subject line or body;
+    - an unknown or misspelt placeholder;
+    - a body that lacks one of its email's placeholders;
+    - English and Urdu using different placeholders in any part.
+  - It fills every placeholder in one pass and throws when a value is missing. It tolerates a BOM and CRLF line ends.
+- **Language per recipient**:
+  - Sign-in and PIN reset codes follow the POS app's language. The client sends `X-App-Language` (core `ApiClientOptions.getLanguage`; the POS passes `i18n.language`). Better Auth's `sendVerificationOTP` reads it from the request, and `/staff/{id}/pin-code` passes it on. Missing or unknown values fall back to English (core `emailLanguage`). CORS allows the header.
+  - The invite follows the language the admin picks: "Invite email language" on New shop, "Email language" on the shop's invites card. `language` (`en` | `ur`, default `en`) is on `AdminCreateShopRequest` and `AdminInviteRequest`. It is not stored, so "Resend message" stays WhatsApp only.
+- **Both parts are sent**: Resend `text` + `html`, SMTP `text` + `html`.
+- **Preview**: `pnpm email:preview <email> <en|ur>` (`apps/api/scripts/email-preview.ts`) renders sample values into `.email-preview/` (gitignored) and prints the paths and a `file://` link.
+- **Dockerfile** copies `apps/api/emails`. Without it the API would refuse to start.
+- **Decisions**:
+  - One language per email replaces the earlier English-then-Urdu email.
+  - `{{expiresInDays}}` from the request isn't used, because no wording mentions the invite's expiry.
+  - The admin portal's WhatsApp text stays in core `inviteMessage` (the browser can't read API files). docs/emails.md says to change both.
+- **Also fixed**: the POS test "switches the UI to Urdu" failed every day between 12:00 and 17:00 Karachi time. It expected "بخیر", but the afternoon greeting is "السلام علیکم". It now accepts any of the three greetings.
+- **Tests**:
+  - Core 452: `emailLanguage` cases; the client sends `X-App-Language` only when there is one; invite bodies carry the language, `en` by default.
+  - API unit 112:
+    - every template in every language renders with every placeholder filled;
+    - English and Urdu use the same placeholders;
+    - the exact subject and text of all six emails;
+    - HTML escaping and a literal `$&`;
+    - RTL and LTR markup, footers, and none of the tags email apps strip;
+    - every refusal names its file, and all problems are listed at once;
+    - BOM and CRLF handling, and a changed file changes the email;
+    - Better Auth picks the language from the request header.
+  - API DB 65:
+    - codes follow `X-App-Language`, Urdu for the PIN code and sign-in and English by default;
+    - the invite is English by default and Urdu for a new shop and a re-invite;
+    - `language: 'fr'` → 400.
+  - DB 209. Admin 21 (the requests carry `language`). Pos 440.
+  - `pnpm lint`, `pnpm typecheck` and `pnpm format:check` pass.
+  - The POS onboarding test "creates the shop…" sometimes hits the 5 s timeout when the whole workspace runs in parallel on this PC. Alone it takes about 0.3 s and passes with or without this change.
+  - E2E not run here (no `caddy` on this PC); CI runs it.
+- **Follow-up**:
+  - Review the wording of the Urdu footers (new text).
+  - Editing templates without a deploy (database + admin portal) would be a separate story.

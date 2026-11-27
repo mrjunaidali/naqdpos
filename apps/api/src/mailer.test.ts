@@ -32,31 +32,26 @@ function fakeTransport() {
   return { transport, sent };
 }
 
-describe('email templates', () => {
-  it('sign-in code: English then Urdu, subject in both', () => {
-    const mail = codeEmail('sign-in', '482913');
-    expect(mail.subject).toBe('NaqdPOS sign-in code / NaqdPOS لاگ ان کوڈ');
-    const [en, ur] = mail.text.split('— — —');
-    expect(en).toContain('Your NaqdPOS sign-in code is 482913.');
-    expect(ur).toContain('482913');
-    expect(ur).toMatch(/[؀-ۿ]/);
+describe('email builders', () => {
+  it('one language per email, with plain text and HTML', () => {
+    const en = codeEmail('sign-in', '482913', 'en');
+    expect(en.subject).toBe('NaqdPOS sign-in code');
+    expect(en.text).not.toMatch(/[؀-ۿ]/);
+    expect(en.html).toContain('482913');
+    const ur = codeEmail('sign-in', '482913', 'ur');
+    expect(ur.subject).toBe('NaqdPOS لاگ ان کوڈ');
+    expect(ur.text).not.toContain('Your NaqdPOS');
   });
 
   it('PIN reset codes say "PIN reset code" (email-verification type, architecture §5)', () => {
-    const mail = codeEmail('email-verification', '123456');
-    expect(mail.subject).toBe('NaqdPOS PIN reset code / NaqdPOS PIN ری سیٹ کوڈ');
-    expect(mail.text).toContain('PIN reset code is 123456');
+    expect(codeEmail('email-verification', '123456').text).toContain('PIN reset code is 123456');
   });
 
-  it('owner invite uses the WhatsApp words, the app address and the email in both languages', () => {
-    const mail = inviteEmail('Ali Fruit', 'https://pos.naqd.pk', 'ali@example.com');
+  it('owner invite: the app address and the email', () => {
+    const mail = inviteEmail('Ali Fruit', 'https://pos.naqd.pk', 'ali@example.com', 'ur');
     expect(mail.subject).toContain('Ali Fruit');
-    expect(mail.text).toContain(
-      'Assalam o alaikum! Your shop Ali Fruit is ready on NaqdPOS. Open https://pos.naqd.pk and sign in with ali@example.com.',
-    );
-    const ur = mail.text.split('— — —')[1]!;
-    expect(ur).toContain('https://pos.naqd.pk');
-    expect(ur).toContain('ali@example.com');
+    expect(mail.text).toContain('https://pos.naqd.pk');
+    expect(mail.html).toContain('ali@example.com');
   });
 });
 

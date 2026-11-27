@@ -32,15 +32,15 @@ const admin = new pg.Pool({
   max: 2,
 });
 
-/** Every code sent, in order: [email, otp, type]. */
-const sent: [string, string, string][] = [];
+/** Every code sent, in order: [email, otp, type, language]. */
+const sent: [string, string, string, string][] = [];
 const lastCode = (email: string, type = 'email-verification') =>
   sent.filter(([e, , t]) => e === email && t === type).at(-1)?.[1];
 const auth = createAuth(env, {
   pool: authPool,
   logger,
-  sendOtp: (email, otp, type) => {
-    sent.push([email, otp, type]);
+  sendOtp: (email, otp, type, language) => {
+    sent.push([email, otp, type, language]);
     return Promise.resolve();
   },
 });
@@ -61,10 +61,14 @@ afterAll(async () => {
 });
 
 const jsonHeaders = { 'content-type': 'application/json' };
-const post = (path: string, body: unknown, token?: string) =>
+const post = (path: string, body: unknown, token?: string, extra: Record<string, string> = {}) =>
   app.request(path, {
     method: 'POST',
-    headers: token ? { ...jsonHeaders, authorization: `Bearer ${token}` } : jsonHeaders,
+    headers: {
+      ...jsonHeaders,
+      ...(token && { authorization: `Bearer ${token}` }),
+      ...extra,
+    },
     body: JSON.stringify(body),
   });
 
@@ -120,7 +124,7 @@ describe('owner PIN reset by email code', () => {
     expect(res.status).toBe(200);
     expect(await res.json()).toEqual({ sent: true });
     expect(sent.slice(sentBefore)).toEqual([
-      [o.email, expect.stringMatching(/^\d{6}$/), 'email-verification'],
+      [o.email, expect.stringMatching(/^\d{6}$/), 'email-verification', 'en'],
     ]);
 
     const done = await reset(o.staffId, lastCode(o.email), o.token);
@@ -135,6 +139,18 @@ describe('owner PIN reset by email code', () => {
     const text = JSON.stringify(audit);
     expect(text).not.toContain(lastCode(o.email)!);
     expect(text).not.toContain('pbkdf2');
+  });
+
+  it('codes come in the app language (X-App-Language), English without it', async () => {
+    const o = await owner();
+    expect(sent.filter(([e]) => e === o.email).at(-1)?.[3]).toBe('en');
+    const ur = { 'x-app-language': 'ur' };
+    expect((await post(`/staff/${o.staffId}/pin-code`, {}, o.token, ur)).status).toBe(200);
+    expect(sent.at(-1)).toEqual([o.email, expect.any(String), 'email-verification', 'ur']);
+
+    const email = `user-${randomUUID()}@example.test`;
+    await post('/auth/email-otp/send-verification-otp', { email, type: 'sign-in' }, undefined, ur);
+    expect(sent.at(-1)).toEqual([email, expect.any(String), 'sign-in', 'ur']);
   });
 
   it('refuses a reused code', async () => {

@@ -4,7 +4,9 @@
 // Not a sync write: the server must see the code. The device stores the returned row itself.
 import { createRoute, OpenAPIHono } from '@hono/zod-openapi';
 import {
+  APP_LANGUAGE_HEADER,
   can,
+  emailLanguage,
   ErrorResponse,
   PinResetCodeResponse,
   ResetOwnerPinRequest,
@@ -100,7 +102,11 @@ export function pinRoutes(deps: Pick<AppDeps, 'db' | 'auth'>) {
         select request_pin_reset_code(${id}) as r`.execute(tx);
       const result = rows[0]!.r;
       // Sent inside the transaction: if sending fails, the send is not counted.
-      if (result === 'ok') await deps.auth.sendPinResetCode(user.email);
+      if (result === 'ok')
+        await deps.auth.sendPinResetCode(
+          user.email,
+          emailLanguage(c.req.header(APP_LANGUAGE_HEADER)),
+        );
       return result;
     });
     if (outcome === 'forbidden') return c.json(errorBody('forbidden'), 403);

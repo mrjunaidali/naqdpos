@@ -65,6 +65,7 @@ import {
   SyncPushRequest,
   SyncPushResponse,
 } from '../sync/schemas.ts';
+import { APP_LANGUAGE_HEADER, type EmailLanguage } from '../emailLanguage.ts';
 
 /** The subset of `fetch` the client uses; apps pass the browser's fetch. */
 export type FetchLike = (
@@ -83,6 +84,8 @@ export interface ApiClientOptions {
   getDeviceId?: () => MaybePromise<string | null>;
   /** This build's version; sent as X-App-Version on every request (architecture §4). */
   appVersion?: string;
+  /** The UI language; sent as X-App-Language so sign-in and PIN code emails match it. */
+  getLanguage?: () => string | null | undefined;
 }
 
 /** status 0 + code 'network' = the request never reached the server (offline, DNS, CORS). */
@@ -130,6 +133,8 @@ export function createApiClient(options: ApiClientOptions) {
     const deviceId = await options.getDeviceId?.();
     if (deviceId) headers['x-device-id'] = deviceId;
     if (options.appVersion) headers['x-app-version'] = options.appVersion;
+    const language = options.getLanguage?.();
+    if (language) headers[APP_LANGUAGE_HEADER] = language;
     if (body !== undefined) headers['content-type'] = 'application/json';
 
     let response: Awaited<ReturnType<FetchLike>>;
@@ -254,12 +259,12 @@ export function createApiClient(options: ApiClientOptions) {
       request('POST', '/admin/shops', AdminCreateShopResponse, AdminCreateShopRequest.parse(input)),
     adminCatalogue: async (shopId: string) =>
       request('GET', `/admin/shops/${encodeURIComponent(shopId)}/catalogue`, AdminCatalogue),
-    adminCreateInvite: async (shopId: string, email: string) =>
+    adminCreateInvite: async (shopId: string, email: string, language?: EmailLanguage) =>
       request(
         'POST',
         `/admin/shops/${encodeURIComponent(shopId)}/invites`,
         AdminInviteResponse,
-        AdminInviteRequest.parse({ email }),
+        AdminInviteRequest.parse({ email, ...(language && { language }) }),
       ),
     adminRevokeInvite: async (inviteId: string) =>
       request('POST', `/admin/invites/${encodeURIComponent(inviteId)}/revoke`, SuccessResponse, {}),

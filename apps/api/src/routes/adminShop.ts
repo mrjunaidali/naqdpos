@@ -16,6 +16,7 @@ import {
   ErrorResponse,
   IdResponse,
   OWNER_JOINED_MESSAGE,
+  type EmailLanguage,
 } from '@naqdpos/core';
 import { sql, type RawBuilder } from 'kysely';
 import { z } from 'zod';
@@ -126,10 +127,14 @@ export function registerAdminShopRoutes(
    * Emails the owner invite when SMTP and POS_URL are set (US012). Never fails the request: the
    * invite exists either way and the portal still shows the WhatsApp text.
    */
-  const emailInvite = async (shopName: string, email: string): Promise<boolean> => {
+  const emailInvite = async (
+    shopName: string,
+    email: string,
+    language: EmailLanguage,
+  ): Promise<boolean> => {
     if (!deps.mailer || !deps.posUrl) return false;
     try {
-      await deps.mailer.send({ to: email, ...inviteEmail(shopName, deps.posUrl, email) });
+      await deps.mailer.send({ to: email, ...inviteEmail(shopName, deps.posUrl, email, language) });
       return true;
     } catch (error) {
       deps.logger.warn({ err: error, to: maskEmail(email) }, 'invite email failed');
@@ -166,7 +171,7 @@ export function registerAdminShopRoutes(
       );
       if (!r.ok) return c.json(r.body, r.status);
       const body = c.req.valid('json');
-      const emailed = await emailInvite(body.name, body.owner_email);
+      const emailed = await emailInvite(body.name, body.owner_email, body.language);
       return c.json({ ...AdminCreateShopResponse.parse(r.value), emailed }, 200);
     })
     .openapi(catalogue, async (c) => {
@@ -187,7 +192,8 @@ export function registerAdminShopRoutes(
         sql`select admin_get_shop(${c.req.valid('param').id}::uuid) as r`,
       );
       const name = shop.ok ? (shop.value as { shop?: { name?: string } }).shop?.name : undefined;
-      const emailed = name ? await emailInvite(name, c.req.valid('json').email) : false;
+      const invite = c.req.valid('json');
+      const emailed = name ? await emailInvite(name, invite.email, invite.language) : false;
       return c.json({ id: String(r.value), emailed }, 200);
     })
     .openapi(revokeInvite, async (c) => {

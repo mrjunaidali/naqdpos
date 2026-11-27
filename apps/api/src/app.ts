@@ -66,7 +66,13 @@ export function createApp(deps: AppDeps) {
     '*',
     cors({
       origin: deps.origins,
-      allowHeaders: ['Authorization', 'Content-Type', 'X-Device-Id', 'X-App-Version'],
+      allowHeaders: [
+        'Authorization',
+        'Content-Type',
+        'X-Device-Id',
+        'X-App-Version',
+        'X-App-Language',
+      ],
       // The bearer plugin returns the session token in this header after sign-in.
       exposeHeaders: ['set-auth-token', 'X-Request-Id'],
       credentials: true,

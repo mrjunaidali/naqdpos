@@ -1,0 +1,3 @@
+Subject: NaqdPOS PIN reset code
+
+Your NaqdPOS PIN reset code is {{code}}. It is valid for {{expiresInMinutes}} minutes. If you did not ask to reset your PIN, ignore this email.

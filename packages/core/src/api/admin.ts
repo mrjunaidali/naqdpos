@@ -1,6 +1,7 @@
 // Admin portal API (US010, US011; architecture §5). Shared by apps/api routes and apps/admin.
 import { z } from 'zod';
 import { PRODUCT_UNITS } from '../catalogue.ts';
+import { EmailLanguageSchema } from '../emailLanguage.ts';
 import { PK_MOBILE_PATTERN } from '../phone.ts';
 import { SHOP_TYPES } from '../tenancy.ts';
 
@@ -144,6 +145,8 @@ export const AdminCreateShopRequest = z.object({
   /** E.164 Pakistani mobile (normalised in the form with phone.ts). */
   owner_mobile: z.string().regex(PK_MOBILE_PATTERN),
   owner_email: z.email().transform((e) => e.trim().toLowerCase()),
+  /** The language of the invite email (not stored). */
+  language: EmailLanguageSchema.default('en'),
 });
 export type AdminCreateShopRequest = z.input<typeof AdminCreateShopRequest>;
 
@@ -159,7 +162,12 @@ export const AdminCreateShopResponse = z.object({
 export const OWNER_JOINED_MESSAGE =
   "The owner has already joined this shop. Adding a second owner isn't supported yet.";
 
-export const AdminInviteRequest = z.object({ email: z.email() });
+export const AdminInviteRequest = z.object({
+  email: z.email(),
+  /** The language of the invite email (not stored). */
+  language: EmailLanguageSchema.default('en'),
+});
+export type AdminInviteRequest = z.input<typeof AdminInviteRequest>;
 
 export const AdminInvite = z.object({
   id: z.uuid(),

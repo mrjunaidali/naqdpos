@@ -4,6 +4,7 @@
 import { apiBaseUrl, createApiClient } from '@naqdpos/core';
 import { APP_VERSION } from '../app/version.ts';
 import { getStoredDevice, getStoredSession } from '../db/session.ts';
+import { i18n } from '../i18n/index.ts';
 
 export { ApiError } from '@naqdpos/core';
 
@@ -19,6 +20,8 @@ export const api = createApiClient({
   getToken: async () => (await getStoredSession())?.token ?? null,
   getDeviceId: async () => (await getStoredDevice())?.id ?? null,
   appVersion: APP_VERSION,
+  // Emails (sign-in and PIN reset codes) come in the language the app shows.
+  getLanguage: () => i18n.language,
 });
 
 /**
@@ -32,5 +35,7 @@ export function apiWithToken(token: string) {
     getToken: () => token,
     getDeviceId: async () => (await getStoredDevice())?.id ?? null,
     appVersion: APP_VERSION,
+    // Emails (sign-in and PIN reset codes) come in the language the app shows.
+    getLanguage: () => i18n.language,
   });
 }

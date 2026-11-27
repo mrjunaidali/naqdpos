@@ -1,0 +1,3 @@
+Subject: آپ کی دکان {{shopName}} NaqdPOS پر تیار ہے
+
+السلام علیکم! آپ کی دکان {{shopName}} NaqdPOS پر تیار ہے۔ {{inviteLink}} کھولیں اور {{email}} سے سائن ان کریں۔

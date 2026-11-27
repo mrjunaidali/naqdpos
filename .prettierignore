@@ -5,3 +5,7 @@ dev-dist
 coverage
 # Hand-written docs are not auto-formatted.
 *.md
+# Email templates are edited by hand (docs/emails.md); keep their line breaks as written.
+apps/api/emails
+# Local email previews (pnpm email:preview)
+.email-preview

@@ -4,6 +4,7 @@ export * from './cart.ts';
 export * from './catalogue.ts';
 export * from './closing.ts';
 export * from './discount.ts';
+export * from './emailLanguage.ts';
 export * from './escpos.ts';
 export * from './expenses.ts';
 export * from './files.ts';

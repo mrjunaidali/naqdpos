@@ -248,7 +248,7 @@ For each public service: Railway → service → Settings → Networking → **C
 ### 9. Checks after each deploy
 
 - `https://<api>/health` → `{"ok":true,"db":true}`; the API log line `NaqdPOS API listening` shows `email: true, files: true`; with `RESEND_API_KEY` the log says `email: no startup check for this transport` (Resend sending keys can't be checked without sending), so the sign-in below is the real email check. With SMTP: no `email check failed`.
-- Sign in on the POS with an email code (the email arrives in English and Urdu; the log shows `email sent` with `via: resend-https` and a masked address); create or open a shop; set a logo in Settings → Shop; it shows in the header and on a receipt.
+- Sign in on the POS with an email code (the email arrives in the app language, English or Urdu; the log shows `email sent` with `via: resend-https` and a masked address); create or open a shop; set a logo in Settings → Shop; it shows in the header and on a receipt.
 - Browser dev tools on POS and admin: no CSP errors in the console; response headers as in §4.
 - Admin portal: create a test shop → "Email sent to …"; the invite email arrives.
 - **The `worker` service exists and is running** (step 4a): its latest log shows `NaqdPOS worker started`, and each morning `backup uploaded` for the night (or right after `pnpm backup:now`); the backups bucket has `backups/daily/<date>.dump.enc`. Do the restore drill once on staging (runbook §4) before the pilot, and once on production after its first backup.

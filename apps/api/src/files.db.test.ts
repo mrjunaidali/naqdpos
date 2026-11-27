@@ -244,7 +244,7 @@ describe('owner invite email (US012)', () => {
     owner_email: ownerEmail,
   });
 
-  it('new shop and a new invite are emailed (English then Urdu) and still return the invite', async () => {
+  it('new shop and a new invite are emailed in the chosen language (default English)', async () => {
     const token = await adminToken();
     sent.length = 0;
     const email = `owner-${randomUUID()}@example.test`;
@@ -254,15 +254,34 @@ describe('owner invite email (US012)', () => {
     expect(shop.emailed).toBe(true);
     expect(sent).toHaveLength(1);
     expect(sent[0]!.to).toBe(email);
-    expect(sent[0]!.text).toContain(
-      'Your shop Mailed Fruit is ready on NaqdPOS. Open https://pos.naqd.pk',
+    expect(sent[0]!.subject).toBe('Your shop Mailed Fruit is ready on NaqdPOS');
+    expect(sent[0]!.text).toBe(
+      `Assalam o alaikum! Your shop Mailed Fruit is ready on NaqdPOS. Open https://pos.naqd.pk and sign in with ${email}.`,
     );
-    expect(sent[0]!.text).toMatch(/[؀-ۿ]/);
+    expect(sent[0]!.html).toContain('<html lang="en"');
 
-    const again = await post(app, `/admin/shops/${shop.shop_id}/invites`, token, { email });
+    const again = await post(app, `/admin/shops/${shop.shop_id}/invites`, token, {
+      email,
+      language: 'ur',
+    });
     expect(again.status).toBe(200);
     expect(await again.json()).toMatchObject({ emailed: true });
     expect(sent).toHaveLength(2);
+    expect(sent[1]!.subject).toBe('آپ کی دکان Mailed Fruit NaqdPOS پر تیار ہے');
+    expect(sent[1]!.html).toContain('<html lang="ur" dir="rtl">');
+
+    const urdu = await post(app, '/admin/shops', token, {
+      ...newShop(`owner-${randomUUID()}@example.test`),
+      language: 'ur',
+    });
+    expect(urdu.status).toBe(200);
+    expect(sent[2]!.text).toMatch(/^السلام علیکم!/);
+
+    const bad = await post(app, `/admin/shops/${shop.shop_id}/invites`, token, {
+      email,
+      language: 'fr',
+    });
+    expect(bad.status).toBe(400);
   });
 
   it('SMTP failing or not configured: the invite is created, emailed: false', async () => {
