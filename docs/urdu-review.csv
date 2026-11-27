@@ -54,6 +54,7 @@ signIn.resend,Resend code,کوڈ دوبارہ بھیجیں,,
 signIn.changeEmail,Change email,ای میل تبدیل کریں,,
 signIn.wrongCode,That code is not right. Check the email and try again.,یہ کوڈ درست نہیں۔ ای میل دیکھ کر دوبارہ کوشش کریں۔,,
 signIn.codeExpired,That code has expired. Send a new one.,اس کوڈ کی مدت ختم ہو گئی۔ نیا کوڈ منگوائیں۔,,
+signIn.sendFailed,"Couldn't send the code, try again.",کوڈ نہیں بھیجا جا سکا، دوبارہ کوشش کریں۔,,
 signIn.or,or,یا,,
 signIn.google,Sign in with Google,Google سے سائن ان کریں,,
 signIn.googleFailed,"Google sign-in did not finish. Try again, or use your email.",Google سائن ان مکمل نہیں ہوا۔ دوبارہ کوشش کریں یا ای میل استعمال کریں۔,,
@@ -107,6 +108,13 @@ pwa.reload,Reload,دوبارہ لوڈ کریں,,
 pwa.later,Later,بعد میں,,
 notFound.title,Page not found,صفحہ نہیں ملا,,
 notFound.goHome,Go to home,ہوم پر جائیں,,
+routeError.title,Something went wrong on this screen,اس اسکرین پر کچھ غلط ہو گیا,,
+routeError.body,"Your sales and changes are saved on this device. Try again, or reload the app.",آپ کی سیلز اور تبدیلیاں اس ڈیوائس پر محفوظ ہیں۔ دوبارہ کوشش کریں، یا ایپ دوبارہ لوڈ کریں۔,,
+routeError.closingBody,"Day Close could not open. Your sales and changes are saved on this device. Try again, or reload the app.",دن بند کرنے کی اسکرین نہیں کھلی۔ آپ کی سیلز اور تبدیلیاں اس ڈیوائس پر محفوظ ہیں۔ دوبارہ کوشش کریں، یا ایپ دوبارہ لوڈ کریں۔,,
+routeError.reloadNeeded,Please reload the app. Your unsynced changes are safe on this device.,براہِ کرم ایپ دوبارہ لوڈ کریں۔ آپ کی غیر سنک تبدیلیاں اس ڈیوائس پر محفوظ ہیں۔,,
+routeError.tryAgain,Try again,دوبارہ کوشش کریں,,
+routeError.reload,Reload app,ایپ دوبارہ لوڈ کریں,,
+routeError.details,Details for support,سپورٹ کے لیے تفصیل,,
 sync.synced,Synced,سنک ہو گیا,,
 sync.pending_one,{{count}} pending,{{count}} باقی,,Plural form for exactly 1. Keep {{count}} exactly.
 sync.pending_other,{{count}} pending,{{count}} باقی,,Plural form for any other number. Keep {{count}} exactly.
@@ -130,10 +138,36 @@ sync.deviceUnlinked,This device is no longer linked to the shop,یہ ڈیوائ�
 sync.clockAhead,Phone date/time is wrong — fix it and tap Sync now,"فون کی تاریخ/وقت غلط ہے — درست کر کے ""ابھی سنک کریں"" دبائیں",,
 sync.rejectedTitle,Needs review,دیکھنا ضروری ہے,,
 sync.rejectedIntro,The server did not accept these changes. They are kept on this device.,سرور نے یہ تبدیلیاں قبول نہیں کیں۔ یہ اس ڈیوائس پر محفوظ ہیں۔,,
+sync.notAccepted_one,{{count}} change was not accepted,{{count}} تبدیلی قبول نہیں ہوئی,,Plural form for exactly 1. Keep {{count}} exactly.
+sync.notAccepted_other,{{count}} changes were not accepted,{{count}} تبدیلیاں قبول نہیں ہوئیں,,Plural form for any other number. Keep {{count}} exactly.
+sync.fieldRejected,{{field}} was not accepted.,{{field}} قبول نہیں ہوا۔,,Keep {{field}} exactly.
+sync.tryAgain,Try again,دوبارہ کوشش کریں,,
+sync.tryAgainLabel,Try again: {{name}},دوبارہ کوشش کریں: {{name}},,Keep {{name}} exactly.
+sync.tryAllAgain,Try all again,سب دوبارہ بھیجیں,,
+sync.queuedOffline,Queued. It will be sent when you are back online.,قطار میں ہے۔ انٹرنیٹ آنے پر بھیج دی جائے گی۔,,
+sync.ownerReview,The owner needs to review these changes.,ان تبدیلیوں کو مالک کو دیکھنا ہوگا۔,,
+sync.heldForServer_one,{{count}} change waits for a server update (unit: {{units}}).,{{count}} تبدیلی سرور اپڈیٹ کی منتظر ہے (یونٹ: {{units}})۔,,Plural form for exactly 1. Keep {{count}} {{units}} exactly.
+sync.heldForServer_other,{{count}} changes wait for a server update (unit: {{units}}).,{{count}} تبدیلیاں سرور اپڈیٹ کی منتظر ہیں (یونٹ: {{units}})۔,,Plural form for any other number. Keep {{count}} {{units}} exactly.
 sync.table.shops,Shop settings,دکان کی سیٹنگز,,
 sync.table.staff,Staff,عملہ,,
 sync.table.staff_salaries,Salary,تنخواہ,,
 sync.table.devices,Device,ڈیوائس,,
+sync.table.staff_pins,Staff PINs,عملے کے پن,,
+sync.table.categories,Categories,کیٹیگریز,,
+sync.table.products,Products,پروڈکٹس,,
+sync.table.product_costs,Cost prices,قیمتِ خرید,,
+sync.table.price_history,Price history,قیمتوں کی تاریخ,,
+sync.table.product_cost_history,Cost price history,قیمتِ خرید کی تاریخ,,
+sync.table.payment_methods,Payment methods,ادائیگی کے طریقے,,
+sync.table.sales,Sales,سیلز,,
+sync.table.sale_lines,Sale items,سیل کی اشیاء,,
+sync.table.payments,Payments,ادائیگیاں,,
+sync.table.stock_movements,Stock,اسٹاک,,
+sync.table.customers,Customers,گاہک,,
+sync.table.khata_entries,Khata,کھاتہ,,
+sync.table.expense_categories,Expense categories,خرچوں کی اقسام,,
+sync.table.expenses,Expenses,خرچے,,
+sync.table.day_closes,Day closes,دن کی بندش,,
 sync.error.forbidden,Not allowed for this user or device.,اس صارف یا ڈیوائس کو اجازت نہیں۔,,
 sync.error.other_shop,This belongs to another shop.,یہ کسی اور دکان کا ہے۔,,
 sync.error.day_closed,That day is already closed.,وہ دن بند ہو چکا ہے۔,,
@@ -154,11 +188,39 @@ sync.reason.update_required,Update required to sync,سنک کے لیے اپڈی�
 sync.reason.auth_required,Sign in again to sync,سنک کے لیے دوبارہ سائن ان کریں,,
 sync.reason.device_unlinked,This device is no longer linked to the shop,یہ ڈیوائس اب دکان سے منسلک نہیں,,
 sync.reason.rejected_entries,Some changes were not accepted. See below.,کچھ تبدیلیاں قبول نہیں ہوئیں۔ نیچے دیکھیں۔,,
+sync.reason.pull_skipped,Some records from the server could not be stored on this device.,سرور سے آئے کچھ ریکارڈ اس ڈیوائس پر محفوظ نہیں ہو سکے۔,,
 sync.signInAgain,Sign in again,دوبارہ سائن ان کریں,,
 sync.reminderToast_one,{{count}} change not synced. Connect to internet and tap Sync now.,"{{count}} تبدیلی سنک نہیں ہوئی۔ انٹرنیٹ سے جڑیں اور ""ابھی سنک کریں"" دبائیں۔",,Plural form for exactly 1. Keep {{count}} exactly.
 sync.reminderToast_other,{{count}} changes not synced. Connect to internet and tap Sync now.,"{{count}} تبدیلیاں سنک نہیں ہوئیں۔ انٹرنیٹ سے جڑیں اور ""ابھی سنک کریں"" دبائیں۔",,Plural form for any other number. Keep {{count}} exactly.
 sync.syncedRecords_one,Synced {{count}} record,{{count}} ریکارڈ سنک ہوا,,Plural form for exactly 1. Keep {{count}} exactly.
 sync.syncedRecords_other,Synced {{count}} records,{{count}} ریکارڈ سنک ہوئے,,Plural form for any other number. Keep {{count}} exactly.
+sync.field.unit,Unit,یونٹ,,
+sync.field.unit_snapshot,Unit,یونٹ,,
+sync.field.name,Name,نام,,
+sync.field.name_snapshot,Name,نام,,
+sync.field.name_ur,Urdu name,اردو نام,,
+sync.field.sale_price_paisa,Sale price,قیمتِ فروخت,,
+sync.field.unit_price_paisa,Price,قیمت,,
+sync.field.qty_milli,Quantity,مقدار,,
+sync.field.amount_paisa,Amount,رقم,,
+sync.field.receipt_no,Receipt number,رسید نمبر,,
+sync.field.mobile,Mobile number,موبائل نمبر,,
+sync.field.phone,Phone,فون,,
+sync.field.barcode,Barcode,بارکوڈ,,
+sync.field.category_id,Category,کیٹیگری,,
+sync.field.search_terms,Search words,تلاش کے الفاظ,,
+sync.field.icon,Icon,آئیکن,,
+sync.field.business_date,Date,تاریخ,,
+sync.field.created_at,Date and time,تاریخ اور وقت,,
+sync.field.updated_at,Date and time,تاریخ اور وقت,,
+sync.field.id,Record ID,ریکارڈ آئی ڈی,,
+sync.checkSync,Check sync,سنک دیکھیں,,
+sync.pullSkipped.count_one,{{count}} record from the server could not be stored,سرور سے آیا {{count}} ریکارڈ محفوظ نہیں ہو سکا,,Plural form for exactly 1. Keep {{count}} exactly.
+sync.pullSkipped.count_other,{{count}} records from the server could not be stored,سرور سے آئے {{count}} ریکارڈ محفوظ نہیں ہو سکے,,Plural form for any other number. Keep {{count}} exactly.
+sync.pullSkipped.title,Not stored on this device,اس ڈیوائس پر محفوظ نہیں,,
+sync.pullSkipped.intro,This device received these from the server but could not store them. They are safe on the server. Updating the app usually fixes this.,یہ ڈیوائس سرور سے یہ ریکارڈ لے آئی لیکن محفوظ نہیں کر سکی۔ یہ سرور پر محفوظ ہیں۔ عام طور پر ایپ اپڈیٹ کرنے سے ٹھیک ہو جاتا ہے۔,,
+sync.pullSkipped.field,{{field}} could not be read.,{{field}} پڑھا نہیں جا سکا۔,,Keep {{field}} exactly.
+sync.pullSkipped.generic,This record could not be read.,یہ ریکارڈ پڑھا نہیں جا سکا۔,,
 role.owner,Owner,مالک,,
 role.cashier,Cashier,کیشیئر,,
 role.rider,Rider,رائیڈر,,
@@ -210,7 +272,7 @@ nav.main,Main,مین مینو,,Screen-reader label for the menu (not shown as te
 nav.side,Menu,مینو,,Screen-reader label for the menu (not shown as text).
 nav.sales,Sales,سیلز,,
 nav.sale,Sale,سیل,,
-nav.products,Products,پروڈکٹس,,
+nav.products,Products,مصنوعات,,
 nav.khata,Khata,کھاتہ,,
 nav.more,More,مزید,,
 nav.stock,Stock,اسٹاک,,
@@ -285,6 +347,7 @@ presets.open,Add from list,فہرست سے شامل کریں,,
 presets.title,Pick your products,اپنی اشیاء چنیں,,
 presets.intro,Tick what you sell. Today’s rate is optional; without it the rate is asked at the first sale.,جو بیچتے ہیں اس پر نشان لگائیں۔ آج کا ریٹ اختیاری ہے؛ ورنہ پہلی فروخت پر پوچھا جائے گا۔,,
 presets.search,Search the list,فہرست میں تلاش کریں,,
+presets.selectAll,Select all,سب چنیں,,
 presets.searchPlaceholder,"Search: aalu, آلو, potato","تلاش: aalu, آلو, potato",,
 presets.added,Added,شامل ہے,,
 presets.hidden,Hidden,چھپی ہوئی,,
@@ -297,6 +360,8 @@ presets.save_one,Add {{count}} product,{{count}} چیز شامل کریں,,Plura
 presets.save_other,Add {{count}} products,{{count}} اشیاء شامل کریں,,Plural form for any other number. Keep {{count}} exactly.
 presets.focFree,Give free with purchases?,خریداری کے ساتھ مفت دیں؟,,
 presets.focFreeFor,Give {{name}} free with purchases,{{name}} خریداری کے ساتھ مفت دیں,,Keep {{name}} exactly.
+presets.noneForType,No ready-made list for this shop type yet. Add your products one by one.,اس قسم کی دکان کے لیے ابھی کوئی تیار فہرست نہیں۔ اپنی پروڈکٹس ایک ایک کر کے شامل کریں۔,,
+presets.csvHint,Many products? NaqdPOS support can import them from a spreadsheet (CSV) for you.,زیادہ پروڈکٹس ہیں؟ NaqdPOS سپورٹ انہیں اسپریڈشیٹ (CSV) سے آپ کے لیے شامل کر سکتی ہے۔,,
 rates.title,Today’s rates,آج کے ریٹ,,
 rates.introOwner,Sale price and cost per unit. Save all at once.,فی اکائی قیمتِ فروخت اور خرید۔ سب ایک ساتھ محفوظ کریں۔,,
 rates.perUnit,per {{unit}},فی {{unit}},,Keep {{unit}} exactly.
@@ -378,6 +443,14 @@ sale.errors.rateNeeded,Set a rate first.,پہلے ریٹ لکھیں۔,,
 sale.errors.amountTooSmall,The amount is too small for this rate.,اس ریٹ پر رقم بہت کم ہے۔,,
 sale.errors.rate,Enter a rate above 0.,0 سے زیادہ ریٹ لکھیں۔,,
 sale.errors.price,Enter a price above 0.,0 سے زیادہ قیمت لکھیں۔,,
+sale.cartEmptyHint,Tap a product to add it,شامل کرنے کے لیے پروڈکٹ پر ٹیپ کریں,,
+sale.chargeTotal,Charge {{amount}},وصول کریں {{amount}},,Keep {{amount}} exactly.
+sale.lineRate,{{rate}}/{{unit}},{{rate}}/{{unit}},,Keep {{rate}} {{unit}} exactly.
+sale.less,Less {{name}},{{name}} کم کریں,,Keep {{name}} exactly.
+sale.more,More {{name}},{{name}} زیادہ کریں,,Keep {{name}} exactly.
+sale.lineMenu,More options for {{name}},{{name}} کے مزید اختیارات,,Keep {{name}} exactly.
+sale.setRate,Set rate,ریٹ لگائیں,,
+sale.pcShort,pc,عدد,,
 payment.method.cash,Cash,نقد,,Default payment method name.
 payment.method.jazzcash,JazzCash,JazzCash,,Default payment method name.
 payment.method.easypaisa,Easypaisa,Easypaisa,,Default payment method name.
@@ -389,8 +462,12 @@ pay.remaining,Remaining {{amount}},باقی {{amount}},,Keep {{amount}} exactly.
 pay.method,Paid by,ادائیگی کا طریقہ,,
 pay.exact,Exact,پوری رقم,,
 pay.tendered,Cash received,نقد وصول,,
+pay.changeLabel,Change,واپس کریں,,
+pay.left,Remaining,باقی,,
+pay.addNote,Add {{amount}},{{amount}} شامل کریں,,Keep {{amount}} exactly.
+pay.clear,Clear,صاف کریں,,
+pay.typeAmount,Type amount,رقم لکھیں,,
 pay.amount,Amount,رقم,,
-pay.change,Change: {{amount}},واپس کریں: {{amount}},,Change to give back to the customer (not khata balance). Keep {{amount}} exactly.
 pay.reference,Reference number (optional),حوالہ نمبر (اختیاری),,
 pay.addPayment,Add payment,ادائیگی شامل کریں,,
 pay.complete,Complete sale,سیل مکمل کریں,,
@@ -428,7 +505,26 @@ sales.count_one,{{count}} sale,{{count}} سیل,,Plural form for exactly 1. Keep
 sales.count_other,{{count}} sales,{{count}} سیلز,,Plural form for any other number. Keep {{count}} exactly.
 sales.none,No sales yet today.,آج ابھی کوئی سیل نہیں۔,,
 sales.notFound,This sale is not on this device.,یہ سیل اس ڈیوائس پر نہیں۔,,
-sales.back,Back to today’s sales,آج کی سیل پر واپس,,
+sales.back,Back to sales,سیل پر واپس,,
+sales.titleDay,Sales — {{date}},سیل — {{date}},,Keep {{date}} exactly.
+sales.titleRange,Sales — {{from}} to {{to}},سیل — {{from}} سے {{to}},,Keep {{from}} {{to}} exactly.
+sales.allRange,All sales in this range.,اس مدت کی تمام سیل۔,,
+sales.yoursDay,Your sales for this business day.,اس کاروباری دن کی آپ کی سیل۔,,
+sales.noneRange,No sales on these days.,ان دنوں میں کوئی سیل نہیں۔,,
+sales.dayClosed,Day closed — new sales go to {{date}}.,دن بند ہو گیا — نئی سیل {{date}} میں جائے گی۔,,Keep {{date}} exactly.
+sales.seeOlder,See older in Reports,پرانی سیل رپورٹس میں دیکھیں,,
+sales.range.label,Show sales for,سیل دکھائیں,,
+sales.range.today,Today,آج,,
+sales.range.yesterday,Yesterday,کل,,
+sales.range.week,This week,یہ ہفتہ,,
+sales.range.custom,Custom,اپنی مرضی,,
+sales.from,From,سے,,
+sales.to,To,تک,,
+sales.show,Show,دکھائیں,,
+sales.rangeError.invalid,Pick both dates.,دونوں تاریخیں چنیں۔,,
+sales.rangeError.reversed,The start date is after the end date.,شروع کی تاریخ آخری تاریخ کے بعد ہے۔,,
+sales.rangeError.too_long,Pick at most 31 days. Older sales are in Reports.,زیادہ سے زیادہ 31 دن چنیں۔ پرانی سیل رپورٹس میں ہے۔,,
+sales.rangeError.future,Pick dates up to {{date}}.,{{date}} تک کی تاریخیں چنیں۔,,Keep {{date}} exactly.
 paymentMethods.title,Payment methods,ادائیگی کے طریقے,,
 paymentMethods.intro,Choose which methods the counter offers. Cash is always on.,کاؤنٹر پر کون سے طریقے ہوں، چنیں۔ نقد ہمیشہ آن ہے۔,,
 paymentMethods.on,On,آن,,
