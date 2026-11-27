@@ -122,6 +122,21 @@ jobs:
           docker build -f apps/api/Dockerfile -t naqdpos-api .
           docker run --rm naqdpos-api pg_dump --version | grep ' 18\.'
           docker run --rm naqdpos-api node -e "require('node:fs').accessSync('/repo/db/node_modules/dbmate/dist/cli.js')"
+      - name: Railway's pre-deploy command, inside the image, on an empty Postgres 18
+        run: |
+          set -o pipefail
+          docker network create predeploy
+          docker run -d --name pg --network predeploy -e POSTGRES_PASSWORD=ci postgres:18-alpine
+          url='postgres://postgres:ci@pg:5432/postgres?sslmode=disable'
+          # First run applies every migration; the second must find nothing to do.
+          docker run --rm --network predeploy -e DATABASE_ADMIN_URL="$url" naqdpos-api \
+            node /repo/db/scripts/migrate.ts | tee first.log
+          grep -q 'db:deploy: applied 20261127090000_applied_migrations.sql' first.log
+          docker run --rm --network predeploy -e DATABASE_ADMIN_URL="$url" naqdpos-api \
+            node /repo/db/scripts/migrate.ts | tee second.log
+          grep -q 'db:deploy: 0 migration(s) to apply' second.log
+          grep -q 'db:deploy: migrations are up to date' second.log
+          docker rm -f pg
       - name: Static images, headers from the real container
         run: |
           for app in pos admin; do
